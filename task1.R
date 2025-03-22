@@ -12,12 +12,24 @@ fixtures <- read_csv("fixtures/fixtures.csv") |>
 team_games <- bind_rows(
   # Home games
   fixtures |>
-    select(week_number, date, team = home_team, team_score = home_team_score,
-           opponent = away_team, opponent_score = away_team_score),
+    select(
+      week_number,
+      date,
+      team = home_team,
+      team_score = home_team_score,
+      opponent = away_team,
+      opponent_score = away_team_score
+    ),
   # Away games
   fixtures |>
-    select(week_number, date, team = away_team, team_score = away_team_score,
-           opponent = home_team, opponent_score = home_team_score)
+    select(
+      week_number,
+      date,
+      team = away_team,
+      team_score = away_team_score,
+      opponent = home_team,
+      opponent_score = home_team_score
+    )
 ) |>
   arrange(week_number, date)
 
@@ -49,14 +61,16 @@ p <- ggplot(weekly_rankings, aes(x = week_number, y = rank, group = team)) +
   geom_point(aes(color = team), size = 3) +
   scale_y_reverse(breaks = 1:6) +
   scale_x_continuous(breaks = 1:14) +
-  scale_color_manual(values = c(
-    "Lunar Owls" = "#6B4E71",  # Darkest purple
-    "Laces" = "#8B6B8F",      # Dark purple
-    "Vinyl" = "#A88AAD",      # Medium purple
-    "Phantom" = "#C5A9CB",    # Light purple
-    "Mist" = "#E2C8E9",       # Very light purple
-    "Rose" = "#FFE7FF"        # Lightest purple
-  )) +
+  scale_color_manual(
+    values = c(
+      "Lunar Owls" = "#6B4E71", # Darkest purple
+      "Laces" = "#8B6B8F", # Dark purple
+      "Vinyl" = "#A88AAD", # Medium purple
+      "Phantom" = "#C5A9CB", # Light purple
+      "Mist" = "#E2C8E9", # Very light purple
+      "Rose" = "#FFE7FF" # Lightest purple
+    )
+  ) +
   labs(
     title = "Unrivaled Basketball League Rankings",
     subtitle = "Weekly Team Rankings (1-6) Throughout the 14-Week Season",
