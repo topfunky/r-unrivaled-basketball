@@ -95,8 +95,8 @@ p <- ggplot(weekly_rankings, aes(x = week_number, y = rank, group = team)) +
 print(p)
 
 # Save the plot to a PNG file
-ggsave("unrivaled_rankings.png", p, width = 12, height = 8, dpi = 300)
+ggsave("unrivaled_rankings_1.png", p, width = 12, height = 8, dpi = 300)
 
 # Save the data to a feather file
 library(feather)
-write_feather(weekly_rankings, "unrivaled_rankings.feather")
+write_feather(weekly_rankings, "unrivaled_rankings_1.feather")
