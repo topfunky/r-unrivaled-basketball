@@ -3,6 +3,7 @@ library(tidyverse)
 library(ggplot2)
 library(lubridate)
 library(gghighcontrast)
+library(ggbump)  # For smooth bump charts
 
 # Read the CSV data
 games <- read_csv("fixtures/unrivaled_scores.csv")
@@ -78,24 +79,12 @@ dot_size <- 8
 label_size <- 4
 
 p <- game_rankings |>
-  # First layer: all teams except Rose
   ggplot(aes(x = games_played, y = rank, color = team)) +
-  geom_line(
-    data = game_rankings |> filter(team != "Rose"),
-    linewidth = line_width
-  ) +
-  geom_point(
-    data = game_rankings |> filter(team != "Rose"),
-    size = dot_size
-  ) +
-  # Second layer: Rose team
-  geom_line(
-    data = game_rankings |> filter(team == "Rose"),
-    linewidth = line_width
-  ) +
-  geom_point(
-    data = game_rankings |> filter(team == "Rose"),
-    size = dot_size
+  # Use geom_bump for smooth lines and points
+  geom_bump(
+    linewidth = line_width,
+    size = dot_size,
+    show.legend = FALSE    # Don't show in legend
   ) +
   # Use bright purple for Rose, shades of grey for others
   scale_color_manual(
@@ -116,7 +105,7 @@ p <- game_rankings |>
       group_by(team) |>
       slice_max(games_played, n = 1),
     aes(label = team),
-    hjust = -0.5,
+    hjust = -0.2,
     size = label_size,
     family = "InputMono",  # Use InputMono font for team labels
     show.legend = FALSE    # Don't show in legend
