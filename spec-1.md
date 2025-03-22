@@ -29,6 +29,6 @@ Summarize this data into a new variable. The summary contains a row for each tea
 
 Chart each team's wins and ranking in the entire league during each week of the season and generate a chart with ggplot that shows a bump chart to show the leading teams during the season. Use shades of Unrivaled purple for the chart.
 
-Save the rendered chart to a file unrivaled_rankings.png
+Save the rendered chart to a file unrivaled_rankings_1.png
 
 Use https://github.com/topfunky/gghighcontrast as the theme for the chart but keep the colors for each team as already specified.
