@@ -79,27 +79,36 @@ plot_data <- bind_rows(
   mutate(
     x_offset = case_when(
       team == "Rose" ~ 0,
-      team == "Lunar Owls" ~ 0,
-      team == "Mist" ~ 2,
-      team == "Laces" ~ 0,
-      team == "Phantom" ~ 2.5,
+      team == "Lunar Owls" ~ -0.6,
+      team == "Mist" ~ 3.5,
+      team == "Laces" ~ 2,
+      team == "Phantom" ~ 4,
       team == "Vinyl" ~ 0
     ),
     y_offset = case_when(
-      team == "Rose" ~ 8,
+      team == "Rose" ~ 12,
       team == "Lunar Owls" ~ -8,
       team == "Mist" ~ 0,
-      team == "Laces" ~ -8,
+      team == "Laces" ~ -12,
       team == "Phantom" ~ -16,
-      team == "Vinyl" ~ -8
+      team == "Vinyl" ~ -12
     )
-  )
+  ) |>
+  # Reorder data so Rose appears last (on top)
+  arrange(team != "Rose")
 
 # Create the ELO ratings chart
 p <- plot_data |>
   ggplot(aes(x = date, y = elo_rating, color = team)) +
   geom_line(linewidth = 1.5, show.legend = FALSE) +
-  geom_point(size = 3, show.legend = FALSE) +
+  # Add points only at the end of each line
+  geom_point(
+    data = plot_data |>
+      group_by(team) |>
+      slice_max(date, n = 1),
+    size = 3,
+    show.legend = FALSE
+  ) +
   # Use custom Unrivaled purple colors for each team
   scale_color_manual(
     values = c(
@@ -122,7 +131,7 @@ p <- plot_data |>
       y = elo_rating + y_offset
     ),
     hjust = 0.5,  # Center text horizontally
-    size = 4,
+    size = 3,
     family = "InputMono",
     show.legend = FALSE
   ) +
@@ -140,13 +149,14 @@ p <- plot_data |>
   # Add labels
   labs(
     title = "Unrivaled Basketball League ELO Ratings",
-    subtitle = "Team Ratings Throughout the Season",
+    subtitle = "Team ratings throughout the season",
     x = "Date",
-    y = "ELO Rating"
+    y = "ELO Rating",
+    caption = "Game data from unrivaled.basketball",
   )
 
 # Save the plot
-ggsave("unrivaled_elo_ratings.png", p, width = 12, height = 8, dpi = 300)
+ggsave("unrivaled_elo_ratings.png", p, width = 6, height = 4, dpi = 300)
 
 # Save the ELO rankings
 write_feather(ratings_history, "unrivaled_elo_rankings.feather")
