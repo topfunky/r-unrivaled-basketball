@@ -1,3 +1,5 @@
+# NOTE: Original code generated with GitHub Copilot.
+
 
 # Load necessary libraries
 library(rvest)
