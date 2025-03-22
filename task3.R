@@ -127,10 +127,15 @@ p <- game_rankings |>
     background_color = "black",
     base_family = "InputMono"
   ) +
+  # Style grid lines in dark grey
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
   # Add labels
   labs(
-    title = "Unrivaled Basketball League Rankings",
-    subtitle = "Team Rankings (1-6) After Equal Number of Games",
+    title = "Unrivaled Basketball League Rankings 2025",
+    subtitle = "Team Rankings After Equal Number of Games",
     x = "Games Played",
     y = "Rank",
     color = "Team"
