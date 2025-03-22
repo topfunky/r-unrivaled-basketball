@@ -6,7 +6,7 @@ DATA_OUTPUT = game_data.feather
 PLOT_OUTPUT = unrivaled_bump_chart.png
 
 # Default target
-all: $(DATA_OUTPUT) $(PLOT_OUTPUT)
+all: install-packages
 
 # Target to run the R script
 $(DATA_OUTPUT) $(PLOT_OUTPUT): $(RSCRIPT)
@@ -27,5 +27,9 @@ list_tasks:
 # Clean target to remove generated files
 clean:
 	rm -f $(DATA_OUTPUT) $(PLOT_OUTPUT)
+
+# Install required R packages
+install-packages:
+	Rscript -e 'install.packages(c("tidyverse", "ggplot2", "lubridate", "gghighcontrast", "ggbump", "elo"), repos="https://cloud.r-project.org/")'
 
 .PHONY: all clean install_deps set_cran_mirror list_tasks
