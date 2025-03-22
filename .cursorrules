@@ -1,0 +1,59 @@
+# Cursor Rules for R Project
+
+## Code Style
+
+- Use tidyverse pipe operator |> for data transformations
+- Use snake_case for variable and function names
+- Add comments to explain complex logic
+- Group related operations with blank lines
+- Use consistent indentation (2 spaces)
+
+## Documentation
+
+- Add a brief description at the top of each R script
+- Document any non-obvious data transformations
+- Include comments for complex calculations
+- Document any assumptions about the data
+
+## Data Processing
+
+- Use explicit column names in select() statements
+- Group operations logically (filter -> mutate -> arrange)
+- Use descriptive variable names
+- Handle missing values explicitly
+
+## Visualization
+
+- Use gghighcontrast theme for all plots
+- Use InputMono font family for text
+- Include clear titles and labels
+- Use consistent color schemes
+- Save plots in high resolution (300 DPI)
+
+## File Organization
+
+- Keep data files in fixtures/ directory
+- Use descriptive filenames
+- Save both plots and data files
+- Use consistent file naming patterns
+
+## Error Handling
+
+- Validate input data
+- Check for missing values
+- Handle edge cases explicitly
+- Use warning() for non-critical issues
+
+## Performance
+
+- Minimize redundant calculations
+- Use efficient data structures
+- Avoid unnecessary data copies
+- Group operations to reduce iterations
+
+## Version Control
+
+- Keep sensitive data out of version control
+- Use .gitignore for temporary files
+- Document major changes
+- Keep commits focused and atomic
