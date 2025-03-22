@@ -4,6 +4,13 @@ library(rvest)
 library(lubridate)
 library(glue)
 
+# Define valid team names
+VALID_TEAMS <- c("Lunar Owls", "Mist", "Rose", "Laces", "Phantom", "Vinyl")
+
+# Define date range to skip (1v1 games)
+SKIP_START <- as.Date("2025-02-10")
+SKIP_END <- as.Date("2025-02-15")
+
 # Function to parse a single game day
 parse_game_day <- function(day_node) {
   # Debug: Print the day node text
@@ -27,53 +34,73 @@ parse_game_day <- function(day_node) {
   # Print game_date
   print(game_date)
 
+  # Skip games in the specified date range
+  if (game_date >= SKIP_START && game_date <= SKIP_END) {
+    warning(glue("Skipping games on {game_date} (within skip date range)"))
+    return(NULL)
+  }
+
   # Find all games in this day with correct selector
   games <- day_node |>
     html_elements("div.flex-row.w-100.items-center.col-12")
 
   print(paste("Found", length(games), "team scores for this day"))
 
-  # Process each game with error handling
-  game_data <- map(games, function(game) {
-    # Debug: Print game text
-    print("Processing game:")
-    print(html_text(game))
+  # Process games in pairs (away team then home team)
+  game_data <- list()
+  for (i in seq(1, length(games), by = 2)) {
+    if (i + 1 > length(games)) {
+      warning("Odd number of teams found, skipping last team")
+      break
+    }
 
-    # Extract scores with error handling
-    scores <- game |>
-      html_elements("h3.weight-900") |>
+    away_game <- games[[i]]
+    home_game <- games[[i + 1]]
+
+    # Extract scores
+    away_score <- away_game |>
+      html_element("h3.weight-900") |>
       html_text() |>
       as.numeric()
 
-    print(glue("scores: {scores[1]}"))
+    home_score <- home_game |>
+      html_element("h3.weight-900") |>
+      html_text() |>
+      as.numeric()
 
-    # Extract team names with error handling
-    team_links <- game |>
-      html_elements("a.flex-row.items-center.col-12")
-
-    teams <- team_links |>
+    # Extract team names
+    away_team <- away_game |>
+      html_element("a.flex-row.items-center.col-12") |>
       html_element("div.color-blue.weight-500.font-14") |>
       html_text()
 
-    print(glue("teams: {teams[1]}"))
+    home_team <- home_game |>
+      html_element("a.flex-row.items-center.col-12") |>
+      html_element("div.color-blue.weight-500.font-14") |>
+      html_text()
+
+    # Validate team names
+    if (!away_team %in% VALID_TEAMS || !home_team %in% VALID_TEAMS) {
+      warning(glue("Skipping game with invalid team names: {away_team} at {home_team}"))
+      next
+    }
+
+    print(glue("Game: {away_team} ({away_score}) at {home_team} ({home_score})"))
 
     # Create a row of game data
-    tibble(
+    game_data[[length(game_data) + 1]] <- tibble(
       date = game_date,
-      away_team = teams[1],
-      away_team_score = scores[1],
-      home_team = teams[2],
-      home_team_score = scores[2]
+      away_team = away_team,
+      away_team_score = away_score,
+      home_team = home_team,
+      home_team_score = home_score
     )
-  }) |>
-    # Remove any NULL results from failed parsing
-    compact() |>
-    bind_rows()
+  }
 
-  # Print tibble
-  print(game_data)
-
-  return(game_data)
+  # Combine all games for this day
+  day_data <- bind_rows(game_data)
+  print(day_data)
+  return(day_data)
 }
 
 # Function to scrape all games
