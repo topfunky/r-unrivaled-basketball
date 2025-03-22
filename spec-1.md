@@ -8,7 +8,9 @@ Use the native R pipe in R code.
 
 ## Task 1: Create a chart from fixture data
 
-Create fixture data that can be used to render a chart of team wins throughout the season. Fixture data should originate in a CSV file.
+Create the `fixtures` subdirectory with R.
+
+Create fixture data that can be used to render a chart of team wins throughout the season. Fixture data should originate in a CSV file stored in the `fixtures` subdirectory.
 
 Team names include:
 
@@ -27,6 +29,6 @@ Summarize this data into a new variable. The summary contains a row for each tea
 
 Chart each team's wins and ranking in the entire league during each week of the season and generate a chart with ggplot that shows a bump chart to show the leading teams during the season. Use shades of Unrivaled purple for the chart.
 
-Save the rendered chart to a file rankings.png
+Save the rendered chart to a file unrivaled_rankings.png
 
-Use https://github.com/topfunky/gghighcontrast as the theme for the chart.
+Use https://github.com/topfunky/gghighcontrast as the theme for the chart but keep the colors for each team as already specified.

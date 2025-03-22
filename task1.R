@@ -4,8 +4,8 @@ library(ggplot2)
 library(lubridate)
 library(gghighcontrast)
 
-# Read fixture data from CSV file
-fixtures <- read_csv("fixtures.csv") |>
+# Read fixture data from CSV file in fixtures subdirectory
+fixtures <- read_csv("fixtures/fixtures.csv") |>
   mutate(date = as.Date(date))
 
 # Create long format data for each team's games
@@ -43,19 +43,19 @@ weekly_rankings <- team_records |>
   mutate(rank = pmin(pmax(rank, 1), 6)) |>
   ungroup()
 
-# Create bump chart with high contrast theme
+# Create bump chart with high contrast theme and Unrivaled purple colors
 p <- ggplot(weekly_rankings, aes(x = week_number, y = rank, group = team)) +
   geom_line(aes(color = team), linewidth = 1.2) +
   geom_point(aes(color = team), size = 3) +
   scale_y_reverse(breaks = 1:6) +
   scale_x_continuous(breaks = 1:14) +
   scale_color_manual(values = c(
-    "Lunar Owls" = "#6B4E71",
-    "Laces" = "#8B6B8F",
-    "Vinyl" = "#A88AAD",
-    "Phantom" = "#C5A9CB",
-    "Mist" = "#E2C8E9",
-    "Rose" = "#FFE7FF"
+    "Lunar Owls" = "#6B4E71",  # Darkest purple
+    "Laces" = "#8B6B8F",      # Dark purple
+    "Vinyl" = "#A88AAD",      # Medium purple
+    "Phantom" = "#C5A9CB",    # Light purple
+    "Mist" = "#E2C8E9",       # Very light purple
+    "Rose" = "#FFE7FF"        # Lightest purple
   )) +
   labs(
     title = "Unrivaled Basketball League Rankings",
@@ -81,7 +81,7 @@ p <- ggplot(weekly_rankings, aes(x = week_number, y = rank, group = team)) +
 print(p)
 
 # Save the plot to a PNG file
-ggsave("rankings.png", p, width = 12, height = 8, dpi = 300)
+ggsave("unrivaled_rankings.png", p, width = 12, height = 8, dpi = 300)
 
 # Save the data to a feather file
 library(feather)
