@@ -72,19 +72,40 @@ game_rankings <- team_records |>
 print(game_rankings)
 
 # Create the bump chart
+# Define plot parameters
+line_width <- 6
+dot_size <- 8
+label_size <- 4
+
 p <- game_rankings |>
-  ggplot(aes(x = date, y = rank, color = team)) +
-  geom_line(linewidth = 1.5) +
-  geom_point(size = 3) +
-  # Use custom Unrivaled purple colors for each team
+  # First layer: all teams except Rose
+  ggplot(aes(x = games_played, y = rank, color = team)) +
+  geom_line(
+    data = game_rankings |> filter(team != "Rose"),
+    linewidth = line_width
+  ) +
+  geom_point(
+    data = game_rankings |> filter(team != "Rose"),
+    size = dot_size
+  ) +
+  # Second layer: Rose team
+  geom_line(
+    data = game_rankings |> filter(team == "Rose"),
+    linewidth = line_width
+  ) +
+  geom_point(
+    data = game_rankings |> filter(team == "Rose"),
+    size = dot_size
+  ) +
+  # Use bright purple for Rose, shades of grey for others
   scale_color_manual(
     values = c(
-      "Lunar Owls" = "#8A2BE2",  # Deep purple
-      "Mist" = "#9370DB",        # Medium purple
       "Rose" = "#9B30FF",        # Bright purple
-      "Laces" = "#A020F0",       # Electric purple
-      "Phantom" = "#B19CD9",     # Light purple
-      "Vinyl" = "#C8A2C8"        # Pastel purple
+      "Lunar Owls" = "#808080",  # Medium grey
+      "Mist" = "#A9A9A9",        # Dark grey
+      "Laces" = "#C0C0C0",       # Silver
+      "Phantom" = "#D3D3D3",     # Light grey
+      "Vinyl" = "#E6E6E6"        # Very light grey
     )
   ) +
   # Reverse y-axis so rank 1 is at the top
@@ -93,11 +114,12 @@ p <- game_rankings |>
   geom_text(
     data = game_rankings |>
       group_by(team) |>
-      slice_max(date, n = 1),
+      slice_max(games_played, n = 1),
     aes(label = team),
-    hjust = -0.2,
-    size = 4,
-    family = "InputMono"  # Use InputMono font for team labels
+    hjust = -0.5,
+    size = label_size,
+    family = "InputMono",  # Use InputMono font for team labels
+    show.legend = FALSE    # Don't show in legend
   ) +
   # Use gghighcontrast theme with white text on black background
   theme_high_contrast(
@@ -109,7 +131,7 @@ p <- game_rankings |>
   labs(
     title = "Unrivaled Basketball League Rankings",
     subtitle = "Team Rankings (1-6) After Equal Number of Games",
-    x = "Date",
+    x = "Games Played",
     y = "Rank",
     color = "Team"
   )
