@@ -2,6 +2,8 @@
 library(tidyverse)
 library(lubridate)
 library(elo)  # For ELO calculations
+library(ggplot2)
+library(gghighcontrast)
 
 # Read the CSV data
 games <- read_csv("fixtures/unrivaled_scores.csv") |>
@@ -62,6 +64,89 @@ final_ratings <- bind_rows(
   arrange(desc(elo_rating))
 
 print(final_ratings)
+
+# Create a long format dataset for plotting
+plot_data <- bind_rows(
+  # Home team ratings
+  ratings_history |>
+    select(date, team = home_team, elo_rating = elo.A),
+  # Away team ratings
+  ratings_history |>
+    select(date, team = away_team, elo_rating = elo.B)
+) |>
+  arrange(date) |>
+  # Add offset columns for label positioning
+  mutate(
+    x_offset = case_when(
+      team == "Rose" ~ 0,
+      team == "Lunar Owls" ~ 0,
+      team == "Mist" ~ 2,
+      team == "Laces" ~ 0,
+      team == "Phantom" ~ 2.5,
+      team == "Vinyl" ~ 0
+    ),
+    y_offset = case_when(
+      team == "Rose" ~ 8,
+      team == "Lunar Owls" ~ -8,
+      team == "Mist" ~ 0,
+      team == "Laces" ~ -8,
+      team == "Phantom" ~ -16,
+      team == "Vinyl" ~ -8
+    )
+  )
+
+# Create the ELO ratings chart
+p <- plot_data |>
+  ggplot(aes(x = date, y = elo_rating, color = team)) +
+  geom_line(linewidth = 1.5, show.legend = FALSE) +
+  geom_point(size = 3, show.legend = FALSE) +
+  # Use custom Unrivaled purple colors for each team
+  scale_color_manual(
+    values = c(
+      "Rose" = "#9B30FF",        # Bright purple
+      "Lunar Owls" = "#808080",  # Medium grey
+      "Mist" = "#A9A9A9",        # Dark grey
+      "Laces" = "#C0C0C0",       # Silver
+      "Phantom" = "#D3D3D3",     # Light grey
+      "Vinyl" = "#E6E6E6"        # Very light grey
+    )
+  ) +
+  # Add team labels at the end of each line
+  geom_text(
+    data = plot_data |>
+      group_by(team) |>
+      slice_max(date, n = 1),
+    aes(
+      label = team,
+      x = date + x_offset,
+      y = elo_rating + y_offset
+    ),
+    hjust = 0.5,  # Center text horizontally
+    size = 4,
+    family = "InputMono",
+    show.legend = FALSE
+  ) +
+  # Use gghighcontrast theme with white text on black background
+  theme_high_contrast(
+    foreground_color = "white",
+    background_color = "black",
+    base_family = "InputMono"
+  ) +
+  # Style grid lines in dark grey
+  theme(
+    panel.grid.major = element_line(color = "#1A1A1A", linewidth = 0.5),
+    panel.grid.minor = element_line(color = "#1A1A1A", linewidth = 0.25)
+  ) +
+  # Add labels
+  labs(
+    title = "Unrivaled Basketball League ELO Ratings",
+    subtitle = "Team Ratings Throughout the Season",
+    x = "Date",
+    y = "ELO Rating"
+  )
+
+# Save the plot
+ggsave("unrivaled_elo_ratings.png", p, width = 12, height = 8, dpi = 300)
 
 # Save the ELO rankings
 write_feather(ratings_history, "unrivaled_elo_rankings.feather")
