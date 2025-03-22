@@ -1,66 +1,67 @@
 # Load required libraries
 library(tidyverse)
 library(lubridate)
+library(elo)  # For ELO calculations
 
-# Read the rankings data
-rankings <- read_feather("unrivaled_rankings_3.feather")
-
-# ELO parameters
-K_FACTOR <- 32  # Standard K-factor for ELO calculations
-INITIAL_RATING <- 1500  # Standard starting ELO rating
-
-# Initialize ratings for all teams
-team_ratings <- rankings |>
-  distinct(team) |>
-  mutate(rating = INITIAL_RATING)
-
-# Calculate ELO ratings game by game
-elo_rankings <- rankings |>
-  arrange(date) |>
-  # Process each game
-  group_by(date) |>
-  group_modify(function(data, group) {
-    # Get current ratings for both teams
-    home_rating <- team_ratings$rating[team_ratings$team == data$team[1]]
-    away_rating <- team_ratings$rating[team_ratings$team == data$opponent[1]]
-
-    # Calculate expected scores
-    home_expected <- 1 / (1 + 10^((away_rating - home_rating) / 400))
-    away_expected <- 1 - home_expected
-
-    # Calculate actual scores
-    home_actual <- case_when(
-      data$result[1] == "W" ~ 1,
-      data$result[1] == "L" ~ 0,
-      TRUE ~ 0.5
+# Read the CSV data
+games <- read_csv("fixtures/unrivaled_scores.csv") |>
+  # Calculate results (1 for home win, 0 for away win, 0.5 for tie)
+  mutate(
+    result = case_when(
+      home_team_score > away_team_score ~ 1,  # Home win
+      home_team_score < away_team_score ~ 0,  # Away win
+      TRUE ~ 0.5                              # Tie
     )
-    away_actual <- 1 - home_actual
+  ) |>
+  arrange(date)
 
-    # Calculate rating changes
-    home_change <- K_FACTOR * (home_actual - home_expected)
-    away_change <- K_FACTOR * (away_actual - away_expected)
+# Initialize ELO ratings
+elo_ratings <- elo.run(
+  formula = result ~ home_team + away_team,
+  data = games,
+  k = 32,  # Standard K-factor
+  initial.ratings = 1500  # Standard starting rating
+)
 
-    # Update ratings
-    team_ratings$rating[team_ratings$team == data$team[1]] <<- home_rating + home_change
-    team_ratings$rating[team_ratings$team == data$opponent[1]] <<- away_rating + away_change
+# Get ratings after each game
+ratings_history <- as.data.frame(elo_ratings) |>
+  mutate(
+    date = games$date,
+    home_team = games$home_team,
+    away_team = games$away_team,
+    result = games$result
+  )
 
-    # Add ratings to the data
-    data |>
-      mutate(
-        elo_rating = home_rating + home_change,
-        opponent_elo = away_rating + away_change
-      )
-  }) |>
-  ungroup()
-
-# Print final ELO ratings
-print("Final ELO Ratings:")
-elo_rankings |>
-  group_by(team) |>
-  slice_max(date, n = 1) |>
-  select(team, elo_rating) |>
-  arrange(desc(elo_rating)) |>
+# Print ratings after each game
+print("ELO Ratings After Each Game:")
+ratings_history |>
+  select(date, home_team, away_team, result, elo.A, elo.B) |>
   print()
 
+# Print final ELO ratings
+print("\nFinal ELO Ratings:")
+# Combine home and away ratings for each team
+final_ratings <- bind_rows(
+  # Home team ratings
+  ratings_history |>
+    group_by(team = home_team) |>
+    arrange(desc(date)) |>
+    slice(1) |>
+    select(date, team, elo_rating = elo.A),
+  # Away team ratings
+  ratings_history |>
+    group_by(team = away_team) |>
+    arrange(desc(date)) |>
+    slice(1) |>
+    select(date, team, elo_rating = elo.B)
+) |>
+  # Get the most recent rating for each team
+  group_by(team) |>
+  arrange(desc(date)) |>
+  slice(1) |>
+  arrange(desc(elo_rating))
+
+print(final_ratings)
+
 # Save the ELO rankings
-write_feather(elo_rankings, "unrivaled_elo_rankings.feather")
+write_feather(ratings_history, "unrivaled_elo_rankings.feather")
