@@ -1,0 +1,88 @@
+# Load required libraries
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(gghighcontrast)
+
+# Read fixture data from CSV file
+fixtures <- read_csv("fixtures.csv") |>
+  mutate(date = as.Date(date))
+
+# Create long format data for each team's games
+team_games <- bind_rows(
+  # Home games
+  fixtures |>
+    select(week_number, date, team = home_team, team_score = home_team_score,
+           opponent = away_team, opponent_score = away_team_score),
+  # Away games
+  fixtures |>
+    select(week_number, date, team = away_team, team_score = away_team_score,
+           opponent = home_team, opponent_score = home_team_score)
+) |>
+  arrange(week_number, date)
+
+# Calculate wins and losses for each team by week
+team_records <- team_games |>
+  group_by(team) |>
+  mutate(
+    game_result = ifelse(team_score > opponent_score, 1, 0),
+    wins = cumsum(game_result),
+    losses = cumsum(1 - game_result),
+    point_differential = team_score - opponent_score
+  ) |>
+  ungroup()
+
+# Calculate weekly rankings (1 to 6)
+weekly_rankings <- team_records |>
+  group_by(week_number) |>
+  # First sort by wins (descending), then by point differential (descending)
+  arrange(desc(wins), desc(point_differential)) |>
+  # Assign ranks from 1 to 6
+  mutate(rank = row_number()) |>
+  # Ensure rank is between 1 and 6
+  mutate(rank = pmin(pmax(rank, 1), 6)) |>
+  ungroup()
+
+# Create bump chart with high contrast theme
+p <- ggplot(weekly_rankings, aes(x = week_number, y = rank, group = team)) +
+  geom_line(aes(color = team), linewidth = 1.2) +
+  geom_point(aes(color = team), size = 3) +
+  scale_y_reverse(breaks = 1:6) +
+  scale_x_continuous(breaks = 1:14) +
+  scale_color_manual(values = c(
+    "Lunar Owls" = "#6B4E71",
+    "Laces" = "#8B6B8F",
+    "Vinyl" = "#A88AAD",
+    "Phantom" = "#C5A9CB",
+    "Mist" = "#E2C8E9",
+    "Rose" = "#FFE7FF"
+  )) +
+  labs(
+    title = "Unrivaled Basketball League Rankings",
+    subtitle = "Weekly Team Rankings (1-6) Throughout the 14-Week Season",
+    x = "Week",
+    y = "Rank (1 = Best)",
+    color = "Team"
+  ) +
+  theme_high_contrast(
+    foreground_color = "white",
+    background_color = "black",
+    base_family = "InputMono"
+  ) +
+  theme(
+    plot.title = element_text(size = 16, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    legend.position = "right",
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# Display the plot
+print(p)
+
+# Save the plot to a PNG file
+ggsave("rankings.png", p, width = 12, height = 8, dpi = 300)
+
+# Save the data to a feather file
+library(feather)
+write_feather(weekly_rankings, "unrivaled_rankings.feather")

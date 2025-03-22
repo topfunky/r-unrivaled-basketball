@@ -1,0 +1,43 @@
+week_number,date,home_team,home_team_score,away_team,away_team_score
+1,2024-03-01,Lunar Owls,85,Laces,82
+1,2024-03-01,Vinyl,92,Phantom,88
+1,2024-03-01,Mist,78,Rose,85
+2,2024-03-08,Laces,92,Lunar Owls,85
+2,2024-03-08,Phantom,87,Vinyl,92
+2,2024-03-08,Rose,90,Mist,88
+3,2024-03-15,Lunar Owls,90,Laces,88
+3,2024-03-15,Vinyl,87,Phantom,89
+3,2024-03-15,Mist,83,Rose,87
+4,2024-03-22,Laces,84,Lunar Owls,91
+4,2024-03-22,Phantom,93,Vinyl,86
+4,2024-03-22,Rose,80,Mist,93
+5,2024-03-29,Lunar Owls,87,Laces,89
+5,2024-03-29,Vinyl,89,Phantom,86
+5,2024-03-29,Mist,86,Rose,93
+6,2024-04-05,Laces,83,Lunar Owls,90
+6,2024-04-05,Phantom,90,Vinyl,87
+6,2024-04-05,Rose,87,Mist,92
+7,2024-04-12,Lunar Owls,86,Laces,89
+7,2024-04-12,Vinyl,91,Phantom,86
+7,2024-04-12,Mist,88,Rose,93
+8,2024-04-19,Laces,92,Lunar Owls,88
+8,2024-04-19,Phantom,89,Vinyl,94
+8,2024-04-19,Rose,85,Mist,90
+9,2024-04-26,Lunar Owls,93,Laces,87
+9,2024-04-26,Vinyl,88,Phantom,92
+9,2024-04-26,Mist,91,Rose,86
+10,2024-05-03,Laces,86,Lunar Owls,90
+10,2024-05-03,Phantom,92,Vinyl,88
+10,2024-05-03,Rose,89,Mist,93
+11,2024-05-10,Lunar Owls,89,Laces,92
+11,2024-05-10,Vinyl,87,Phantom,90
+11,2024-05-10,Mist,85,Rose,88
+12,2024-05-17,Laces,90,Lunar Owls,87
+12,2024-05-17,Phantom,88,Vinyl,93
+12,2024-05-17,Rose,92,Mist,86
+13,2024-05-24,Lunar Owls,91,Laces,88
+13,2024-05-24,Vinyl,90,Phantom,87
+13,2024-05-24,Mist,89,Rose,94
+14,2024-05-31,Laces,87,Lunar Owls,92
+14,2024-05-31,Phantom,91,Vinyl,89
+14,2024-05-31,Rose,88,Mist,93

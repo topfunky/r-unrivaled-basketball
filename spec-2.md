@@ -1,4 +1,6 @@
-# Unrivaled Basketball games, teams, dates, and scores
+## Task 2: Scrape data
+
+https://www.unrivaled.basketball/schedule
 
 Month
 h2 p-12 px-16 weight-500
