@@ -30,6 +30,7 @@ scrape_game_data <- function(url) {
     dates <- page %>% html_nodes("span.uppercase.weight-500") %>% html_text(trim = TRUE)
 
 
+
     games <- page %>% html_nodes(".flex.w-100.radius-8")
     game_data <- list()
     game_divs <- page %>% html_nodes(".flex-row.w-100.items-center.col-12")
