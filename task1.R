@@ -2,6 +2,8 @@
 # visualization of team rankings throughout the 14-week season using fixture data from a CSV file.
 # The chart shows weekly rankings (1-6) with custom Unrivaled purple colors and high contrast theme.
 # Outputs include a PNG chart and a feather file with the rankings data.
+#
+# Note: This task is exploratory and is not used in the final analysis.
 
 # Load required libraries
 library(tidyverse)
