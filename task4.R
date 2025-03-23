@@ -11,6 +11,9 @@ library(elo)  # For ELO calculations
 library(ggplot2)
 library(gghighcontrast)
 
+# Import team colors
+source("team_colors.R")
+
 # Read the CSV data
 games <- read_csv("fixtures/unrivaled_scores.csv") |>
   # Calculate results (1 for home win, 0 for away win, 0.5 for tie)
@@ -126,17 +129,8 @@ p <- plot_data |>
     size = dot_size,
     show.legend = FALSE
   ) +
-  # Use custom Unrivaled purple colors for each team
-  scale_color_manual(
-    values = c(
-      "Rose" = "#9B30FF",        # Bright purple
-      "Lunar Owls" = "#808080",  # Medium grey
-      "Mist" = "#A9A9A9",        # Dark grey
-      "Laces" = "#C0C0C0",       # Silver
-      "Phantom" = "#D3D3D3",     # Light grey
-      "Vinyl" = "#E6E6E6"        # Very light grey
-    )
-  ) +
+  # Use team colors from imported palette
+  scale_color_manual(values = TEAM_COLORS) +
   # Add team labels at the end of each line
   geom_text(
     data = plot_data |>

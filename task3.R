@@ -10,6 +10,9 @@ library(lubridate)
 library(gghighcontrast)
 library(ggbump)  # For smooth bump charts
 
+# Import team colors
+source("team_colors.R")
+
 # Read the CSV data
 games <- read_csv("fixtures/unrivaled_scores.csv")
 
@@ -91,17 +94,8 @@ p <- game_rankings |>
     size = dot_size,
     show.legend = FALSE    # Don't show in legend
   ) +
-  # Use bright purple for Rose, shades of grey for others
-  scale_color_manual(
-    values = c(
-      "Rose" = "#9B30FF",        # Bright purple
-      "Lunar Owls" = "#808080",  # Medium grey
-      "Mist" = "#A9A9A9",        # Dark grey
-      "Laces" = "#C0C0C0",       # Silver
-      "Phantom" = "#D3D3D3",     # Light grey
-      "Vinyl" = "#E6E6E6"        # Very light grey
-    )
-  ) +
+  # Use team colors from imported palette
+  scale_color_manual(values = TEAM_COLORS) +
   # Reverse y-axis so rank 1 is at the top
   scale_y_reverse(breaks = 1:6) +
   # Add team labels at the end of each line
