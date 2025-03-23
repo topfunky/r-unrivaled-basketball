@@ -121,13 +121,15 @@ label_size <- 3
 # Create the ELO ratings chart
 p <- plot_data |>
   ggplot(aes(x = games_played, y = elo_rating, color = team)) +
+  # Add vertical line at end of regular season
+  geom_vline(xintercept = 14, linetype = "dotted", color = "white", alpha = 0.5) +
   geom_line(linewidth = linewidth, show.legend = FALSE) +
   # Add points only at the end of each line
   geom_point(
     data = plot_data |>
       group_by(team) |>
       slice_max(games_played, n = 1),
-    size = dot_size,
+    size = linewidth-0.6,
     show.legend = FALSE
   ) +
   # Use team colors from imported palette
@@ -145,7 +147,8 @@ p <- plot_data |>
     hjust = 0.5,  # Center text horizontally
     size = 3,
     family = "InputMono",
-    show.legend = FALSE
+    show.legend = FALSE,
+    fontface = "bold"  # Use bold font weight
   ) +
   # Use gghighcontrast theme with white text on black background
   theme_high_contrast(
