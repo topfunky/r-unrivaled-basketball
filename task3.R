@@ -1,3 +1,8 @@
+# Purpose: Creates a bump chart visualization of team rankings based on games played,
+# using data from the scraped scores CSV. Calculates rankings after each game and
+# displays them with custom Unrivaled colors and high contrast theme. Outputs include
+# a PNG chart and a feather file with the rankings data.
+
 # Load required libraries
 library(tidyverse)
 library(ggplot2)

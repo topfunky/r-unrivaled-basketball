@@ -1,3 +1,8 @@
+# Purpose: Exploratory analysis of the Unrivaled Basketball League data from sample fixture data. Creates a bump chart
+# visualization of team rankings throughout the 14-week season using fixture data from a CSV file.
+# The chart shows weekly rankings (1-6) with custom Unrivaled purple colors and high contrast theme.
+# Outputs include a PNG chart and a feather file with the rankings data.
+
 # Load required libraries
 library(tidyverse)
 library(ggplot2)

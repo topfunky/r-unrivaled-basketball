@@ -1,3 +1,9 @@
+# Purpose: Scrapes live game data from the Unrivaled website HTML file (local copy), processes game results,
+# and saves them to a CSV file. Includes validation for team names and skips games within
+# the date range of the mid-season 1v1 tournament (Feb 10-15, 2025). Adds missing (canceled) game
+# to the data set, given that it counts against the team's win-loss record.
+# Outputs game data to fixtures/unrivaled_scores.csv.
+
 # Load required libraries
 library(tidyverse)
 library(rvest)

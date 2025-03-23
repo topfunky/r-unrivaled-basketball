@@ -1,3 +1,9 @@
+# Purpose: Calculates and visualizes ELO ratings for each team throughout the season,
+# using the scraped game data. Implements the ELO rating system using standard ELO defaults of a K-factor of 32
+# and initial rating of 1500. Creates a line chart showing rating progression with
+# custom Unrivaled colors and high contrast theme. Outputs include a PNG chart and
+# a feather file with the ELO ratings data.
+
 # Load required libraries
 library(tidyverse)
 library(lubridate)
