@@ -51,7 +51,7 @@ print(games_long)
 
 # Calculate cumulative wins and losses for each team
 team_records <- games_long |>
-  select(date, team, score, opponent, opponent_score, is_home, result, point_differential) |>
+  select(date, team, score, opponent, opponent_score, is_home, result, point_differential, season_type) |>
   group_by(team) |>
   arrange(date) |>
   mutate(

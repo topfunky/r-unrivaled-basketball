@@ -17,6 +17,9 @@ VALID_TEAMS <- c("Lunar Owls", "Mist", "Rose", "Laces", "Phantom", "Vinyl")
 SKIP_START <- as.Date("2025-02-10")
 SKIP_END <- as.Date("2025-02-15")
 
+# Define postseason start date
+POSTSEASON_START <- as.Date("2025-03-16")
+
 # Function to parse a single game day
 parse_game_day <- function(day_node) {
   # Debug: Print the day node text
@@ -151,7 +154,14 @@ canceled_game <- tibble(
 
 # Combine scraped games with canceled game and sort by date
 games <- bind_rows(games, canceled_game) |>
-  arrange(date)
+  arrange(date) |>
+  # Add season type (REG or POST) based on date
+  mutate(
+    season_type = case_when(
+      date >= POSTSEASON_START ~ "POST",
+      TRUE ~ "REG"
+    )
+  )
 
 # Save to CSV
 write_csv(games, "fixtures/unrivaled_scores.csv")
