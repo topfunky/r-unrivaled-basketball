@@ -143,6 +143,19 @@ scrape_unrivaled_games <- function() {
 # Scrape the games
 games <- scrape_unrivaled_games()
 
+# Add the canceled game that counts against team records
+canceled_game <- tibble(
+  date = as.Date("2025-02-08"),
+  away_team = "Laces",
+  away_team_score = 0,
+  home_team = "Vinyl",
+  home_team_score = 11
+)
+
+# Combine scraped games with canceled game and sort by date
+games <- bind_rows(games, canceled_game) |>
+  arrange(date)
+
 # Save to CSV
 write_csv(games, "fixtures/unrivaled_scores.csv")
 
