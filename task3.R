@@ -67,13 +67,12 @@ print(team_records)
 game_rankings <- team_records |>
   # Group by games_played to compare teams with same number of games
   group_by(games_played) |>
-  mutate(
-    # Calculate rankings for each games_played group
-    rank = rank(
-      -wins,  # Negative wins so highest wins gets lowest rank number
-      ties.method = "min"  # Teams with same record get same rank
-    )
-  ) |>
+  # First sort by wins (descending), then by point differential (descending)
+  arrange(desc(wins), desc(point_differential)) |>
+  # Assign ranks from 1 to 6
+  mutate(rank = row_number()) |>
+  # Ensure rank is between 1 and 6
+  mutate(rank = pmin(pmax(rank, 1), 6)) |>
   # Fill in the ranks for the rest of the week
   group_by(team) |>
   fill(rank, .direction = "down") |>
