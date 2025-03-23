@@ -5,8 +5,8 @@
 TEAM_COLORS <- c(
   "Rose" = "#9B30FF",        # Bright purple
   "Lunar Owls" = "#808080",  # Medium grey
-  "Mist" = "#A9A9A9",        # Dark grey
+  "Mist" = "#848484",        # Medium-dark grey
   "Laces" = "#C0C0C0",       # Silver
-  "Phantom" = "#D3D3D3",     # Light grey
+  "Phantom" = "#606060",     # Dark grey
   "Vinyl" = "#E6E6E6"        # Very light grey
 )
