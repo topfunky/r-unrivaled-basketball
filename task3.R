@@ -74,9 +74,9 @@ print(game_rankings)
 
 # Create the bump chart
 # Define plot parameters
-line_width <- 6
+line_width <- 4
 dot_size <- 8
-label_size <- 4
+label_size <- 3
 
 p <- game_rankings |>
   ggplot(aes(x = games_played, y = rank, color = team)) +
@@ -103,8 +103,30 @@ p <- game_rankings |>
   geom_text(
     data = game_rankings |>
       group_by(team) |>
-      slice_max(games_played, n = 1),
-    aes(label = team),
+      slice_max(games_played, n = 1) |>
+    mutate(
+      x_offset = case_when(
+        team == "Rose" ~ -1,
+        team == "Lunar Owls" ~ -3,
+        team == "Mist" ~ 0.75,
+        team == "Laces" ~ -1.5,
+        team == "Phantom" ~ 0,
+        team == "Vinyl" ~ 0
+      ),
+      y_offset = case_when(
+        team == "Rose" ~ -0.4,
+        team == "Lunar Owls" ~ 0.35,
+        team == "Mist" ~ 0,
+        team == "Laces" ~ 0.35,
+        team == "Phantom" ~ 0,
+        team == "Vinyl" ~ 0
+      )
+    ),
+    aes(
+      label = team,
+      x = games_played + x_offset,
+      y = rank + y_offset
+    ),
     hjust = -0.2,
     size = label_size,
     family = "InputMono",  # Use InputMono font for team labels
@@ -131,7 +153,7 @@ p <- game_rankings |>
   )
 
 # Save the plot
-ggsave("unrivaled_rankings_3.png", p, width = 12, height = 8, dpi = 300)
+ggsave("unrivaled_rankings_3.png", p, width = 6, height = 4, dpi = 300)
 
 # Save the data
 write_feather(game_rankings, "unrivaled_rankings_3.feather")
