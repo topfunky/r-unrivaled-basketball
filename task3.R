@@ -151,10 +151,11 @@ p <- game_rankings |>
   # Add labels
   labs(
     title = "Unrivaled Basketball League Rankings 2025",
-    subtitle = "Team Rankings After Equal Number of Games",
+    subtitle = "Team rankings throughout the season",
     x = "Games Played",
     y = "Rank",
-    color = "Team"
+    color = "Team",
+    caption = "Game data from unrivaled.basketball",
   )
 
 # Save the plot

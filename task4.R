@@ -71,48 +71,59 @@ final_ratings <- bind_rows(
 
 print(final_ratings)
 
+
 # Create a long format dataset for plotting
 plot_data <- bind_rows(
   # Home team ratings
   ratings_history |>
-    select(date, team = home_team, elo_rating = elo.A),
+    select(date, team = home_team, elo_rating = elo.A, result),
   # Away team ratings
   ratings_history |>
-    select(date, team = away_team, elo_rating = elo.B)
+    select(date, team = away_team, elo_rating = elo.B, result)
 ) |>
   arrange(date) |>
+    group_by(team) |>
+  mutate(
+    games_played = cumsum(!is.na(result))  # Count cumulative games played
+  ) |>
+  ungroup() |>
   # Add offset columns for label positioning
   mutate(
     x_offset = case_when(
-      team == "Rose" ~ 0,
-      team == "Lunar Owls" ~ -0.6,
-      team == "Mist" ~ 3.5,
-      team == "Laces" ~ 2,
-      team == "Phantom" ~ 4,
-      team == "Vinyl" ~ 0
+      team == "Rose" ~ -1.75,
+      team == "Lunar Owls" ~ -5.5,
+      team == "Mist" ~ 1.15,
+      team == "Laces" ~ 1.25,
+      team == "Phantom" ~ 0.75,
+      team == "Vinyl" ~ 1
     ),
     y_offset = case_when(
-      team == "Rose" ~ 12,
-      team == "Lunar Owls" ~ -8,
+      team == "Rose" ~ 0,
+      team == "Lunar Owls" ~ 10,
       team == "Mist" ~ 0,
-      team == "Laces" ~ -12,
-      team == "Phantom" ~ -16,
-      team == "Vinyl" ~ -12
+      team == "Laces" ~ 0,
+      team == "Phantom" ~ -15,
+      team == "Vinyl" ~ 0
     )
   ) |>
   # Reorder data so Rose appears last (on top)
   arrange(team != "Rose")
 
+# Define plot parameters
+linewidth <- 4
+dot_size <- 6
+label_size <- 3
+
 # Create the ELO ratings chart
 p <- plot_data |>
-  ggplot(aes(x = date, y = elo_rating, color = team)) +
-  geom_line(linewidth = 1.5, show.legend = FALSE) +
+  ggplot(aes(x = games_played, y = elo_rating, color = team)) +
+  geom_line(linewidth = linewidth, show.legend = FALSE) +
   # Add points only at the end of each line
   geom_point(
     data = plot_data |>
       group_by(team) |>
-      slice_max(date, n = 1),
-    size = 3,
+      slice_max(games_played, n = 1),
+    size = dot_size,
     show.legend = FALSE
   ) +
   # Use custom Unrivaled purple colors for each team
@@ -130,10 +141,10 @@ p <- plot_data |>
   geom_text(
     data = plot_data |>
       group_by(team) |>
-      slice_max(date, n = 1),
+      slice_max(games_played, n = 1),
     aes(
       label = team,
-      x = date + x_offset,
+      x = games_played + x_offset,
       y = elo_rating + y_offset
     ),
     hjust = 0.5,  # Center text horizontally
@@ -154,9 +165,9 @@ p <- plot_data |>
   ) +
   # Add labels
   labs(
-    title = "Unrivaled Basketball League ELO Ratings",
+    title = "Unrivaled Basketball League ELO Ratings 2025",
     subtitle = "Team ratings throughout the season",
-    x = "Date",
+    x = "Games Played",
     y = "ELO Rating",
     caption = "Game data from unrivaled.basketball",
   )
