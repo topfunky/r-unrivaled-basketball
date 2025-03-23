@@ -98,6 +98,8 @@ label_size <- 3
 
 p <- game_rankings |>
   ggplot(aes(x = games_played, y = rank, color = team)) +
+  # Add vertical line at end of regular season
+  geom_vline(xintercept = 14, linetype = "dotted", color = "white", alpha = 0.5) +
   # Use geom_bump for smooth lines and points
   geom_bump(
     linewidth = line_width,
