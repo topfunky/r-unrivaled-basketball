@@ -1,35 +1,35 @@
-# Define the R script
-RSCRIPT = scrape_and_chart.R
-
-# Define the output files
-DATA_OUTPUT = game_data.feather
-PLOT_OUTPUT = unrivaled_bump_chart.png
+# Purpose: Automates running the Unrivaled Basketball League analysis scripts
+# to generate rankings and ELO rating visualizations.
 
 # Default target
-all: install-packages
+all: rankings elo
 
-# Target to run the R script
-$(DATA_OUTPUT) $(PLOT_OUTPUT): $(RSCRIPT)
-	Rscript $(RSCRIPT)
+# Generate rankings visualization
+rankings: task3.R
+	Rscript task3.R
 
-# Task to install dependencies
-install_deps:
-	Rscript -e "options(repos = c(CRAN = 'https://cran.rstudio.com'))" -e "install.packages(c('rvest', 'dplyr', 'feather', 'ggplot2', 'ggbump'))"
+# Generate ELO ratings visualization
+elo: task4.R
+	Rscript task4.R
 
-# Task to set CRAN mirror
-set_cran_mirror:
-	Rscript -e "options(repos = c(CRAN = 'https://cran.rstudio.com'))"
-
-# Task to list all tasks
-list_tasks:
-	@grep -E '^[a-zA-Z_-]+:' Makefile | awk -F: '{print $$1}'
-
-# Clean target to remove generated files
+# Clean up generated files
 clean:
-	rm -f $(DATA_OUTPUT) $(PLOT_OUTPUT)
+	rm -f unrivaled_rankings_3.png unrivaled_rankings_3.feather
+	rm -f unrivaled_elo_ratings.png unrivaled_elo_rankings.feather
 
 # Install required R packages
-install-packages:
-	Rscript -e 'install.packages(c("tidyverse", "ggplot2", "lubridate", "gghighcontrast", "ggbump", "elo"), repos="https://cloud.r-project.org/")'
+install-deps:
+	Rscript -e 'install.packages(c("tidyverse", "ggplot2", "lubridate", "ggbump", "elo", "devtools", "feather"), repos="https://cloud.r-project.org/")'
+	Rscript -e 'devtools::install_github("topfunky/gghighcontrast")'
 
-.PHONY: all clean install_deps set_cran_mirror list_tasks
+# List all available tasks
+list:
+	@echo "Available tasks:"
+	@echo "  all      - Generate both rankings and ELO ratings (default)"
+	@echo "  rankings - Generate only the rankings visualization"
+	@echo "  elo      - Generate only the ELO ratings visualization"
+	@echo "  clean    - Remove all generated files"
+	@echo "  install-deps  - Install required R packages"
+	@echo "  list     - Show this help message"
+
+.PHONY: all rankings elo clean install-deps list

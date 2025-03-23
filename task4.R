@@ -10,6 +10,7 @@ library(lubridate)
 library(elo)  # For ELO calculations
 library(ggplot2)
 library(gghighcontrast)
+library(feather)  # For saving data in feather format
 
 # Import team colors
 source("team_colors.R")
