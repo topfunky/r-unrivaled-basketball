@@ -57,7 +57,8 @@ team_records <- games_long |>
   mutate(
     wins = cumsum(result == "W"),
     losses = cumsum(result == "L"),
-    games_played = cumsum(!is.na(result))  # Count cumulative games played
+    games_played = cumsum(!is.na(result)),  # Count cumulative games played
+    point_differential = cumsum(score - opponent_score)  # Cumulative point differential
   )
 
 print(team_records)
@@ -79,6 +80,15 @@ game_rankings <- team_records |>
   ungroup()
 
 print(game_rankings)
+
+# Print final standings with point differential
+print("\nFinal Standings with Point Differential:")
+final_standings <- team_records |>
+  group_by(team) |>
+  slice_max(games_played, n = 1) |>
+  select(team, wins, losses, point_differential) |>
+  arrange(desc(wins), desc(point_differential))
+print(final_standings)
 
 # Create the bump chart
 # Define plot parameters
