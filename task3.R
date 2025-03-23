@@ -116,19 +116,19 @@ p <- game_rankings |>
     mutate(
       x_offset = case_when(
         team == "Rose" ~ -1,
-        team == "Lunar Owls" ~ -3,
-        team == "Mist" ~ 0.75,
-        team == "Laces" ~ -1.5,
+        team == "Lunar Owls" ~ 0,
+        team == "Mist" ~ -0.1,
+        team == "Laces" ~ 0,
         team == "Phantom" ~ 0,
-        team == "Vinyl" ~ 0
+        team == "Vinyl" ~ -2
       ),
       y_offset = case_when(
-        team == "Rose" ~ -0.4,
-        team == "Lunar Owls" ~ 0.35,
+        team == "Rose" ~ 1,
+        team == "Lunar Owls" ~ 0,
         team == "Mist" ~ 0,
-        team == "Laces" ~ 0.35,
+        team == "Laces" ~ 0,
         team == "Phantom" ~ 0,
-        team == "Vinyl" ~ 0
+        team == "Vinyl" ~ 3
       )
     ),
     aes(
@@ -136,10 +136,12 @@ p <- game_rankings |>
       x = games_played + x_offset,
       y = rank + y_offset
     ),
-    hjust = -0.2,
+    hjust = 1.1,  # Right-justify text
     size = label_size,
     family = "InputMono",  # Use InputMono font for team labels
-    show.legend = FALSE    # Don't show in legend
+    show.legend = FALSE,   # Don't show in legend
+    color = "black",       # Use black text for labels
+    fontface = "bold"      # Use bold font weight
   ) +
   # Use gghighcontrast theme with white text on black background
   theme_high_contrast(
