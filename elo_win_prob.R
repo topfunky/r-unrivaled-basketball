@@ -13,7 +13,7 @@
 elo_win_prob <- function(elo_a, elo_b) {
   # Calculate probability using standard ELO formula
   # P(A) = 1 / (1 + 10^((R_B - R_A)/400))
-  prob <- 1 / (1 + 10^((elo_b - elo_a)/400))
+  prob <- 1 / (1 + 10^((elo_b - elo_a) / 400))
   return(prob)
 }
 

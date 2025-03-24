@@ -8,8 +8,8 @@ library(tidyverse)
 library(ggplot2)
 library(lubridate)
 library(gghighcontrast)
-library(ggbump)  # For smooth bump charts
-library(feather)  # For saving data in feather format
+library(ggbump) # For smooth bump charts
+library(feather) # For saving data in feather format
 
 # Import team colors
 source("team_colors.R")
@@ -53,14 +53,24 @@ print(games_long)
 
 # Calculate cumulative wins and losses for each team
 team_records <- games_long |>
-  select(date, team, score, opponent, opponent_score, is_home, result, point_differential, season_type) |>
+  select(
+    date,
+    team,
+    score,
+    opponent,
+    opponent_score,
+    is_home,
+    result,
+    point_differential,
+    season_type
+  ) |>
   group_by(team) |>
   arrange(date) |>
   mutate(
     wins = cumsum(result == "W"),
     losses = cumsum(result == "L"),
-    games_played = cumsum(!is.na(result)),  # Count cumulative games played
-    point_differential = cumsum(score - opponent_score)  # Cumulative point differential
+    games_played = cumsum(!is.na(result)), # Count cumulative games played
+    point_differential = cumsum(score - opponent_score) # Cumulative point differential
   )
 
 print("🏀 Team Records:")
@@ -86,7 +96,7 @@ game_rankings <- team_records |>
           filter(
             team == current_team,
             opponent %in% playoff_teams,
-            date <= max(date[team == current_team])  # Only count games up to current date
+            date <= max(date[team == current_team]) # Only count games up to current date
           ) |>
           summarise(wins = sum(result == "W")) |>
           pull(wins)
@@ -99,7 +109,7 @@ game_rankings <- team_records |>
         filter(
           games_played == current_games_played,
           wins == current_wins,
-          team != current_team  # Exclude self
+          team != current_team # Exclude self
         ) |>
         slice(1) |>
         pull(team)
@@ -112,7 +122,7 @@ game_rankings <- team_records |>
         filter(
           team == current_team,
           opponent == next_team,
-          date <= max(date[team == current_team])  # Only count games up to current date
+          date <= max(date[team == current_team]) # Only count games up to current date
         )
       sum(team_games$result == "W")
     })
@@ -148,7 +158,12 @@ label_size <- 3
 p <- game_rankings |>
   ggplot(aes(x = games_played, y = rank, color = team)) +
   # Add vertical line at end of regular season
-  geom_vline(xintercept = 14, linetype = "dotted", color = "white", alpha = 0.5) +
+  geom_vline(
+    xintercept = 14,
+    linetype = "dotted",
+    color = "white",
+    alpha = 0.5
+  ) +
   # Add "Playoffs" label
   annotate(
     "text",
@@ -159,13 +174,13 @@ p <- game_rankings |>
     family = "InputMono",
     size = 2,
     hjust = 0,
-    vjust = 0.5  # Center vertically
+    vjust = 0.5 # Center vertically
   ) +
   # Use geom_bump for smooth lines and points
   geom_bump(
     linewidth = line_width,
     size = dot_size,
-    show.legend = FALSE    # Don't show in legend
+    show.legend = FALSE # Don't show in legend
   ) +
   # Use team colors from imported palette
   scale_color_manual(values = TEAM_COLORS) +
@@ -176,35 +191,35 @@ p <- game_rankings |>
     data = game_rankings |>
       group_by(team) |>
       slice_max(games_played, n = 1) |>
-    mutate(
-      x_offset = case_when(
-        team == "Rose" ~ -1,
-        team == "Lunar Owls" ~ 0,
-        team == "Mist" ~ -2.9,
-        team == "Laces" ~ 0,
-        team == "Phantom" ~ 0,
-        team == "Vinyl" ~ -0.7
+      mutate(
+        x_offset = case_when(
+          team == "Rose" ~ -1,
+          team == "Lunar Owls" ~ 0,
+          team == "Mist" ~ -2.9,
+          team == "Laces" ~ 0,
+          team == "Phantom" ~ 0,
+          team == "Vinyl" ~ -0.7
+        ),
+        y_offset = case_when(
+          team == "Rose" ~ 1,
+          team == "Lunar Owls" ~ 0,
+          team == "Mist" ~ 0,
+          team == "Laces" ~ 0,
+          team == "Phantom" ~ 0,
+          team == "Vinyl" ~ 2
+        )
       ),
-      y_offset = case_when(
-        team == "Rose" ~ 1,
-        team == "Lunar Owls" ~ 0,
-        team == "Mist" ~ 0,
-        team == "Laces" ~ 0,
-        team == "Phantom" ~ 0,
-        team == "Vinyl" ~ 2
-      )
-    ),
     aes(
       label = team,
       x = games_played + x_offset,
       y = rank + y_offset
     ),
-    hjust = 1.1,  # Right-justify text
+    hjust = 1.1,
     size = label_size,
-    family = "InputMono",  # Use InputMono font for team labels
-    show.legend = FALSE,   # Don't show in legend
-    color = "black",       # Use black text for labels
-    fontface = "bold"      # Use bold font weight
+    family = "InputMono",
+    show.legend = FALSE,
+    color = "black",
+    fontface = "bold"
   ) +
   # Use gghighcontrast theme with white text on black background
   theme_high_contrast(
@@ -220,7 +235,7 @@ p <- game_rankings |>
   # Add labels
   labs(
     title = "Unrivaled Basketball League Rankings 2025",
-    subtitle = "Team rankings throughout the season",
+    subtitle = "Team rankings by win/loss record throughout the season",
     x = "Games Played",
     y = "Rank",
     color = "Team",

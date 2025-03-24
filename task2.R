@@ -90,11 +90,15 @@ parse_game_day <- function(day_node) {
 
     # Validate team names
     if (!away_team %in% VALID_TEAMS || !home_team %in% VALID_TEAMS) {
-      warning(glue("Skipping game with invalid team names: {away_team} at {home_team}"))
+      warning(glue(
+        "Skipping game with invalid team names: {away_team} at {home_team}"
+      ))
       next
     }
 
-    print(glue("Game: {away_team} ({away_score}) at {home_team} ({home_score})"))
+    print(glue(
+      "Game: {away_team} ({away_score}) at {home_team} ({home_score})"
+    ))
 
     # Create a row of game data
     game_data[[length(game_data) + 1]] <- tibble(
@@ -165,4 +169,3 @@ games <- bind_rows(games, canceled_game) |>
 
 # Save to CSV
 write_csv(games, "fixtures/unrivaled_scores.csv")
-
