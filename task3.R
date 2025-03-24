@@ -48,6 +48,7 @@ games_long <- games |>
     point_differential = score - opponent_score
   )
 
+print("🏀 Games Long Format:")
 print(games_long)
 
 # Calculate cumulative wins and losses for each team
@@ -62,14 +63,45 @@ team_records <- games_long |>
     point_differential = cumsum(score - opponent_score)  # Cumulative point differential
   )
 
+print("🏀 Team Records:")
 print(team_records)
 
 # Create rankings based on games played
 game_rankings <- team_records |>
   # Group by games_played to compare teams with same number of games
   group_by(games_played) |>
-  # First sort by wins (descending), then by point differential (descending)
-  arrange(desc(wins), desc(point_differential)) |>
+  # Calculate head-to-head records for each team
+  mutate(
+    h2h_wins = map_dbl(seq_len(n()), function(i) {
+      # Get current team and its wins from the current row
+      current_team <- team[i]
+      current_wins <- wins[i]
+
+      # Get the next team with same number of wins (if any)
+      next_team <- team_records |>
+        filter(
+          games_played == .data$games_played[1],
+          wins == current_wins,
+          team != current_team  # Exclude self
+        ) |>
+        slice(1) |>
+        pull(team)
+
+      # If no tied team, return 0
+      if (length(next_team) == 0) return(0)
+
+      # Count wins against the specific tied team
+      team_games <- games_long |>
+        filter(
+          team == current_team,
+          opponent == next_team,
+          date <= max(date[team == current_team])  # Only count games up to current date
+        )
+      sum(team_games$result == "W")
+    })
+  ) |>
+  # First sort by wins (descending), then by head-to-head wins, then by point differential
+  arrange(desc(wins), desc(h2h_wins), desc(point_differential)) |>
   # Assign ranks from 1 to 6
   mutate(rank = row_number()) |>
   # Ensure rank is between 1 and 6
