@@ -51,7 +51,6 @@ ratings_history |>
   print()
 
 # Print final ELO ratings
-print("\nFinal ELO Ratings:")
 # Combine home and away ratings for each team
 final_ratings <- bind_rows(
   # Home team ratings
@@ -71,10 +70,16 @@ final_ratings <- bind_rows(
   group_by(team) |>
   arrange(desc(date)) |>
   slice(1) |>
+
+  # Select only team and rating
+  select(team, elo_rating) |>
   arrange(desc(elo_rating))
 
+print("🏀 Final Regular Season ELO Ratings:")
 print(final_ratings)
 
+# Save final regular season ratings
+write_feather(final_ratings, "unrivaled_final_elo_ratings.feather")
 
 # Create a long format dataset for plotting
 plot_data <- bind_rows(
