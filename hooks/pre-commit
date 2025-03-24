@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Get list of staged R files
+STAGED_R_FILES=$(git diff --cached --name-only --diff-filter=d | grep '\.R$')
+
+if [ -n "$STAGED_R_FILES" ]; then
+  echo "🎯 Formatting R files with air..."
+
+  # Format each staged R file
+  for file in $STAGED_R_FILES; do
+    echo "  Formatting $file..."
+    air format "$file"
+    git add "$file"
+  done
+
+  echo "✨ R files formatted successfully!"
+fi
