@@ -76,11 +76,28 @@ game_rankings <- team_records |>
       # Get current team and its wins from the current row
       current_team <- team[i]
       current_wins <- wins[i]
+      current_games_played <- games_played[i]
 
+      # For game 14, count all wins against playoff teams
+      if (current_games_played == 14) {
+        playoff_teams <- c("Lunar Owls", "Rose", "Laces")
+        # Count all wins against playoff teams
+        playoff_wins <- games_long |>
+          filter(
+            team == current_team,
+            opponent %in% playoff_teams,
+            date <= max(date[team == current_team])  # Only count games up to current date
+          ) |>
+          summarise(wins = sum(result == "W")) |>
+          pull(wins)
+        return(playoff_wins)
+      }
+
+      # For other games, use regular head-to-head comparison
       # Get the next team with same number of wins (if any)
       next_team <- team_records |>
         filter(
-          games_played == .data$games_played[1],
+          games_played == current_games_played,
           wins == current_wins,
           team != current_team  # Exclude self
         ) |>
