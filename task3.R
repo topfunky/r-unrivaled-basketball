@@ -170,7 +170,7 @@ p <- game_rankings |>
     x = 14.2,
     y = 6,
     label = "Playoffs",
-    color = "grey",
+    color = "#606060",
     family = "InputMono",
     size = 2,
     hjust = 0,

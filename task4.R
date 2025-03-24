@@ -94,20 +94,20 @@ plot_data <- bind_rows(
   # Add offset columns for label positioning
   mutate(
     x_offset = case_when(
-      team == "Rose" ~ -1.75,
+      team == "Rose" ~ 0,
       team == "Lunar Owls" ~ -5.5,
-      team == "Mist" ~ 1.15,
-      team == "Laces" ~ 1.25,
-      team == "Phantom" ~ 0.75,
-      team == "Vinyl" ~ 1
+      team == "Mist" ~ -2,
+      team == "Laces" ~ 1,
+      team == "Phantom" ~ -3.25,
+      team == "Vinyl" ~ -0.05
     ),
     y_offset = case_when(
-      team == "Rose" ~ 0,
+      team == "Rose" ~ 15,
       team == "Lunar Owls" ~ 10,
-      team == "Mist" ~ 0,
-      team == "Laces" ~ 0,
+      team == "Mist" ~ 45,
+      team == "Laces" ~ 5,
       team == "Phantom" ~ -15,
-      team == "Vinyl" ~ 0
+      team == "Vinyl" ~ -15
     )
   ) |>
   # Reorder data so Rose appears last (on top)
@@ -127,6 +127,18 @@ p <- plot_data |>
     linetype = "dotted",
     color = "white",
     alpha = 0.5
+  ) +
+  # Add "Playoffs" label
+  annotate(
+    "text",
+    x = 14.2,
+    y = 1410,
+    label = "Playoffs",
+    color = "#606060",
+    family = "InputMono",
+    size = 2,
+    hjust = 0,
+    vjust = 0.5  # Center vertically
   ) +
   geom_line(linewidth = linewidth, show.legend = FALSE) +
   # Add points only at the end of each line
@@ -169,7 +181,7 @@ p <- plot_data |>
   # Add labels
   labs(
     title = "Unrivaled Basketball League ELO Ratings 2025",
-    subtitle = "Team ratings throughout the season",
+    subtitle = "Team ratings after each game",
     x = "Games Played",
     y = "ELO Rating",
     caption = "Game data from unrivaled.basketball",
