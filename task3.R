@@ -149,6 +149,18 @@ p <- game_rankings |>
   ggplot(aes(x = games_played, y = rank, color = team)) +
   # Add vertical line at end of regular season
   geom_vline(xintercept = 14, linetype = "dotted", color = "white", alpha = 0.5) +
+  # Add "Playoffs" label
+  annotate(
+    "text",
+    x = 14.2,
+    y = 6,
+    label = "Playoffs",
+    color = "grey",
+    family = "InputMono",
+    size = 2,
+    hjust = 0,
+    vjust = 0.5  # Center vertically
+  ) +
   # Use geom_bump for smooth lines and points
   geom_bump(
     linewidth = line_width,
