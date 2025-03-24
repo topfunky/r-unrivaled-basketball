@@ -168,10 +168,10 @@ p <- game_rankings |>
       x_offset = case_when(
         team == "Rose" ~ -1,
         team == "Lunar Owls" ~ 0,
-        team == "Mist" ~ -0.1,
+        team == "Mist" ~ -2.9,
         team == "Laces" ~ 0,
         team == "Phantom" ~ 0,
-        team == "Vinyl" ~ -2
+        team == "Vinyl" ~ -0.7
       ),
       y_offset = case_when(
         team == "Rose" ~ 1,
@@ -179,7 +179,7 @@ p <- game_rankings |>
         team == "Mist" ~ 0,
         team == "Laces" ~ 0,
         team == "Phantom" ~ 0,
-        team == "Vinyl" ~ 3
+        team == "Vinyl" ~ 2
       )
     ),
     aes(
