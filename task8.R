@@ -73,8 +73,32 @@ parse_box_score <- function(game_id) {
     mutate(
       game_id = game_id,
       # Convert MIN to character to ensure consistent type across all games
-      MIN = as.character(MIN)
-    )
+      MIN = as.character(MIN),
+      # Add starter flag and clean player names
+      is_starter = str_starts(PLAYERS, "S "),
+      player_name = if_else(is_starter, str_remove(PLAYERS, "^S "), PLAYERS)
+    ) |>
+    # Filter out rows with blank player names or "TEAM" rows
+    filter(!is.na(player_name),
+           str_trim(player_name) != "",
+           str_trim(player_name) != "TEAM") |>
+    # Split shooting stats into made and missed
+    mutate(
+      # Split FG into made and missed
+      fg_made = as.numeric(str_extract(FG, "^\\d+")),
+      fg_missed = as.numeric(str_extract(FG, "\\d+$")),
+      # Split 3PT into made and missed
+      three_pt_made = as.numeric(str_extract(`3PT`, "^\\d+")),
+      three_pt_missed = as.numeric(str_extract(`3PT`, "\\d+$")),
+      # Split FT into made and missed
+      ft_made = as.numeric(str_extract(FT, "^\\d+")),
+      ft_missed = as.numeric(str_extract(FT, "\\d+$"))
+    ) |>
+    # Reorder columns to put new columns first
+    select(game_id, is_starter, player_name, MIN,
+           fg_made, fg_missed, three_pt_made, three_pt_missed,
+           ft_made, ft_missed,
+           REB, OREB, DREB, AST, STL, BLK, TO, PF, PTS)
 
   return(box_score)
 }
