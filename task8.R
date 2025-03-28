@@ -36,7 +36,26 @@ parse_play_by_play <- function(game_id) {
   plays <- table_data[[1]] |>
     as_tibble() |>
     set_names(c("time", "play", "score")) |>
-    mutate(game_id = game_id)
+    mutate(
+      game_id = game_id,
+      # Extract quarter from play description if it exists, otherwise assume quarter 4
+      quarter = if_else(
+        str_detect(play, "^Q\\d"),
+        as.numeric(str_match(play, "^Q(\\d)")[, 2]),
+        NA_real_
+      ),
+      # Clean up play description by removing quarter prefix if it exists
+      play = if_else(
+        str_detect(play, "^Q\\d"),
+        str_remove(play, "^Q\\d"),
+        play
+      ),
+      # Split score into away and home scores
+      away_score = as.numeric(str_extract(score, "^\\d+")),
+      home_score = as.numeric(str_extract(score, "\\d+$"))
+    ) |>
+    # Reorder columns
+    select(game_id, quarter, time, play, away_score, home_score)
 
   return(plays)
 }
