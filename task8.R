@@ -91,11 +91,64 @@ parse_summary <- function(game_id) {
   # Parse the HTML
   html <- read_html(summary_file)
 
-  # Extract relevant information
-  summary <- tibble(
-    game_id = game_id,
-    # Add more fields as needed based on the summary HTML structure
-  )
+  # Extract the table data
+  tables <- html |> html_nodes("table")
+  if (length(tables) == 0) {
+    warning(sprintf("No tables found in summary file for game %s", game_id))
+    return(NULL)
+  }
+
+  # Get the first table and check if it has data
+  table_data <- html_table(tables[1])
+  if (length(table_data) == 0 || nrow(table_data[[1]]) == 0) {
+    warning(sprintf("Empty table in summary file for game %s", game_id))
+    return(NULL)
+  }
+
+  # Convert to tibble and process the shooting stats
+  summary <- table_data[[1]] |>
+    # Convert to tibble with temporary names
+    as_tibble(.name_repair = "minimal") |>
+    # Add temporary column names
+    set_names(c("col1", "col2", "col3")) |>
+    # Filter out rows we want
+    filter(col1 %in% c("FG", "Field Goal %", "3PT", "Three Point %", "FT", "Free Throw %")) |>
+    # Add game_id and rename stats
+    mutate(
+      game_id = game_id,
+      stat = case_when(
+        col1 == "FG" ~ "field_goals",
+        col1 == "Field Goal %" ~ "field_goal_pct",
+        col1 == "3PT" ~ "three_pointers",
+        col1 == "Three Point %" ~ "three_point_pct",
+        col1 == "FT" ~ "free_throws",
+        col1 == "Free Throw %" ~ "free_throw_pct",
+        TRUE ~ col1
+      )
+    ) |>
+    # Convert to long format for teams
+    pivot_longer(
+      cols = c(col2, col3),
+      names_to = "team_col",
+      values_to = "value"
+    ) |>
+    # Add team indicator
+    mutate(
+      team = if_else(team_col == "col2", "team_a", "team_b")
+    ) |>
+    # Remove unnecessary columns
+    select(game_id, team, stat, value) |>
+    # Convert to wide format by stat
+    pivot_wider(
+      names_from = stat,
+      values_from = value
+    ) |>
+    # Clean up percentage values
+    mutate(
+      field_goal_pct = as.numeric(str_remove(field_goal_pct, "%")),
+      three_point_pct = as.numeric(str_remove(three_point_pct, "%")),
+      free_throw_pct = as.numeric(str_remove(free_throw_pct, "%"))
+    )
 
   return(summary)
 }
@@ -122,9 +175,28 @@ message(sprintf("Number of unique games in box score data: %d",
 message("Parsing summary data...")
 summary_data <- map_dfr(game_dirs, parse_summary)
 
+# Count unique games in summary data
+message(sprintf("Number of unique games in summary data: %d",
+  n_distinct(summary_data$game_id)))
+
 # Save the parsed data
 write_feather(play_by_play_data, "unrivaled_play_by_play.feather")
 write_feather(box_score_data, "unrivaled_box_scores.feather")
 write_feather(summary_data, "unrivaled_summaries.feather")
 
 message("All game data parsed and saved successfully!")
+
+# Display samples of each dataset
+message("\nSample of play by play data:")
+print(play_by_play_data |>
+  filter(game_id == first(game_id)) |>
+  slice_head(n = 5))
+
+message("\nSample of box score data:")
+print(box_score_data |>
+  filter(game_id == first(game_id)) |>
+  slice_head(n = 5))
+
+message("\nSample of summary data:")
+print(summary_data |>
+  filter(game_id == first(game_id)))
