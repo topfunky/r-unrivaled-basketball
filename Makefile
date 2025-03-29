@@ -2,7 +2,7 @@
 # to generate rankings and ELO rating visualizations.
 
 # Default target
-all: rankings elo
+all: rankings elo wp
 
 # Generate rankings visualization
 rankings: task3.R
@@ -11,6 +11,9 @@ rankings: task3.R
 # Generate ELO ratings visualization
 elo: task4.R
 	Rscript task4.R
+
+wp: task9.R
+	Rscript task9.R
 
 # Clean up generated files
 clean:
