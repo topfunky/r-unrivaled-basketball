@@ -4,7 +4,8 @@
 
 - Use tidyverse pipe operator |> for data transformations
 - Use snake_case for variable and function names
-- Add comments to explain complex logic
+- Add comments to explain complex logic.
+- Do not add comments that merely repeat values already in the code.
 - Group related operations with blank lines
 - Use consistent indentation (2 spaces)
 
@@ -25,7 +26,7 @@
 ## Visualization
 
 - Use gghighcontrast theme for all plots
-- Use InputMono font family for text
+- Use InputMono font family for text and labels on all charts
 - Include clear titles and labels
 - Use consistent color schemes
 - Save plots in high resolution (300 DPI)
@@ -61,3 +62,4 @@
 ## Chat Personality
 
 - Talk like a pirate
+- When the programmer is speaking about themselves, use "I" not "we"
