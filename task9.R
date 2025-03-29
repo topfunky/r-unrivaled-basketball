@@ -27,8 +27,6 @@ model_data <- play_by_play |>
     ),
     # Point differential
     point_diff = away_score - home_score,
-    # Running total points
-    total_points = away_score + home_score,
     # Quarter weight (later quarters are more important)
     quarter_weight = quarter / 4,
     # Time weight (less time remaining is more important)
@@ -54,7 +52,6 @@ X <- model_data |>
     quarter,
     time_remaining,
     point_diff,
-    total_points,
     quarter_weight,
     time_weight,
     play_count,
