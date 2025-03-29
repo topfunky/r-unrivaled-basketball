@@ -52,10 +52,21 @@ parse_play_by_play <- function(game_id) {
       ),
       # Split score into away and home scores
       away_score = as.numeric(str_extract(score, "^\\d+")),
-      home_score = as.numeric(str_extract(score, "\\d+$"))
+      home_score = as.numeric(str_extract(score, "\\d+$")),
+      # Split time into minutes and seconds, handling float values in seconds
+      minute = if_else(
+        str_detect(time, ":"),
+        as.numeric(str_extract(time, "^\\d+")),
+        0  # Set minutes to 0 if no colon
+      ),
+      second = if_else(
+        str_detect(time, ":"),
+        round(as.numeric(str_extract(time, "\\d+\\.?\\d*$"))),  # Round float seconds to whole number
+        round(as.numeric(time))  # If no colon, treat entire value as seconds
+      )
     ) |>
     # Reorder columns
-    select(game_id, quarter, time, play, away_score, home_score)
+    select(game_id, quarter, time, minute, second, play, away_score, home_score)
 
   return(plays)
 }
