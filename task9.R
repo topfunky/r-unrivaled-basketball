@@ -1,8 +1,8 @@
 # Purpose: Creates a win probability model using XGBoost and visualizes it with ggplot.
 # Test comment for pre-commit hook
 
-    # Load required libraries
-    library(tidyverse)
+# Load required libraries
+library(tidyverse)
 library(xgboost)
 library(feather)
 library(gghighcontrast)
@@ -102,7 +102,7 @@ for (game in unique(model_data$game_id)) {
       alpha = 0.3,
       width = 1
     ) +
-                 scale_y_continuous(
+    scale_y_continuous(
       name = "Win Probability",
       sec.axis = sec_axis(
         ~ . * 100,
@@ -135,14 +135,14 @@ for (game in unique(model_data$game_id)) {
       )
     )
 
-    # Save the plot
-    ggsave(
-      filename = file.path("plots", sprintf("win_prob_%s.png", game)),
-      plot = p,
-      width = 10,
-      height = 6,
-      dpi = 300
-    )
+  # Save the plot
+  ggsave(
+    filename = file.path("plots", sprintf("win_prob_%s.png", game)),
+    plot = p,
+    width = 10,
+    height = 6,
+    dpi = 300
+  )
 }
 
 message("All visualizations saved to plots/ directory!")
