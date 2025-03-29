@@ -14,4 +14,6 @@ if [ -n "$STAGED_R_FILES" ]; then
   done
 
   echo "✨ R files formatted successfully!"
+else
+  echo "👻 No R files to format"
 fi
