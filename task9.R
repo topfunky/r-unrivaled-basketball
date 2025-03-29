@@ -23,7 +23,7 @@ model_data <- play_by_play |>
     time_remaining = if_else(
       quarter <= 3,
       (minute * 60 + second),
-      0  # No time remaining in 4th quarter
+      0 # No time remaining in 4th quarter
     ),
     # Point differential
     point_diff = away_score - home_score,
@@ -32,7 +32,7 @@ model_data <- play_by_play |>
     # Quarter weight (later quarters are more important)
     quarter_weight = quarter / 4,
     # Time weight (less time remaining is more important)
-    time_weight = 1 - (time_remaining / (7 * 60)),  # 7 minutes per quarter
+    time_weight = 1 - (time_remaining / (7 * 60)), # 7 minutes per quarter
     # Projected winning score (highest score at end of 3rd quarter + 11)
     projected_winning_score = if_else(
       quarter <= 3,
@@ -96,39 +96,40 @@ for (game in unique(model_data$game_id)) {
   # Create win probability visualization
   p <- ggplot(game_data, aes(x = play_count)) +
     geom_line(aes(y = win_prob, color = "Win Probability"), linewidth = 1) +
-    geom_line(aes(y = point_diff/100, color = "Point Differential"), linewidth = 1) +
+    geom_line(
+      aes(y = point_diff / 100, color = "Point Differential"),
+      linewidth = 1
+    ) +
     scale_y_continuous(
       name = "Win Probability",
-      sec.axis = sec_axis(~.*100, name = "Point Differential")
+      sec.axis = sec_axis(~ . * 100, name = "Point Differential")
     ) +
     scale_color_manual(
       name = "Metric",
-      values = c("Win Probability" = "#FF6B6B", "Point Differential" = "#4ECDC4")
+      values = c(
+        "Win Probability" = "#FF6B6B",
+        "Point Differential" = "#4ECDC4"
+      )
     ) +
     labs(
       title = paste0("Win Probability and Point Differential - ", game),
       x = "Play Number",
       color = "Metric"
     ) +
-    theme_high_contrast() +
-    theme(
-      text = element_text(family = "InputMono"),
-      plot.title = element_text(size = 14, hjust = 0.5),
-      axis.title = element_text(size = 12),
-      axis.text = element_text(size = 10),
-      legend.title = element_text(size = 12),
-      legend.text = element_text(size = 10),
-      legend.position = "bottom"
+    theme_high_contrast(
+      foreground_color = "white",
+      background_color = "black",
+      base_family = "InputMono"
     )
 
-  # Save the plot
-  ggsave(
-    filename = file.path("plots", sprintf("win_prob_%s.png", game)),
-    plot = p,
-    width = 10,
-    height = 6,
-    dpi = 300
-  )
+    # Save the plot
+    ggsave(
+      filename = file.path("plots", sprintf("win_prob_%s.png", game)),
+      plot = p,
+      width = 10,
+      height = 6,
+      dpi = 300
+    )
 }
 
 message("All visualizations saved to plots/ directory!")
