@@ -92,21 +92,30 @@ for (game in unique(model_data$game_id)) {
 
   # Create win probability visualization
   p <- ggplot(game_data, aes(x = play_count)) +
+    # Win probability line
     geom_line(aes(y = win_prob, color = "Win Probability"), linewidth = 1) +
-    geom_line(
-      aes(y = point_diff / 100, color = "Point Differential"),
-      linewidth = 1
+    # Point differential bars
+    geom_bar(
+      aes(y = point_diff / 100, fill = point_diff > 0),
+      stat = "identity",
+      alpha = 0.3,
+      width = 1
     ) +
-    scale_y_continuous(
+                 scale_y_continuous(
       name = "Win Probability",
-      sec.axis = sec_axis(~ . * 100, name = "Point Differential")
+      sec.axis = sec_axis(
+        ~ . * 100,
+        name = "Point Differential"
+      )
     ) +
     scale_color_manual(
       name = "Metric",
-      values = c(
-        "Win Probability" = "#FF6B6B",
-        "Point Differential" = "#4ECDC4"
-      )
+      values = c("Win Probability" = "#FF6B6B")
+    ) +
+    scale_fill_manual(
+      name = "Point Differential",
+      values = c("TRUE" = "#4ECDC4", "FALSE" = "#FF6B6B"),
+      labels = c("TRUE" = "Away Team Ahead", "FALSE" = "Home Team Ahead")
     ) +
     labs(
       title = paste0("Win Probability and Point Differential - ", game),
@@ -117,6 +126,12 @@ for (game in unique(model_data$game_id)) {
       foreground_color = "white",
       background_color = "black",
       base_family = "InputMono"
+    ) +
+    theme(
+      axis.title.y.right = element_text(
+        vjust = 0,
+        margin = margin(t = 0, r = 0, b = 10, l = 0)
+      )
     )
 
     # Save the plot
