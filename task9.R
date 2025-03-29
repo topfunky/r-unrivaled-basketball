@@ -103,6 +103,9 @@ calibration_data <- model_data |>
     bin_center = as.numeric(pred_bin) - 0.05
   )
 
+# Calculate Brier score
+brier_score <- mean((model_data$win_prob - model_data$away_win)^2)
+
 # Create calibration plot
 p_calibration <- ggplot(
   calibration_data,
@@ -141,7 +144,10 @@ p_calibration <- ggplot(
   ) +
   labs(
     title = "Model Calibration: Predicted vs Actual Win Probabilities",
-    subtitle = "Points show actual win rate for each prediction bin"
+    subtitle = sprintf(
+      "Points show actual win rate for each prediction bin\nBrier Score: %.4f (lower is better)",
+      brier_score
+    )
   ) +
   theme_high_contrast(
     foreground_color = "white",
