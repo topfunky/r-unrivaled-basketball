@@ -92,6 +92,19 @@ for (game in unique(model_data$game_id)) {
 
   # Create win probability visualization
   p <- ggplot(game_data, aes(x = play_count)) +
+    # Add vertical line at halftime
+    geom_vline(
+      data = game_data |>
+        filter(quarter == 2) |>
+        slice_max(play_count),
+      aes(xintercept = play_count),
+      color = "white",
+      linetype = "dotted",
+      alpha = 0.2
+    ) +
+    # Add horizontal line at even win probability (below data representation)
+    geom_hline(yintercept = 50, linetype = "solid", color = "white") +
+
     # Point differential bars
     geom_bar(
       aes(y = point_diff, fill = point_diff > 0),
@@ -104,29 +117,27 @@ for (game in unique(model_data$game_id)) {
       aes(y = win_prob * 100, color = "Win Probability"),
       linewidth = 1
     ) +
-    # Add horizontal line at even win probability
-    geom_hline(yintercept = 50, linetype = "solid", color = "white") +
     # Add win probability labels
     annotate(
       "text",
-      x = Inf,
-      y = 75,
+      x = -Inf,
+      y = 95,
       label = "Away Team Win",
-      hjust = 1,
+      hjust = 0,
       vjust = 1,
-      color = "white",
-      size = 4,
+      color = "darkgray",
+      size = 3,
       family = "InputMono"
     ) +
     annotate(
       "text",
-      x = Inf,
-      y = 25,
+      x = -Inf,
+      y = 5,
       label = "Home Team Win",
-      hjust = 1,
+      hjust = 0,
       vjust = 0,
-      color = "white",
-      size = 4,
+      color = "darkgray",
+      size = 3,
       family = "InputMono"
     ) +
     scale_y_continuous(
