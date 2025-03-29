@@ -1,5 +1,4 @@
 # Purpose: Creates a win probability model using XGBoost and visualizes it with ggplot.
-# Test comment for pre-commit hook
 
 # Load required libraries
 library(tidyverse)
