@@ -23,7 +23,7 @@ model_data <- play_by_play |>
     time_remaining = if_else(
       quarter <= 3,
       (minute * 60 + second),
-      0 # No time remaining in 4th quarter
+      NA_real_ # 4th quarter is untimed
     ),
     # Point differential
     point_diff = away_score - home_score,
