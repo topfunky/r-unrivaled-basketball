@@ -16,8 +16,3 @@ elo_win_prob <- function(elo_a, elo_b) {
   prob <- 1 / (1 + 10^((elo_b - elo_a) / 400))
   return(prob)
 }
-
-# Example usage:
-# print(elo_win_prob(1500, 1500))  # Should be 0.5
-# print(elo_win_prob(1600, 1400))  # Should be 0.76
-# print(elo_win_prob(1400, 1600))  # Should be 0.24
