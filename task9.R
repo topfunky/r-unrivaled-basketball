@@ -92,20 +92,55 @@ for (game in unique(model_data$game_id)) {
 
   # Create win probability visualization
   p <- ggplot(game_data, aes(x = play_count)) +
-    # Win probability line
-    geom_line(aes(y = win_prob, color = "Win Probability"), linewidth = 1) +
     # Point differential bars
     geom_bar(
-      aes(y = point_diff / 100, fill = point_diff > 0),
+      aes(y = point_diff, fill = point_diff > 0),
       stat = "identity",
       alpha = 0.3,
       width = 1
     ) +
+    # Win probability line (on top of point differential bars)
+    geom_line(
+      aes(y = win_prob * 100, color = "Win Probability"),
+      linewidth = 1
+    ) +
+    # Add horizontal line at even win probability
+    geom_hline(yintercept = 50, linetype = "solid", color = "white") +
+    # Add win probability labels
+    annotate(
+      "text",
+      x = Inf,
+      y = 75,
+      label = "Away Team Win",
+      hjust = 1,
+      vjust = 1,
+      color = "white",
+      size = 4,
+      family = "InputMono"
+    ) +
+    annotate(
+      "text",
+      x = Inf,
+      y = 25,
+      label = "Home Team Win",
+      hjust = 1,
+      vjust = 0,
+      color = "white",
+      size = 4,
+      family = "InputMono"
+    ) +
     scale_y_continuous(
-      name = "Win Probability",
+      name = "Point Differential",
       sec.axis = sec_axis(
-        ~ . * 100,
-        name = "Point Differential"
+        ~ . / 100,
+        name = "Win Probability",
+        labels = scales::percent
+      )
+    ) +
+    coord_cartesian(
+      ylim = c(
+        min(game_data$point_diff),
+        max(100, max(game_data$point_diff))
       )
     ) +
     scale_color_manual(
