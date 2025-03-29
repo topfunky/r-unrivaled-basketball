@@ -25,6 +25,15 @@ install-deps:
 	Rscript -e 'install.packages(c("tidyverse", "ggplot2", "lubridate", "ggbump", "elo", "devtools", "feather"), repos="https://cloud.r-project.org/")'
 	Rscript -e 'devtools::install_github("topfunky/gghighcontrast")'
 
+# Set up git hooks
+setup-hooks:
+	@echo "Setting up git hooks..."
+	@mkdir -p .git/hooks
+	@rm -f .git/hooks/pre-commit
+	@ln -s ../../hooks/pre-commit .git/hooks/pre-commit
+	@chmod +x hooks/pre-commit
+	@echo "✨ Git hooks set up successfully!"
+
 # List all available tasks
 list:
 	@echo "Available tasks:"
@@ -33,6 +42,7 @@ list:
 	@echo "  elo      - Generate only the ELO ratings visualization"
 	@echo "  clean    - Remove all generated files"
 	@echo "  install-deps  - Install required R packages"
+	@echo "  setup-hooks   - Set up git hooks"
 	@echo "  list     - Show this help message"
 
-.PHONY: all rankings elo clean install-deps list
+.PHONY: all rankings elo clean install-deps setup-hooks list
