@@ -38,7 +38,8 @@ parse_play_by_play <- function(game_id) {
     set_names(c("time", "play", "score")) |>
     mutate(
       game_id = game_id,
-      # Extract quarter from play description if it exists, otherwise assume quarter 4
+      # Extract quarter from play description if it exists, 
+      # otherwise use NA
       quarter = if_else(
         str_detect(play, "^Q\\d"),
         as.numeric(str_match(play, "^Q(\\d)")[, 2]),
@@ -53,7 +54,7 @@ parse_play_by_play <- function(game_id) {
       # Split score into away and home scores
       away_score = as.numeric(str_extract(score, "^\\d+")),
       home_score = as.numeric(str_extract(score, "\\d+$")),
-      # Split time into minutes and seconds, handling float values in seconds
+      # Split time into minutes and seconds
       minute = if_else(
         str_detect(time, ":"),
         as.numeric(str_extract(time, "^\\d+")),
@@ -61,7 +62,7 @@ parse_play_by_play <- function(game_id) {
       ),
       second = if_else(
         str_detect(time, ":"),
-        round(as.numeric(str_extract(time, "\\d+\\.?\\d*$"))),  # Round float seconds to whole number
+        round(as.numeric(str_extract(time, "\\d+\\.?\\d*$"))),
         round(as.numeric(time))  # If no colon, treat entire value as seconds
       )
     ) |>
@@ -113,6 +114,7 @@ parse_box_score <- function(game_id) {
            str_trim(player_name) != "",
            str_trim(player_name) != "TEAM") |>
     # Split shooting stats into made and missed
+    # TODO: Should be made and attempted (not missed)
     mutate(
       # Split FG into made and missed
       fg_made = as.numeric(str_extract(FG, "^\\d+")),
