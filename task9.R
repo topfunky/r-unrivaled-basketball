@@ -69,6 +69,9 @@ X <- model_data |>
 
 y <- model_data$away_win
 
+# Set seed for reproducibility
+set.seed(5150)
+
 # Train XGBoost model
 message("Training XGBoost model...")
 model <- xgboost(
