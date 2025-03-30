@@ -167,11 +167,11 @@ for (game in unique(model_data$game_id)) {
     ) +
     scale_color_manual(
       name = "Metric",
-      values = c("Win Probability" = "#FF6B6B")
+      values = c("Win Probability" = "#B39DFF") # Light purple
     ) +
     scale_fill_manual(
       name = "Point Differential",
-      values = c("TRUE" = "#4ECDC4", "FALSE" = "#FF6B6B"),
+      values = c("TRUE" = "#E1BEE7", "FALSE" = "#9C27B0"), # Higher contrast purples
       labels = c("TRUE" = "Away Team Ahead", "FALSE" = "Home Team Ahead")
     ) +
     labs(
