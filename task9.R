@@ -6,6 +6,10 @@ library(xgboost)
 library(feather)
 library(gghighcontrast)
 
+# Create plots directory if it doesn't exist
+message("Creating plots directory if it doesn't exist...")
+dir.create("plots", showWarnings = FALSE, recursive = TRUE)
+
 # Read play by play data
 message("Reading play by play data...")
 play_by_play <- read_feather("unrivaled_play_by_play.feather")
