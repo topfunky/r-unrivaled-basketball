@@ -47,7 +47,18 @@ ratings_history <- as.data.frame(elo_ratings) |>
   rename(
     home_team_elo = elo.A,
     away_team_elo = elo.B
-  )
+  ) |>
+  # Add previous ELO ratings for each team
+  group_by(home_team) |>
+  mutate(
+    home_team_elo_prev = lag(home_team_elo, default = 1500)
+  ) |>
+  ungroup() |>
+  group_by(away_team) |>
+  mutate(
+    away_team_elo_prev = lag(away_team_elo, default = 1500)
+  ) |>
+  ungroup()
 
 # Print ratings after each game
 print("ELO Ratings After Each Game:")
@@ -58,6 +69,8 @@ ratings_history |>
     home_team,
     away_team,
     result,
+    home_team_elo_prev,
+    away_team_elo_prev,
     home_team_elo,
     away_team_elo
   ) |>
