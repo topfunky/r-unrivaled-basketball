@@ -39,15 +39,28 @@ elo_ratings <- elo.run(
 ratings_history <- as.data.frame(elo_ratings) |>
   mutate(
     date = games$date,
+    game_id = games$game_id,
     home_team = games$home_team,
     away_team = games$away_team,
     result = games$result
+  ) |>
+  rename(
+    home_team_elo = elo.A,
+    away_team_elo = elo.B
   )
 
 # Print ratings after each game
 print("ELO Ratings After Each Game:")
 ratings_history |>
-  select(date, home_team, away_team, result, elo.A, elo.B) |>
+  select(
+    date,
+    game_id,
+    home_team,
+    away_team,
+    result,
+    home_team_elo,
+    away_team_elo
+  ) |>
   print()
 
 # Print final ELO ratings
@@ -58,19 +71,18 @@ final_ratings <- bind_rows(
     group_by(team = home_team) |>
     arrange(desc(date)) |>
     slice(1) |>
-    select(date, team, elo_rating = elo.A),
+    select(date, team, elo_rating = home_team_elo),
   # Away team ratings
   ratings_history |>
     group_by(team = away_team) |>
     arrange(desc(date)) |>
     slice(1) |>
-    select(date, team, elo_rating = elo.B)
+    select(date, team, elo_rating = away_team_elo)
 ) |>
   # Get the most recent rating for each team
   group_by(team) |>
   arrange(desc(date)) |>
   slice(1) |>
-
   # Select only team and rating
   select(team, elo_rating) |>
   arrange(desc(elo_rating))
@@ -85,10 +97,10 @@ write_feather(final_ratings, "unrivaled_final_elo_ratings.feather")
 plot_data <- bind_rows(
   # Home team ratings
   ratings_history |>
-    select(date, team = home_team, elo_rating = elo.A, result),
+    select(date, game_id, team = home_team, elo_rating = home_team_elo, result),
   # Away team ratings
   ratings_history |>
-    select(date, team = away_team, elo_rating = elo.B, result)
+    select(date, game_id, team = away_team, elo_rating = away_team_elo, result)
 ) |>
   arrange(date) |>
   group_by(team) |>
@@ -143,7 +155,7 @@ p <- plot_data |>
     family = "InputMono",
     size = 2,
     hjust = 0,
-    vjust = 0.5  # Center vertically
+    vjust = 0.5 # Center vertically
   ) +
   geom_line(linewidth = linewidth, show.legend = FALSE) +
   # Add points only at the end of each line
