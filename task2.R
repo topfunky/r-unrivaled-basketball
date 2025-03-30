@@ -1,8 +1,8 @@
-# Purpose: Scrapes live game data from the Unrivaled website HTML file (local copy), processes game results,
-# and saves them to a CSV file. Includes validation for team names and skips games within
-# the date range of the mid-season 1v1 tournament (Feb 10-15, 2025). Adds a canceled game
-# from February 8, 2025 (Laces at Vinyl) to the dataset, as it counts in the official standings.
-# Outputs game data to fixtures/unrivaled_scores.csv.
+# Purpose: Scrapes live game data from Unrivaled website HTML file (local copy),
+# processes game results, and saves to CSV. Includes team name validation and
+# skips games during mid-season 1v1 tournament (Feb 10-15, 2025). Adds canceled
+# game from Feb 8, 2025 (Laces at Vinyl) as it counts in standings.
+# Outputs to fixtures/unrivaled_scores.csv.
 
 # Load required libraries
 library(tidyverse)
@@ -96,12 +96,29 @@ parse_game_day <- function(day_node) {
       next
     }
 
+    # Extract game ID from box score link
+    box_score_link <- day_node |>
+      html_element("a[href*='/game/']") |>
+      html_attr("href")
+
+    print(glue("Box score link: {box_score_link}"))
+
+    game_id <- if (!is.null(box_score_link)) {
+      id <- str_extract(box_score_link, "[a-z0-9]+(?=/box-score$)")
+      print(glue("Extracted game ID: {id}"))
+      id
+    } else {
+      print("No box score link found")
+      NA_character_
+    }
+
     print(glue(
-      "Game: {away_team} ({away_score}) at {home_team} ({home_score})"
+      "Game: id:{game_id} {away_team} ({away_score}) at {home_team} ({home_score})"
     ))
 
     # Create a row of game data
     game_data[[length(game_data) + 1]] <- tibble(
+      game_id = game_id,
       date = game_date,
       away_team = away_team,
       away_team_score = away_score,
