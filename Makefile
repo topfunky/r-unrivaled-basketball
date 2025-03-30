@@ -16,7 +16,7 @@ wp: task9.R
 	Rscript task9.R
 
 # Run all task files
-all-tasks: task2 task3 task4 task6 task7 task8 task9 scrape
+all-tasks: task2 task3 task4 task6 task7 task8 task9
 
 # Individual task targets
 task1: task1.R
@@ -42,9 +42,6 @@ task8: task8.R
 
 task9: task9.R
 	Rscript task9.R
-
-scrape: scrape_and_chart.R
-	Rscript scrape_and_chart.R
 
 # Clean up generated files
 clean:
@@ -75,10 +72,9 @@ list:
 	@echo "  wp          - Generate win probability model"
 	@echo "  all-tasks   - Run all task files in sequence"
 	@echo "  task1-9     - Run individual task files"
-	@echo "  scrape      - Run the scraping script"
 	@echo "  clean       - Remove all generated files"
 	@echo "  install-deps - Install required R packages"
 	@echo "  setup-hooks  - Set up git hooks"
 	@echo "  list        - Show this help message"
 
-.PHONY: all rankings elo wp all-tasks task1 task2 task3 task4 task6 task7 task8 task9 scrape clean install-deps setup-hooks list
+.PHONY: all rankings elo wp all-tasks task1 task2 task3 task4 task6 task7 task8 task9 clean install-deps setup-hooks list
