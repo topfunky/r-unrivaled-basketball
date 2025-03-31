@@ -4,19 +4,9 @@
 # Default target
 all: rankings elo wp
 
-# Generate rankings visualization
-rankings: task03.R
-	Rscript task03.R
-
-# Generate ELO ratings visualization
-elo: task04.R
-	Rscript task04.R
-
-wp: task09.R
-	Rscript task09.R
 
 # Run all task files
-all-tasks: task02 rankings elo task06 task07 pbp wp
+all-tasks: task02 rankings elo task06 task07 pbp wp task10
 
 # Individual task targets
 task01: task01.R
@@ -24,6 +14,14 @@ task01: task01.R
 
 task02: task02.R
 	Rscript task02.R
+
+# Generate rankings visualization
+rankings: task03.R
+	Rscript task03.R
+
+# Generate ELO ratings visualization
+elo: task04.R
+	Rscript task04.R
 
 task06: task06.R
 	Rscript task06.R
@@ -33,6 +31,12 @@ task07: task07.R
 
 pbp: task08.R
 	Rscript task08.R
+
+wp: task09.R
+	Rscript task09.R
+
+task10: task10.R
+	Rscript task10.R
 
 # Clean up generated files
 clean:
@@ -63,17 +67,18 @@ list:
 	@echo "  elo          - Generate ELO ratings visualization"
 	@echo "  wp           - Generate win probability model and visualizations"
 	@echo ""
-	@echo "  all-tasks    - Run all task files in sequence (task02, rankings, elo, task06, task07, pbp, wp)"
+	@echo "  all-tasks    - Run all task files in sequence (task02, rankings, elo, task06, task07, pbp, wp, task10)"
 	@echo ""
 	@echo "  task01       - Generate initial data analysis and visualizations"
 	@echo "  task02       - Scrape and process game data"
 	@echo "  task06       - Generate player statistics"
 	@echo "  task07       - Process and analyze game events"
 	@echo "  pbp          - Generate play-by-play analysis"
+	@echo "  task10       - Calculate additional basketball metrics"
 	@echo ""
 	@echo "  clean        - Remove all generated files (plots, data files)"
 	@echo "  install-deps - Install required R packages"
 	@echo "  setup-hooks  - Set up git hooks for code formatting"
 	@echo "  list         - Show this help message"
 
-.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp clean install-deps setup-hooks list
+.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp task10 clean install-deps setup-hooks list
