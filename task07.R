@@ -34,7 +34,11 @@ download_if_missing <- function(url, filepath) {
       writeBin(content(response, "raw"), filepath)
       message(sprintf("Saved to %s", filepath))
     } else {
-      warning(sprintf("Failed to download %s: status code %d", url, status_code(response)))
+      warning(sprintf(
+        "Failed to download %s: status code %d",
+        url,
+        status_code(response)
+      ))
     }
   } else {
     message(sprintf("File already exists: %s", filepath))

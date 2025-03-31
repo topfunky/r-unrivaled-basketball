@@ -23,8 +23,20 @@ final_stats <- rankings |>
 cat("\n| Team | Record | Point Differential | ELO Rating |\n")
 cat("|------|---------|-------------------|------------|\n")
 final_stats |>
-  {\(x) walk(seq_len(nrow(x)), \(i) cat(sprintf("| %s | %s | %s | %d |\n",
-    x$team[i], x$record[i], x$point_differential[i], x$elo_rating[i])))}()
+  {
+    \(x)
+      walk(
+        seq_len(nrow(x)),
+        \(i)
+          cat(sprintf(
+            "| %s | %s | %s | %d |\n",
+            x$team[i],
+            x$record[i],
+            x$point_differential[i],
+            x$elo_rating[i]
+          ))
+      )
+  }()
 
 # Save the data
 write_feather(final_stats, "unrivaled_final_stats.feather")

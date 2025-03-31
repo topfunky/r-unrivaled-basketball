@@ -21,7 +21,10 @@ parse_play_by_play <- function(game_id) {
   # Extract the table data
   tables <- html |> html_nodes("table")
   if (length(tables) == 0) {
-    warning(sprintf("No tables found in play by play file for game %s", game_id))
+    warning(sprintf(
+      "No tables found in play by play file for game %s",
+      game_id
+    ))
     return(NULL)
   }
 
@@ -38,7 +41,7 @@ parse_play_by_play <- function(game_id) {
     set_names(c("time", "play", "score")) |>
     mutate(
       game_id = game_id,
-      # Extract quarter from play description if it exists, 
+      # Extract quarter from play description if it exists,
       # otherwise use NA
       quarter = if_else(
         str_detect(play, "^Q\\d"),
@@ -58,12 +61,12 @@ parse_play_by_play <- function(game_id) {
       minute = if_else(
         str_detect(time, ":"),
         as.numeric(str_extract(time, "^\\d+")),
-        0  # Set minutes to 0 if no colon
+        0 # Set minutes to 0 if no colon
       ),
       second = if_else(
         str_detect(time, ":"),
         round(as.numeric(str_extract(time, "\\d+\\.?\\d*$"))),
-        round(as.numeric(time))  # If no colon, treat entire value as seconds
+        round(as.numeric(time)) # If no colon, treat entire value as seconds
       )
     ) |>
     # Reorder columns
@@ -110,9 +113,11 @@ parse_box_score <- function(game_id) {
       player_name = if_else(is_starter, str_remove(PLAYERS, "^S "), PLAYERS)
     ) |>
     # Filter out rows with blank player names or "TEAM" rows
-    filter(!is.na(player_name),
-           str_trim(player_name) != "",
-           str_trim(player_name) != "TEAM") |>
+    filter(
+      !is.na(player_name),
+      str_trim(player_name) != "",
+      str_trim(player_name) != "TEAM"
+    ) |>
     # Split shooting stats into made and missed
     # TODO: Should be made and attempted (not missed)
     mutate(
@@ -127,10 +132,27 @@ parse_box_score <- function(game_id) {
       ft_missed = as.numeric(str_extract(FT, "\\d+$"))
     ) |>
     # Reorder columns to put new columns first
-    select(game_id, is_starter, player_name, MIN,
-           fg_made, fg_missed, three_pt_made, three_pt_missed,
-           ft_made, ft_missed,
-           REB, OREB, DREB, AST, STL, BLK, TO, PF, PTS)
+    select(
+      game_id,
+      is_starter,
+      player_name,
+      MIN,
+      fg_made,
+      fg_missed,
+      three_pt_made,
+      three_pt_missed,
+      ft_made,
+      ft_missed,
+      REB,
+      OREB,
+      DREB,
+      AST,
+      STL,
+      BLK,
+      TO,
+      PF,
+      PTS
+    )
 
   return(box_score)
 }
@@ -168,7 +190,10 @@ parse_summary <- function(game_id) {
     # Add temporary column names
     set_names(c("col1", "col2", "col3")) |>
     # Filter out rows we want
-    filter(col1 %in% c("FG", "Field Goal %", "3PT", "Three Point %", "FT", "Free Throw %")) |>
+    filter(
+      col1 %in%
+        c("FG", "Field Goal %", "3PT", "Three Point %", "FT", "Free Throw %")
+    ) |>
     # Add game_id and rename stats
     mutate(
       game_id = game_id,
@@ -218,22 +243,28 @@ message("Parsing play by play data...")
 play_by_play_data <- map_dfr(game_dirs, parse_play_by_play)
 
 # Count unique games in play by play data
-message(sprintf("Number of unique games in play by play data: %d",
-  n_distinct(play_by_play_data$game_id)))
+message(sprintf(
+  "Number of unique games in play by play data: %d",
+  n_distinct(play_by_play_data$game_id)
+))
 
 message("Parsing box score data...")
 box_score_data <- map_dfr(game_dirs, parse_box_score)
 
 # Count unique games in box score data
-message(sprintf("Number of unique games in box score data: %d",
-  n_distinct(box_score_data$game_id)))
+message(sprintf(
+  "Number of unique games in box score data: %d",
+  n_distinct(box_score_data$game_id)
+))
 
 message("Parsing summary data...")
 summary_data <- map_dfr(game_dirs, parse_summary)
 
 # Count unique games in summary data
-message(sprintf("Number of unique games in summary data: %d",
-  n_distinct(summary_data$game_id)))
+message(sprintf(
+  "Number of unique games in summary data: %d",
+  n_distinct(summary_data$game_id)
+))
 
 # Save the parsed data
 write_feather(play_by_play_data, "unrivaled_play_by_play.feather")
@@ -244,15 +275,21 @@ message("All game data parsed and saved successfully!")
 
 # Display samples of each dataset
 message("\nSample of play by play data:")
-print(play_by_play_data |>
-  filter(game_id == first(game_id)) |>
-  slice_head(n = 5))
+print(
+  play_by_play_data |>
+    filter(game_id == first(game_id)) |>
+    slice_head(n = 5)
+)
 
 message("\nSample of box score data:")
-print(box_score_data |>
-  filter(game_id == first(game_id)) |>
-  slice_head(n = 5))
+print(
+  box_score_data |>
+    filter(game_id == first(game_id)) |>
+    slice_head(n = 5)
+)
 
 message("\nSample of summary data:")
-print(summary_data |>
-  filter(game_id == first(game_id)))
+print(
+  summary_data |>
+    filter(game_id == first(game_id))
+)

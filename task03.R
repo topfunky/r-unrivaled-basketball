@@ -143,21 +143,32 @@ print(game_rankings)
 # Print final standings with point differential (regular season only)
 print("\nFinal Regular Season Standings:")
 final_standings <- team_records |>
-  filter(games_played == 14) |>  # Only include regular season games
+  filter(games_played == 14) |> # Only include regular season games
   select(team, wins, losses, point_differential) |>
   arrange(desc(wins), desc(point_differential)) |>
   mutate(
     rank = row_number(),
     record = paste0(wins, "-", losses),
-    point_differential = sprintf("%+d", round(point_differential))  # Format as whole number with + or - sign
+    point_differential = sprintf("%+d", round(point_differential)) # Format as whole number with + or - sign
   )
 
 # Print in markdown format
 cat("\n| Team | Record | Point Differential |\n")
 cat("|------|---------|-------------------|\n")
 final_standings |>
-  {\(x) walk(seq_len(nrow(x)), \(i) cat(sprintf("| %s | %s | %s |\n",
-    x$team[i], x$record[i], x$point_differential[i])))}()
+  {
+    \(x)
+      walk(
+        seq_len(nrow(x)),
+        \(i)
+          cat(sprintf(
+            "| %s | %s | %s |\n",
+            x$team[i],
+            x$record[i],
+            x$point_differential[i]
+          ))
+      )
+  }()
 write_feather(final_standings, "unrivaled_regular_season_standings.feather")
 
 

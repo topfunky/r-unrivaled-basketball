@@ -5,34 +5,34 @@
 all: rankings elo wp
 
 # Generate rankings visualization
-rankings: task3.R
-	Rscript task3.R
+rankings: task03.R
+	Rscript task03.R
 
 # Generate ELO ratings visualization
-elo: task4.R
-	Rscript task4.R
+elo: task04.R
+	Rscript task04.R
 
-wp: task9.R
-	Rscript task9.R
+wp: task09.R
+	Rscript task09.R
 
 # Run all task files
-all-tasks: task2 rankings elo task6 task7 pbp wp
+all-tasks: task02 rankings elo task06 task07 pbp wp
 
 # Individual task targets
-task1: task1.R
-	Rscript task1.R
+task01: task01.R
+	Rscript task01.R
 
-task2: task2.R
-	Rscript task2.R
+task02: task02.R
+	Rscript task02.R
 
-task6: task6.R
-	Rscript task6.R
+task06: task06.R
+	Rscript task06.R
 
-task7: task7.R
-	Rscript task7.R
+task07: task07.R
+	Rscript task07.R
 
-pbp: task8.R
-	Rscript task8.R
+pbp: task08.R
+	Rscript task08.R
 
 # Clean up generated files
 clean:
@@ -63,12 +63,12 @@ list:
 	@echo "  elo          - Generate ELO ratings visualization"
 	@echo "  wp           - Generate win probability model and visualizations"
 	@echo ""
-	@echo "  all-tasks    - Run all task files in sequence (task2, rankings, elo, task6, task7, pbp, wp)"
+	@echo "  all-tasks    - Run all task files in sequence (task02, rankings, elo, task06, task07, pbp, wp)"
 	@echo ""
-	@echo "  task1        - Generate initial data analysis and visualizations"
-	@echo "  task2        - Scrape and process game data"
-	@echo "  task6        - Generate player statistics"
-	@echo "  task7        - Process and analyze game events"
+	@echo "  task01       - Generate initial data analysis and visualizations"
+	@echo "  task02       - Scrape and process game data"
+	@echo "  task06       - Generate player statistics"
+	@echo "  task07       - Process and analyze game events"
 	@echo "  pbp          - Generate play-by-play analysis"
 	@echo ""
 	@echo "  clean        - Remove all generated files (plots, data files)"
@@ -76,4 +76,4 @@ list:
 	@echo "  setup-hooks  - Set up git hooks for code formatting"
 	@echo "  list         - Show this help message"
 
-.PHONY: all rankings elo wp all-tasks task1 task2 task6 task7 pbp clean install-deps setup-hooks list
+.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp clean install-deps setup-hooks list
