@@ -1,4 +1,5 @@
-# Purpose: Creates a win probability model using XGBoost and visualizes it with ggplot.
+# Purpose: Creates separate win probability models for quarters 1-3 and quarter 4
+# using XGBoost and visualizes them with ggplot.
 
 # Load required libraries
 library(tidyverse)
@@ -52,31 +53,52 @@ model_data <- play_by_play |>
   ) |>
   ungroup()
 
-# Prepare training data
-message("Preparing training data...")
-X <- model_data |>
+# Split data into quarters 1-3 and quarter 4
+message("Splitting data into quarters 1-3 and quarter 4...")
+data_q1q3 <- model_data |>
+  filter(quarter <= 3)
+
+data_q4 <- model_data |>
+  filter(quarter == 4)
+
+# Prepare training data for quarters 1-3
+message("Preparing training data for quarters 1-3...")
+X_q1q3 <- data_q1q3 |>
   select(
     quarter,
     time_remaining,
     point_diff,
     quarter_weight,
     time_weight,
+    play_count
+  ) |>
+  as.matrix()
+
+y_q1q3 <- data_q1q3$away_win
+
+# Prepare training data for quarter 4
+message("Preparing training data for quarter 4...")
+X_q4 <- data_q4 |>
+  select(
+    quarter,
+    point_diff,
+    quarter_weight,
     play_count,
     away_points_needed,
     home_points_needed
   ) |>
   as.matrix()
 
-y <- model_data$away_win
+y_q4 <- data_q4$away_win
 
 # Set seed for reproducibility
 set.seed(5150)
 
-# Train XGBoost model
-message("Training XGBoost model...")
-model <- xgboost(
-  data = X,
-  label = y,
+# Train XGBoost model for quarters 1-3
+message("Training XGBoost model for quarters 1-3...")
+model_q1q3 <- xgboost(
+  data = X_q1q3,
+  label = y_q1q3,
   nrounds = 100,
   objective = "binary:logistic",
   eval_metric = "logloss",
@@ -86,9 +108,32 @@ model <- xgboost(
   colsample_bytree = 0.8
 )
 
-# Generate predictions
-message("Generating win probability predictions...")
-model_data$win_prob <- predict(model, X)
+# Train XGBoost model for quarter 4
+message("Training XGBoost model for quarter 4...")
+model_q4 <- xgboost(
+  data = X_q4,
+  label = y_q4,
+  nrounds = 100,
+  objective = "binary:logistic",
+  eval_metric = "logloss",
+  max_depth = 6,
+  eta = 0.1,
+  subsample = 0.8,
+  colsample_bytree = 0.8
+)
+
+# Generate predictions for quarters 1-3
+message("Generating win probability predictions for quarters 1-3...")
+data_q1q3$win_prob <- predict(model_q1q3, X_q1q3)
+
+# Generate predictions for quarter 4
+message("Generating win probability predictions for quarter 4...")
+data_q4$win_prob <- predict(model_q4, X_q4)
+
+# Combine the predictions
+message("Combining predictions...")
+model_data <- bind_rows(data_q1q3, data_q4) |>
+  arrange(game_id, play_count)
 
 # Save the data with win probabilities
 message("Saving data with win probabilities...")
