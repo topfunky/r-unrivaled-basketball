@@ -121,15 +121,15 @@ parse_box_score <- function(game_id) {
     # Split shooting stats into made and missed
     # TODO: Should be made and attempted (not missed)
     mutate(
-      # Split FG into made and missed
-      fg_made = as.numeric(str_extract(FG, "^\\d+")),
-      fg_missed = as.numeric(str_extract(FG, "\\d+$")),
-      # Split 3PT into made and missed
-      three_pt_made = as.numeric(str_extract(`3PT`, "^\\d+")),
-      three_pt_missed = as.numeric(str_extract(`3PT`, "\\d+$")),
-      # Split FT into made and missed
-      ft_made = as.numeric(str_extract(FT, "^\\d+")),
-      ft_missed = as.numeric(str_extract(FT, "\\d+$"))
+      # Split FG into made and attempts
+      fg = as.numeric(str_extract(FG, "^\\d+")),
+      fg_attempts = as.numeric(str_extract(FG, "\\d+$")),
+      # Split 3PT into made and attempts
+      three_pt = as.numeric(str_extract(`3PT`, "^\\d+")),
+      three_pt_attempts = as.numeric(str_extract(`3PT`, "\\d+$")),
+      # Split FT into made and attempts
+      ft = as.numeric(str_extract(FT, "^\\d+")),
+      ft_attempts = as.numeric(str_extract(FT, "\\d+$"))
     ) |>
     # Reorder columns to put new columns first
     select(
@@ -137,12 +137,12 @@ parse_box_score <- function(game_id) {
       is_starter,
       player_name,
       MIN,
-      fg_made,
-      fg_missed,
-      three_pt_made,
-      three_pt_missed,
-      ft_made,
-      ft_missed,
+      fg,
+      fg_attempts,
+      three_pt,
+      three_pt_attempts,
+      ft,
+      ft_attempts,
       REB,
       OREB,
       DREB,
