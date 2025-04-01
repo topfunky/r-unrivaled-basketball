@@ -35,6 +35,19 @@ parse_play_by_play <- function(game_id) {
     return(NULL)
   }
 
+  # Extract possessing team from image alt text
+  play_cells <- html |> html_nodes("td:nth-child(2)") # Get play description cells
+  pos_teams <- map_chr(play_cells, function(cell) {
+    img <- html_node(cell, "img")
+    if (!is.null(img)) {
+      alt_text <- html_attr(img, "alt")
+      if (!is.na(alt_text) && str_detect(alt_text, "Logo$")) {
+        return(str_remove(alt_text, " Logo$"))
+      }
+    }
+    return(NA_character_)
+  })
+
   # Convert to tibble and set names
   plays <- table_data[[1]] |>
     as_tibble() |>
@@ -67,10 +80,22 @@ parse_play_by_play <- function(game_id) {
         str_detect(time, ":"),
         round(as.numeric(str_extract(time, "\\d+\\.?\\d*$"))),
         round(as.numeric(time)) # If no colon, treat entire value as seconds
-      )
+      ),
+      # Add possessing team from image alt text
+      pos_team = pos_teams
     ) |>
     # Reorder columns
-    select(game_id, quarter, time, minute, second, play, away_score, home_score)
+    select(
+      game_id,
+      quarter,
+      time,
+      minute,
+      second,
+      play,
+      pos_team,
+      away_score,
+      home_score
+    )
 
   return(plays)
 }
