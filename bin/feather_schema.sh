@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Display the schema of all feather files in the current directory.
+# Suppress all messages from R, including warnings and errors.
+
 # Check if any feather files exist
 if ! ls *.feather 1> /dev/null 2>&1; then
     echo "No feather files found in current directory"
