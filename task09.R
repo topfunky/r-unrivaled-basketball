@@ -22,18 +22,6 @@ play_by_play <- read_feather("unrivaled_play_by_play.feather")
 points_per_possession <- play_by_play |>
   group_by(game_id) |>
   mutate(
-    # Calculate points scored on this possession
-    points_scored = case_when(
-      # Home team scores
-      pos_team == lead(pos_team, default = first(pos_team)) &
-        home_score > lag(home_score, default = first(home_score)) ~
-        home_score - lag(home_score, default = first(home_score)),
-      # Away team scores
-      pos_team == lead(pos_team, default = first(pos_team)) &
-        away_score > lag(away_score, default = first(away_score)) ~
-        away_score - lag(away_score, default = first(away_score)),
-      TRUE ~ 0
-    ),
     # Detect possession changes, ignoring personal fouls
     is_personal_foul = str_detect(tolower(play), "personal foul"),
     possession_change = !is_personal_foul &
