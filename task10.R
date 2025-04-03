@@ -13,35 +13,14 @@ library(gghighcontrast)
 pbp_data <- read_feather("unrivaled_play_by_play.feather")
 box_scores <- read_feather("unrivaled_box_scores.feather")
 
-# 1. Count total free throw attempts (using box score data for accuracy)
+# Count total free throw attempts (using box score data for accuracy)
 total_ft_attempts <- box_scores |>
   summarise(
     total_fta = sum(ft_attempts, na.rm = TRUE)
   ) |>
   pull(total_fta)
 
-# 2. Count free throw attempts with possession change
-# A possession change occurs when a free throw is followed by the other team getting the ball
-ft_with_possession_change <- pbp_data |>
-  mutate(
-    next_play = lead(play),
-    is_free_throw = str_detect(tolower(play), "free throw"),
-    next_is_offensive = str_detect(
-      tolower(next_play),
-      "offensive|makes|misses|turnover|steal|foul"
-    ),
-    is_possession_change = is_free_throw & !next_is_offensive
-  ) |>
-  summarise(
-    possession_changes = sum(is_possession_change, na.rm = TRUE)
-  ) |>
-  pull(possession_changes)
-
-# 3. Calculate percentage of free throws with possession change
-ft_possession_change_pct <- (ft_with_possession_change / total_ft_attempts) *
-  100
-
-# 4. Calculate average points per possession using pos_team column
+# Calculate average points per possession using pos_team column
 # A possession ends when the team with the ball changes
 points_per_possession <- pbp_data |>
   group_by(game_id) |>
@@ -58,8 +37,10 @@ points_per_possession <- pbp_data |>
         away_score - lag(away_score, default = first(away_score)),
       TRUE ~ 0
     ),
-    # Detect possession changes
-    possession_change = pos_team != lead(pos_team, default = first(pos_team))
+    # Detect possession changes, ignoring personal fouls
+    is_personal_foul = str_detect(tolower(play), "personal foul"),
+    possession_change = !is_personal_foul &
+      pos_team != lead(pos_team, default = first(pos_team))
   ) |>
   summarise(
     # Get final scores for total points
@@ -77,7 +58,7 @@ points_per_possession <- pbp_data |>
     points_per_possession = total_points / total_possessions
   )
 
-# 5. Calculate field goal percentage for each player (using box score data)
+# Calculate field goal percentage for each player (using box score data)
 player_fg_pct <- box_scores |>
   group_by(player_name) |>
   summarise(
@@ -86,7 +67,7 @@ player_fg_pct <- box_scores |>
     fg_pct = fg_made / fg_attempts * 100
   )
 
-# 6. Calculate true shooting percentage for each player (using box score data)
+# Calculate true shooting percentage for each player (using box score data)
 # TS% = PTS / (2 * (FGA + 0.44 * FTA))
 # FGA includes both 2-point and 3-point attempts
 #
@@ -140,13 +121,7 @@ ggsave(
 # Print results in markdown format
 cat("# Basketball Metrics Summary\n\n")
 cat("## Free Throw Statistics\n")
-cat("- Total Free Throw Attempts:", total_ft_attempts, "\n")
-cat("- Free Throws with Possession Change:", ft_with_possession_change, "\n")
-cat(
-  "- Percentage of Free Throws with Possession Change:",
-  round(ft_possession_change_pct, 2),
-  "%\n\n"
-)
+cat("- Total Free Throw Attempts:", total_ft_attempts, "\n\n")
 
 cat("## Points Per Possession\n")
 cat(
