@@ -1,5 +1,5 @@
-# Purpose: Creates separate win probability models for quarters 1-3 and quarter 4
-# using XGBoost and visualizes them with ggplot.
+# Purpose: Creates separate win probability models for quarters 1-3 and
+# quarter 4 using XGBoost and visualizes them with ggplot.
 
 # Load required libraries
 library(tidyverse)
@@ -17,6 +17,40 @@ source("calibration.R")
 # Read play by play data
 message("Reading play by play data...")
 play_by_play <- read_feather("unrivaled_play_by_play.feather")
+
+# Calculate average points per possession for quarter 4 estimation
+points_per_possession <- play_by_play |>
+  group_by(game_id) |>
+  mutate(
+    # Calculate points scored on this possession
+    points_scored = case_when(
+      # Home team scores
+      pos_team == lead(pos_team, default = first(pos_team)) &
+        home_score > lag(home_score, default = first(home_score)) ~
+        home_score - lag(home_score, default = first(home_score)),
+      # Away team scores
+      pos_team == lead(pos_team, default = first(pos_team)) &
+        away_score > lag(away_score, default = first(away_score)) ~
+        away_score - lag(away_score, default = first(away_score)),
+      TRUE ~ 0
+    ),
+    # Detect possession changes, ignoring personal fouls
+    is_personal_foul = str_detect(tolower(play), "personal foul"),
+    possession_change = !is_personal_foul &
+      pos_team != lead(pos_team, default = first(pos_team))
+  ) |>
+  summarise(
+    # Get final scores for total points
+    final_home_score = max(home_score, na.rm = TRUE),
+    final_away_score = max(away_score, na.rm = TRUE),
+    total_points = final_home_score + final_away_score,
+    # Add 1 for first possession
+    total_possessions = sum(possession_change, na.rm = TRUE) + 1
+  ) |>
+  summarise(
+    points_per_possession = sum(total_points) / sum(total_possessions)
+  ) |>
+  pull(points_per_possession)
 
 # Prepare features for the model
 message("Preparing features for the model...")
@@ -48,6 +82,12 @@ model_data <- play_by_play |>
     # Points needed for each team
     away_points_needed = projected_winning_score - away_score,
     home_points_needed = projected_winning_score - home_score,
+    # Estimated plays remaining (only in quarter 4)
+    estimated_plays_remaining = if_else(
+      quarter == 4,
+      pmin(away_points_needed, home_points_needed) / points_per_possession,
+      NA_real_
+    ),
     # Final result (1 if away team won, 0 if home team won)
     away_win = if_else(last(away_score) > last(home_score), 1, 0)
   ) |>
@@ -85,7 +125,8 @@ X_q4 <- data_q4 |>
     quarter_weight,
     play_count,
     away_points_needed,
-    home_points_needed
+    home_points_needed,
+    estimated_plays_remaining
   ) |>
   as.matrix()
 
