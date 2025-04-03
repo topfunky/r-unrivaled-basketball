@@ -188,10 +188,6 @@ for (game in unique(model_data$game_id)) {
   game_data <- model_data |>
     filter(game_id == game)
 
-  # Get first row for ELO annotation
-  first_row <- game_data |>
-    head(1)
-
   # Create win probability visualization
   p <- ggplot(game_data, aes(x = play_count)) +
     # Add vertical line at halftime
@@ -202,8 +198,11 @@ for (game in unique(model_data$game_id)) {
       aes(xintercept = play_count),
       color = "white",
       linetype = "dotted",
-      linewidth = 1
+      alpha = 0.2
     ) +
+    # Add horizontal line at even win probability (below data representation)
+    geom_hline(yintercept = 50, linetype = "solid", color = "white") +
+
     # Point differential bars
     geom_bar(
       aes(y = point_diff, fill = point_diff > 0),
@@ -216,32 +215,36 @@ for (game in unique(model_data$game_id)) {
       aes(y = win_prob * 100, color = "Win Probability"),
       linewidth = 1
     ) +
-    # Add ELO difference annotation
+    # Add win probability labels
     annotate(
       "text",
-      x = 0,
-      y = max(100, max(game_data$point_diff)),
-      label = paste0(
-        "Home ELO: ",
-        round(first_row$home_team_elo_prev),
-        "\nAway ELO: ",
-        round(first_row$away_team_elo_prev),
-        "\nELO Diff: ",
-        round(first_row$elo_diff)
-      ),
+      x = -Inf,
+      y = 95,
+      label = "Away Team Win",
       hjust = 0,
       vjust = 1,
+      color = "darkgray",
       size = 3,
-      color = "white"
+      family = "InputMono"
     ) +
-    # Set up the plot
-    scale_fill_manual(
-      values = c("TRUE" = "green", "FALSE" = "red"),
-      guide = "none"
+    annotate(
+      "text",
+      x = -Inf,
+      y = 5,
+      label = "Home Team Win",
+      hjust = 0,
+      vjust = 0,
+      color = "darkgray",
+      size = 3,
+      family = "InputMono"
     ) +
-    scale_color_manual(
-      values = c("Win Probability" = "blue"),
-      name = ""
+    scale_y_continuous(
+      name = "Point Differential",
+      sec.axis = sec_axis(
+        ~ . / 100,
+        name = "Win Probability",
+        labels = scales::percent
+      )
     ) +
     coord_cartesian(
       ylim = c(
@@ -249,25 +252,36 @@ for (game in unique(model_data$game_id)) {
         max(100, max(game_data$point_diff))
       )
     ) +
+    scale_color_manual(
+      name = "Metric",
+      values = c("Win Probability" = "#B39DFF") # Light purple
+    ) +
+    scale_fill_manual(
+      name = "Point Differential",
+      values = c("TRUE" = "#E1BEE7", "FALSE" = "#9C27B0"), # Higher contrast purples
+      labels = c("TRUE" = "Away Team Ahead", "FALSE" = "Home Team Ahead")
+    ) +
     labs(
       title = paste0("Win Probability and Point Differential - ", game),
       x = "Play Number",
       color = "Metric"
     ) +
-    theme_minimal() +
+    theme_high_contrast(
+      foreground_color = "white",
+      background_color = "black",
+      base_family = "InputMono"
+    ) +
     theme(
-      plot.background = element_rect(fill = "black"),
-      panel.background = element_rect(fill = "black"),
-      text = element_text(color = "white"),
-      axis.text = element_text(color = "white"),
-      axis.line = element_line(color = "white"),
-      panel.grid = element_line(color = "gray20")
+      axis.title.y.right = element_text(
+        vjust = 0,
+        margin = margin(t = 0, r = 0, b = 10, l = 0)
+      )
     )
 
   # Save the plot
   ggsave(
-    paste0("plots/win_probability_", game, ".png"),
-    p,
+    filename = file.path("plots", sprintf("win_prob_%s.png", game)),
+    plot = p,
     width = 10,
     height = 6,
     dpi = 300
