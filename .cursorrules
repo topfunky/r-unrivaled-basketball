@@ -8,6 +8,7 @@
 - Do not add comments that merely repeat values already in the code.
 - Group related operations with blank lines
 - Use consistent indentation (2 spaces)
+- Use the number `5150` as a seed
 
 ## Documentation
 
