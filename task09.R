@@ -99,9 +99,35 @@ data_q1q3 <- model_data |>
 data_q4 <- model_data |>
   filter(quarter == 4)
 
+# Split data into training and testing sets
+message("Splitting data into training and testing sets...")
+# Set seed for reproducibility
+set.seed(5150)
+
+# Get unique game IDs
+unique_games <- unique(model_data$game_id)
+
+# Split games into training (80%) and testing (20%) sets
+train_game_ids <- sample(unique_games, size = floor(0.8 * length(unique_games)))
+test_game_ids <- setdiff(unique_games, train_game_ids)
+
+# Split Q1-Q3 data
+data_q1q3_train <- data_q1q3 |>
+  filter(game_id %in% train_game_ids)
+
+data_q1q3_test <- data_q1q3 |>
+  filter(game_id %in% test_game_ids)
+
+# Split Q4 data
+data_q4_train <- data_q4 |>
+  filter(game_id %in% train_game_ids)
+
+data_q4_test <- data_q4 |>
+  filter(game_id %in% test_game_ids)
+
 # Prepare training data for quarters 1-3
 message("Preparing training data for quarters 1-3...")
-X_q1q3 <- data_q1q3 |>
+X_q1q3_train <- data_q1q3_train |>
   select(
     quarter,
     time_remaining,
@@ -113,16 +139,29 @@ X_q1q3 <- data_q1q3 |>
   ) |>
   as.matrix()
 
-y_q1q3 <- data_q1q3$away_win
+y_q1q3_train <- data_q1q3_train$away_win
+
+# Prepare testing data for quarters 1-3
+X_q1q3_test <- data_q1q3_test |>
+  select(
+    quarter,
+    time_remaining,
+    point_diff,
+    quarter_weight,
+    time_weight,
+    play_count,
+    elo_diff
+  ) |>
+  as.matrix()
+
+y_q1q3_test <- data_q1q3_test$away_win
 
 # Prepare training data for quarter 4
 message("Preparing training data for quarter 4...")
-X_q4 <- data_q4 |>
+X_q4_train <- data_q4_train |>
   select(
     quarter,
     point_diff,
-    quarter_weight,
-    play_count,
     away_points_needed,
     home_points_needed,
     estimated_plays_remaining,
@@ -130,16 +169,27 @@ X_q4 <- data_q4 |>
   ) |>
   as.matrix()
 
-y_q4 <- data_q4$away_win
+y_q4_train <- data_q4_train$away_win
 
-# Set seed for reproducibility
-set.seed(5150)
+# Prepare testing data for quarter 4
+X_q4_test <- data_q4_test |>
+  select(
+    quarter,
+    point_diff,
+    away_points_needed,
+    home_points_needed,
+    estimated_plays_remaining,
+    elo_diff
+  ) |>
+  as.matrix()
+
+y_q4_test <- data_q4_test$away_win
 
 # Train XGBoost model for quarters 1-3
 message("Training XGBoost model for quarters 1-3...")
 model_q1q3 <- xgboost(
-  data = X_q1q3,
-  label = y_q1q3,
+  data = X_q1q3_train,
+  label = y_q1q3_train,
   nrounds = 100,
   objective = "binary:logistic",
   eval_metric = "logloss",
@@ -152,8 +202,8 @@ model_q1q3 <- xgboost(
 # Train XGBoost model for quarter 4
 message("Training XGBoost model for quarter 4...")
 model_q4 <- xgboost(
-  data = X_q4,
-  label = y_q4,
+  data = X_q4_train,
+  label = y_q4_train,
   nrounds = 100,
   objective = "binary:logistic",
   eval_metric = "logloss",
@@ -163,26 +213,125 @@ model_q4 <- xgboost(
   colsample_bytree = 0.8
 )
 
-# Generate predictions for quarters 1-3
-message("Generating win probability predictions for quarters 1-3...")
-data_q1q3$win_prob <- predict(model_q1q3, X_q1q3)
+# Generate predictions for training data (quarters 1-3)
+message(
+  "Generating win probability predictions for training data (quarters 1-3)..."
+)
+data_q1q3_train$win_prob <- predict(model_q1q3, X_q1q3_train)
 
-# Generate predictions for quarter 4
-message("Generating win probability predictions for quarter 4...")
-data_q4$win_prob <- predict(model_q4, X_q4)
+# Generate predictions for testing data (quarters 1-3)
+message(
+  "Generating win probability predictions for testing data (quarters 1-3)..."
+)
+data_q1q3_test$win_prob <- predict(model_q1q3, X_q1q3_test)
 
-# Combine the predictions
-message("Combining predictions...")
-model_data <- bind_rows(data_q1q3, data_q4) |>
+# Generate predictions for training data (quarter 4)
+message(
+  "Generating win probability predictions for training data (quarter 4)..."
+)
+data_q4_train$win_prob <- predict(model_q4, X_q4_train)
+
+# Generate predictions for testing data (quarter 4)
+message(
+  "Generating win probability predictions for testing data (quarter 4)..."
+)
+data_q4_test$win_prob <- predict(model_q4, X_q4_test)
+
+# Combine the predictions for training data
+message("Combining predictions for training data...")
+model_data_train <- bind_rows(data_q1q3_train, data_q4_train) |>
+  arrange(game_id, play_count)
+
+# Combine the predictions for testing data
+message("Combining predictions for testing data...")
+model_data_test <- bind_rows(data_q1q3_test, data_q4_test) |>
   arrange(game_id, play_count)
 
 # Save the data with win probabilities
 message("Saving data with win probabilities...")
-write_feather(model_data, "unrivaled_play_by_play_wp.feather")
+write_feather(model_data_train, "unrivaled_play_by_play_wp_train.feather")
+write_feather(model_data_test, "unrivaled_play_by_play_wp_test.feather")
 
-# Create calibration plot
-message("Creating calibration plot...")
-p_calibration <- create_calibration_plot(model_data)
+# Create calibration plots
+message("Creating calibration plots...")
+p_calibration_train <- create_calibration_plot(
+  model_data_train,
+  "Training Data"
+)
+p_calibration_test <- create_calibration_plot(model_data_test, "Testing Data")
 
-# Generate win probability visualizations for all games
-generate_win_probability_plots(model_data)
+# Save calibration plots
+ggsave(
+  "plots/calibration_train.png",
+  p_calibration_train,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+ggsave(
+  "plots/calibration_test.png",
+  p_calibration_test,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+
+# Generate win probability visualizations for training games
+generate_win_probability_plots(model_data_train, output_dir = "plots/train")
+
+# Generate win probability visualizations for testing games
+generate_win_probability_plots(model_data_test, output_dir = "plots/test")
+
+# Calculate and print model performance metrics
+message("Calculating model performance metrics...")
+
+# Function to calculate metrics
+calculate_metrics <- function(data, model_name) {
+  # Calculate log loss
+  log_loss <- -mean(
+    data$away_win *
+      log(data$win_prob) +
+      (1 - data$away_win) * log(1 - data$win_prob)
+  )
+
+  # Calculate accuracy (using 0.5 as threshold)
+  accuracy <- mean((data$win_prob > 0.5) == data$away_win)
+
+  # Calculate AUC
+  # For simplicity, we'll use a basic implementation
+  # In practice, you might want to use a package like pROC
+  n_pos <- sum(data$away_win == 1)
+  n_neg <- sum(data$away_win == 0)
+
+  # Sort by probability
+  sorted_data <- data[order(data$win_prob, decreasing = TRUE), ]
+
+  # Calculate TPR and FPR at each threshold
+  tpr <- cumsum(sorted_data$away_win == 1) / n_pos
+  fpr <- cumsum(sorted_data$away_win == 0) / n_neg
+
+  # Calculate AUC using trapezoidal rule
+  auc <- sum(diff(fpr) * (tpr[-1] + tpr[-length(tpr)]) / 2)
+
+  # Print metrics
+  message(sprintf("%s Model Metrics:", model_name))
+  message(sprintf("  Log Loss: %.4f", log_loss))
+  message(sprintf("  Accuracy: %.4f", accuracy))
+  message(sprintf("  AUC: %.4f", auc))
+
+  return(list(
+    log_loss = log_loss,
+    accuracy = accuracy,
+    auc = auc
+  ))
+}
+
+# Calculate metrics for Q1-Q3 model
+q1q3_train_metrics <- calculate_metrics(data_q1q3_train, "Q1-Q3 Training")
+q1q3_test_metrics <- calculate_metrics(data_q1q3_test, "Q1-Q3 Testing")
+
+# Calculate metrics for Q4 model
+q4_train_metrics <- calculate_metrics(data_q4_train, "Q4 Training")
+q4_test_metrics <- calculate_metrics(data_q4_test, "Q4 Testing")
+
+message("All processing complete!")

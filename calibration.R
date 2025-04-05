@@ -3,11 +3,13 @@
 
 #' Create and save a calibration plot for the win probability model
 #' @param model_data Data frame containing model predictions and actual outcomes
+#' @param title Title for the calibration plot
 #' @param output_dir Directory to save the plot
 #' @param timestamp Optional timestamp to append to filename
 #' @return The calibration plot object
 create_calibration_plot <- function(
   model_data,
+  title = "Win Probability Calibration by Quarter",
   output_dir = "plots",
   timestamp = format(Sys.time(), "%Y%m%d_%H%M%S")
 ) {
@@ -72,7 +74,7 @@ create_calibration_plot <- function(
       family = "InputMono"
     ) +
     labs(
-      title = "Win Probability Calibration by Quarter",
+      title = title,
       subtitle = "How well predicted probabilities match actual outcomes",
       x = "Predicted Win Probability",
       y = "Actual Win Rate",

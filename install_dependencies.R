@@ -10,21 +10,21 @@ if (!require("remotes", quietly = TRUE)) {
 
 # List of required packages from CRAN
 required_packages <- c(
-  "tidyverse",    # Data manipulation and visualization
-  "xgboost",      # For XGBoost model
-  "feather",      # For fast data storage
-  "rvest",        # For web scraping
-  "fs",           # For file system operations
-  "httr",         # For HTTP requests
-  "lubridate",    # For date handling
-  "elo",          # For ELO calculations
-  "ggbump",       # For smooth bump charts
-  "glue"          # For string interpolation
+  "tidyverse", # Data manipulation and visualization
+  "xgboost", # For XGBoost model
+  "feather", # For fast data storage
+  "rvest", # For web scraping
+  "fs", # For file system operations
+  "httr", # For HTTP requests
+  "lubridate", # For date handling
+  "elo", # For ELO calculations
+  "ggbump", # For smooth bump charts
+  "glue" # For string interpolation
 )
 
 # List of GitHub packages
 github_packages <- c(
-  "topfunky/gghighcontrast"  # High contrast ggplot theme
+  "topfunky/gghighcontrast" # High contrast ggplot theme
 )
 
 # Function to install and load CRAN packages
@@ -63,4 +63,4 @@ for (package in github_packages) {
   install_and_load_github(package)
 }
 
-message("All dependencies installed and loaded successfully!") 
+message("All dependencies installed and loaded successfully!")
