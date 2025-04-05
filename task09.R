@@ -13,6 +13,8 @@ dir.create("plots", showWarnings = FALSE, recursive = TRUE)
 
 # Source calibration functions
 source("calibration.R")
+# Source visualization functions
+source("visualizations.R")
 
 # Read play by play data
 message("Reading play by play data...")
@@ -182,110 +184,5 @@ write_feather(model_data, "unrivaled_play_by_play_wp.feather")
 message("Creating calibration plot...")
 p_calibration <- create_calibration_plot(model_data)
 
-# Create visualization for each game
-message("Creating win probability visualizations...")
-for (game in unique(model_data$game_id)) {
-  game_data <- model_data |>
-    filter(game_id == game)
-
-  # Create win probability visualization
-  p <- ggplot(game_data, aes(x = play_count)) +
-    # Add vertical line at halftime
-    geom_vline(
-      data = game_data |>
-        filter(quarter == 2) |>
-        slice_max(play_count),
-      aes(xintercept = play_count),
-      color = "white",
-      linetype = "dotted",
-      alpha = 0.2
-    ) +
-    # Add horizontal line at even win probability (below data representation)
-    geom_hline(yintercept = 50, linetype = "solid", color = "white") +
-
-    # Point differential bars
-    geom_bar(
-      aes(y = point_diff, fill = point_diff > 0),
-      stat = "identity",
-      alpha = 0.3,
-      width = 1
-    ) +
-    # Win probability line (on top of point differential bars)
-    geom_line(
-      aes(y = win_prob * 100, color = "Win Probability"),
-      linewidth = 1
-    ) +
-    # Add win probability labels
-    annotate(
-      "text",
-      x = -Inf,
-      y = 95,
-      label = "Away Team Win",
-      hjust = 0,
-      vjust = 1,
-      color = "darkgray",
-      size = 3,
-      family = "InputMono"
-    ) +
-    annotate(
-      "text",
-      x = -Inf,
-      y = 5,
-      label = "Home Team Win",
-      hjust = 0,
-      vjust = 0,
-      color = "darkgray",
-      size = 3,
-      family = "InputMono"
-    ) +
-    scale_y_continuous(
-      name = "Point Differential",
-      sec.axis = sec_axis(
-        ~ . / 100,
-        name = "Win Probability",
-        labels = scales::percent
-      )
-    ) +
-    coord_cartesian(
-      ylim = c(
-        min(game_data$point_diff),
-        max(100, max(game_data$point_diff))
-      )
-    ) +
-    scale_color_manual(
-      name = "Metric",
-      values = c("Win Probability" = "#B39DFF") # Light purple
-    ) +
-    scale_fill_manual(
-      name = "Point Differential",
-      values = c("TRUE" = "#E1BEE7", "FALSE" = "#9C27B0"), # Higher contrast purples
-      labels = c("TRUE" = "Away Team Ahead", "FALSE" = "Home Team Ahead")
-    ) +
-    labs(
-      title = paste0("Win Probability and Point Differential - ", game),
-      x = "Play Number",
-      color = "Metric"
-    ) +
-    theme_high_contrast(
-      foreground_color = "white",
-      background_color = "black",
-      base_family = "InputMono"
-    ) +
-    theme(
-      axis.title.y.right = element_text(
-        vjust = 0,
-        margin = margin(t = 0, r = 0, b = 10, l = 0)
-      )
-    )
-
-  # Save the plot
-  ggsave(
-    filename = file.path("plots", sprintf("win_prob_%s.png", game)),
-    plot = p,
-    width = 10,
-    height = 6,
-    dpi = 300
-  )
-}
-
-message("All visualizations saved to plots/ directory!")
+# Generate win probability visualizations for all games
+generate_win_probability_plots(model_data)
