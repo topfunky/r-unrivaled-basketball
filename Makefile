@@ -2,11 +2,11 @@
 # to generate rankings and ELO rating visualizations.
 
 # Default target
-all: rankings elo wp
+all: rankings elo wp format
 
 
 # Run all task files
-all-tasks: task02 rankings elo task06 task07 pbp wp task10
+all-tasks: task02 rankings elo task06 task07 pbp wp task10 format
 
 # Individual task targets
 task01: task01.R
@@ -44,6 +44,12 @@ clean:
 	rm -f unrivaled_elo_ratings.png unrivaled_elo_rankings.feather
 	rm -f plots/*.png
 	rm -f *.feather
+	@echo "Cleaning temporary files..."
+	@find . -name "*.Rproj.user" -type d -exec rm -rf {} +
+	@find . -name ".Rproj.user" -type d -exec rm -rf {} +
+	@find . -name ".RData" -type f -delete
+	@find . -name ".Rhistory" -type f -delete
+	@echo "Cleaning complete!"
 
 # Install required R packages
 install-deps:
@@ -66,6 +72,7 @@ list:
 	@echo "  rankings     - Generate team rankings visualization"
 	@echo "  elo          - Generate ELO ratings visualization"
 	@echo "  wp           - Generate win probability model and visualizations"
+	@echo "  format       - Format all R files using air"
 	@echo ""
 	@echo "  all-tasks    - Run all task files in sequence (task02, rankings, elo, task06, task07, pbp, wp, task10)"
 	@echo ""
@@ -81,4 +88,25 @@ list:
 	@echo "  setup-hooks  - Set up git hooks for code formatting"
 	@echo "  list         - Show this help message"
 
-.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp task10 clean install-deps setup-hooks list
+# Format all R files using air
+format:
+	@echo "Formatting all R files..."
+	@find . -name "*.R" -exec air format {} \;
+	@echo "Formatting complete!"
+
+# Run the win probability model
+win_prob: format
+	@echo "Running win probability model..."
+	@Rscript task09.R
+	@echo "Win probability model complete!"
+
+# Run all tasks
+all_tasks: format
+	@echo "Running all tasks..."
+	@for file in task*.R; do \
+		echo "Running $$file..."; \
+		Rscript $$file; \
+	done
+	@echo "All tasks complete!"
+
+.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp task10 clean install-deps setup-hooks list format win_prob all_tasks
