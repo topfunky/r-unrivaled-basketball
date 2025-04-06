@@ -12,6 +12,42 @@ library(gghighcontrast)
 # Load data
 pbp_data <- read_feather("unrivaled_play_by_play.feather")
 box_scores <- read_feather("unrivaled_box_scores.feather")
+wnba_stats <- read_feather("fixtures/wnba_shooting_stats_2024.feather")
+
+# Join WNBA stats with box scores
+player_comparison <- box_scores |>
+  group_by(player_name) |>
+  summarise(
+    # Box score stats
+    box_fg_made = sum(fg, na.rm = TRUE),
+    box_fg_attempted = sum(fg_attempts, na.rm = TRUE),
+    box_fg_pct = box_fg_made / box_fg_attempted,
+    box_pts = sum(PTS, na.rm = TRUE),
+    box_ft_attempted = sum(ft_attempts, na.rm = TRUE),
+    box_ts_pct = box_pts / (2 * (box_fg_attempted + 0.44 * box_ft_attempted))
+  ) |>
+  inner_join(wnba_stats, by = "player_name") |>
+  select(
+    player_name,
+    team,
+    # Box score stats
+    box_fg_made,
+    box_fg_attempted,
+    box_fg_pct,
+    box_pts,
+    box_ft_attempted,
+    box_ts_pct,
+    # WNBA stats
+    fg_made,
+    fg_attempted,
+    fg_pct,
+    points,
+    ft_attempted,
+    fg3_made,
+    fg3_attempted,
+    fg3_pct
+  ) |>
+  arrange(desc(box_pts))
 
 # Count total free throw attempts (using box score data for accuracy)
 total_ft_attempts <- box_scores |>
@@ -63,8 +99,8 @@ player_fg_pct <- box_scores |>
   group_by(player_name) |>
   summarise(
     fg_made = sum(fg, na.rm = TRUE),
-    fg_attempts = sum(fg_attempts, na.rm = TRUE),
-    fg_pct = fg_made / fg_attempts * 100
+    fg_attempted = sum(fg_attempts, na.rm = TRUE),
+    fg_pct = fg_made / fg_attempted
   )
 
 # Calculate true shooting percentage for each player (using box score data)
@@ -76,16 +112,32 @@ player_ts_pct <- box_scores |>
   group_by(player_name) |>
   summarise(
     points = sum(PTS, na.rm = TRUE),
-    fg_attempts = sum(fg_attempts, na.rm = TRUE), # Already includes 2pt and 3pt attempts
-    ft_attempts = sum(ft_attempts, na.rm = TRUE),
-    ts_pct = points / (2 * (fg_attempts + 0.44 * ft_attempts)) * 100
+    fg_attempted = sum(fg_attempts, na.rm = TRUE), # Already includes 2pt and 3pt attempts
+    ft_attempted = sum(ft_attempts, na.rm = TRUE),
+    ts_pct = points / (2 * (fg_attempted + 0.44 * ft_attempted))
   )
 
 # Create and save density plots with InputMono font
-fg_density_plot <- ggplot(player_fg_pct, aes(x = fg_pct)) +
-  geom_density(fill = "#0077CC", alpha = 0.3) +
+fg_density_plot <- ggplot() +
+  geom_density(
+    data = player_fg_pct,
+    aes(x = fg_pct, fill = "Box Scores"),
+    alpha = 0.3
+  ) +
+  geom_density(
+    data = player_comparison,
+    aes(x = fg_pct, fill = "WNBA Stats"),
+    alpha = 0.3
+  ) +
+  scale_fill_manual(
+    name = "Data Source",
+    values = c("Box Scores" = "#0077CC", "WNBA Stats" = "#CC7700")
+  ) +
   theme_high_contrast() +
-  theme(text = element_text(family = "InputMono")) +
+  theme(
+    text = element_text(family = "InputMono"),
+    legend.position = "bottom"
+  ) +
   labs(
     title = "Distribution of Field Goal Percentages",
     x = "Field Goal Percentage",
@@ -100,10 +152,26 @@ ggsave(
   dpi = 300
 )
 
-ts_density_plot <- ggplot(player_ts_pct, aes(x = ts_pct)) +
-  geom_density(fill = "#0077CC", alpha = 0.3) +
+ts_density_plot <- ggplot() +
+  geom_density(
+    data = player_ts_pct,
+    aes(x = ts_pct, fill = "Box Scores"),
+    alpha = 0.3
+  ) +
+  geom_density(
+    data = player_comparison,
+    aes(x = ts_pct, fill = "WNBA Stats"),
+    alpha = 0.3
+  ) +
+  scale_fill_manual(
+    name = "Data Source",
+    values = c("Box Scores" = "#0077CC", "WNBA Stats" = "#CC7700")
+  ) +
   theme_high_contrast() +
-  theme(text = element_text(family = "InputMono")) +
+  theme(
+    text = element_text(family = "InputMono"),
+    legend.position = "bottom"
+  ) +
   labs(
     title = "Distribution of True Shooting Percentages",
     x = "True Shooting Percentage",
@@ -118,8 +186,11 @@ ggsave(
   dpi = 300
 )
 
-# Print results in markdown format
+# Write results to markdown file
+sink("plots/player_stats.md")
+
 cat("# Basketball Metrics Summary\n\n")
+
 cat("## Free Throw Statistics\n")
 cat("- Total Free Throw Attempts:", total_ft_attempts, "\n\n")
 
@@ -151,11 +222,38 @@ cat(
 )
 
 cat("## Player Shooting Statistics\n")
-cat("### Top 10 Players by Field Goal Percentage (minimum 10 attempts)\n")
+
+cat("### Player Comparison: Box Scores vs WNBA Stats\n")
+cat(
+  "| Player | Team | Box FG% | WNBA FG% | Box TS% | WNBA 3P% | Box PTS | WNBA PTS |\n"
+)
+cat(
+  "|--------|------|---------|----------|---------|----------|---------|----------|\n"
+)
+player_comparison |>
+  {
+    function(x) {
+      for (i in 1:nrow(x)) {
+        cat(sprintf(
+          "| %s | %s | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %d | %d |\n",
+          x$player_name[i],
+          x$team[i],
+          x$box_fg_pct[i] * 100,
+          x$fg_pct[i] * 100,
+          x$box_ts_pct[i] * 100,
+          x$fg3_pct[i] * 100,
+          x$box_pts[i],
+          x$points[i]
+        ))
+      }
+    }
+  }()
+
+cat("\n### Top 10 Players by Field Goal Percentage (minimum 10 attempts)\n")
 cat("| Player | FG% | FGM/FGA |\n")
 cat("|--------|-----|----------|\n")
 player_fg_pct |>
-  filter(fg_attempts >= 10) |>
+  filter(fg_attempted >= 10) |>
   arrange(desc(fg_pct)) |>
   head(10) |>
   {
@@ -164,9 +262,9 @@ player_fg_pct |>
         cat(sprintf(
           "| %s | %.1f%% | %d/%d |\n",
           x$player_name[i],
-          x$fg_pct[i],
+          x$fg_pct[i] * 100,
           x$fg_made[i],
-          x$fg_attempts[i]
+          x$fg_attempted[i]
         ))
       }
     }
@@ -176,7 +274,7 @@ cat("\n### Top 10 Players by True Shooting Percentage (minimum 10 attempts)\n")
 cat("| Player | TS% | PTS | FGA | FTA |\n")
 cat("|--------|-----|-----|-----|-----|\n")
 player_ts_pct |>
-  filter(fg_attempts >= 10) |>
+  filter(fg_attempted >= 10) |>
   arrange(desc(ts_pct)) |>
   head(10) |>
   {
@@ -185,11 +283,13 @@ player_ts_pct |>
         cat(sprintf(
           "| %s | %.1f%% | %d | %d | %d |\n",
           x$player_name[i],
-          x$ts_pct[i],
+          x$ts_pct[i] * 100,
           x$points[i],
-          x$fg_attempts[i],
-          x$ft_attempts[i]
+          x$fg_attempted[i],
+          x$ft_attempted[i]
         ))
       }
     }
   }()
+
+sink()
