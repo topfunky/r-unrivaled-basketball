@@ -6,7 +6,7 @@ all: rankings elo wp format
 
 
 # Run all task files
-all-tasks: task02 rankings elo task06 task07 pbp wp task10 format
+all-tasks: task02 rankings elo task06 task07 pbp wp task10 task11 format
 
 # Individual task targets
 task01: task01.R
@@ -37,6 +37,9 @@ wp: task09.R
 
 task10: task10.R
 	Rscript task10.R
+
+task11: task11.R
+	Rscript task11.R
 
 # Clean up generated files
 clean:
@@ -74,7 +77,7 @@ list:
 	@echo "  wp           - Generate win probability model and visualizations"
 	@echo "  format       - Format all R files using air"
 	@echo ""
-	@echo "  all-tasks    - Run all task files in sequence (task02, rankings, elo, task06, task07, pbp, wp, task10)"
+	@echo "  all-tasks    - Run all task files in sequence (task02, rankings, elo, task06, task07, pbp, wp, task10, task11)"
 	@echo ""
 	@echo "  task01       - Generate initial data analysis and visualizations"
 	@echo "  task02       - Scrape and process game data"
@@ -82,6 +85,7 @@ list:
 	@echo "  task07       - Process and analyze game events"
 	@echo "  pbp          - Generate play-by-play analysis"
 	@echo "  task10       - Calculate additional basketball metrics"
+	@echo "  task11       - Download WNBA player shooting percentages"
 	@echo ""
 	@echo "  clean        - Remove all generated files (plots, data files)"
 	@echo "  install-deps - Install required R packages"
@@ -109,4 +113,4 @@ all_tasks: format
 	done
 	@echo "All tasks complete!"
 
-.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp task10 clean install-deps setup-hooks list format win_prob all_tasks
+.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp task10 task11 clean install-deps setup-hooks list format win_prob all_tasks
