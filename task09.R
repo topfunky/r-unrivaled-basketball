@@ -60,7 +60,7 @@ model_data <- play_by_play |>
     # Time remaining in seconds (only up to end of 3rd quarter)
     time_remaining = if_else(
       quarter <= 3,
-      (minute * 60 + second),
+      (minute * 60 * quarter + second),
       NA_real_ # 4th quarter is untimed
     ),
     # Point differential
