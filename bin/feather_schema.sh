@@ -37,21 +37,20 @@ print_schema_for_file() {
 # Function to print schema for a directory
 print_schema_for_dir() {
     local dir=$1
-    local dir_name=$2
     
     # Check if directory exists
     if [ ! -d "$dir" ]; then
-        echo "Directory $dir_name does not exist"
+        echo "Directory $dir does not exist"
         return
     fi
     
     # Check if any feather files exist in the directory
     if ! ls "$dir"/*.feather 1> /dev/null 2>&1; then
-        echo "No feather files found in $dir_name directory"
+        echo "No feather files found in $dir directory"
         return
     fi
     
-    echo "=== Feather files in $dir_name directory ==="
+    echo "=== Feather files in $dir directory ==="
     
     # Print schema for each feather file
     for feather_file in "$dir"/*.feather; do
@@ -79,4 +78,4 @@ else
 fi
 
 # Print schema for fixtures directory
-print_schema_for_dir "fixtures" "fixtures" 
+print_schema_for_dir "fixtures" 
