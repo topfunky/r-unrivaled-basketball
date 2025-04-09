@@ -2,11 +2,10 @@
 # to generate rankings and ELO rating visualizations.
 
 # Default target
-all: rankings elo wp format
+.DEFAULT_GOAL := list
 
-
-# Run all task files
-all-tasks: task02 rankings elo task06 task07 pbp wp task10 task11 format
+# Run all task files in sequence (respecting dependencies)
+all-tasks: task02 rankings elo task06 task07 pbp wp task11 task10
 
 # Individual task targets
 task01: task01.R
@@ -98,19 +97,13 @@ format:
 	@find . -name "*.R" -exec air format {} \;
 	@echo "Formatting complete!"
 
-# Run the win probability model
-win_prob: format
-	@echo "Running win probability model..."
-	@Rscript task09.R
-	@echo "Win probability model complete!"
-
-# Run all tasks
-all_tasks: format
-	@echo "Running all tasks..."
+# Run all task files in alphabetical order (use with caution)
+run-all-tasks: format
+	@echo "Running all tasks in alphabetical order (use with caution)..."
 	@for file in task*.R; do \
 		echo "Running $$file..."; \
 		Rscript $$file; \
 	done
 	@echo "All tasks complete!"
 
-.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp task10 task11 clean install-deps setup-hooks list format win_prob all_tasks
+.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp task10 task11 clean install-deps setup-hooks list format run-all-tasks

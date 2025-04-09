@@ -3,6 +3,8 @@
 # possession changes, points per possession,
 # and shooting percentages for players using both
 # play-by-play and box score data.
+#
+# Also uses WNBA stats from task11.R to compare against.
 
 library(tidyverse)
 library(feather)

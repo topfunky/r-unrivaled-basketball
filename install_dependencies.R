@@ -19,7 +19,8 @@ required_packages <- c(
   "lubridate", # For date handling
   "elo", # For ELO calculations
   "ggbump", # For smooth bump charts
-  "glue" # For string interpolation
+  "glue", # For string interpolation
+  "wehoop" # For women's basketball data
 )
 
 # List of GitHub packages

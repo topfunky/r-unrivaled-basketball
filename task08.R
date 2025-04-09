@@ -38,6 +38,7 @@ parse_play_by_play <- function(game_id) {
   # Extract possessing team from image alt text
   play_cells <- html |> html_nodes("td:nth-child(2)") # Get play description cells
   pos_teams <- map_chr(play_cells, function(cell) {
+    # Team associated with the play is mentioned in the image alt text
     img <- html_node(cell, "img")
     if (!is.null(img)) {
       alt_text <- html_attr(img, "alt")
