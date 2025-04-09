@@ -29,6 +29,10 @@ player_comparison <- box_scores |>
     box_ts_pct = box_pts / (2 * (box_fg_attempted + 0.44 * box_ft_attempted))
   ) |>
   inner_join(wnba_stats, by = "player_name") |>
+  mutate(
+    # Calculate true shooting percentage for WNBA stats
+    wnba_ts_pct = points / (2 * (fg_attempted + 0.44 * ft_attempted))
+  ) |>
   select(
     player_name,
     team,
@@ -47,7 +51,8 @@ player_comparison <- box_scores |>
     ft_attempted,
     fg3_made,
     fg3_attempted,
-    fg3_pct
+    fg3_pct,
+    wnba_ts_pct
   ) |>
   arrange(desc(box_pts))
 
@@ -162,7 +167,7 @@ ts_density_plot <- ggplot() +
   ) +
   geom_density(
     data = player_comparison,
-    aes(x = ts_pct, fill = "WNBA Stats"),
+    aes(x = wnba_ts_pct, fill = "WNBA Stats"),
     alpha = 0.3
   ) +
   scale_fill_manual(

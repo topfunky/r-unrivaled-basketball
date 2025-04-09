@@ -44,7 +44,9 @@ get_wnba_shooting_stats <- function(season = NULL) {
         ~ as.numeric(.)
       ),
       # Add season column
-      season = season
+      season = season,
+      # Calculate true shooting percentage
+      ts_pct = PTS / (2 * (FGA + 0.44 * FTA))
     ) |>
     # Rename columns for clarity
     rename(
@@ -61,7 +63,8 @@ get_wnba_shooting_stats <- function(season = NULL) {
       ft_made = FTM,
       ft_attempted = FTA,
       ft_pct = FT_PCT,
-      points = PTS
+      points = PTS,
+      ts_pct = ts_pct
     ) |>
     # Select relevant columns
     select(
@@ -79,7 +82,8 @@ get_wnba_shooting_stats <- function(season = NULL) {
       ft_made,
       ft_attempted,
       ft_pct,
-      points
+      points,
+      ts_pct
     )
 
   return(shooting_stats)
@@ -114,12 +118,12 @@ write_feather(wnba_shooting_stats, output_file)
 message("Summary of WNBA shooting stats:")
 summary(wnba_shooting_stats)
 
-# Print top 10 players by field goal percentage (minimum 100 attempts)
-message("Top 10 players by field goal percentage (minimum 100 attempts):")
+# Print top 10 players by true shooting percentage (minimum 100 attempts)
+message("Top 10 players by true shooting percentage (minimum 100 attempts):")
 wnba_shooting_stats |>
   filter(fg_attempted >= 100) |>
-  arrange(desc(fg_pct)) |>
-  select(player_name, team, fg_pct, fg3_pct, ft_pct) |>
+  arrange(desc(ts_pct)) |>
+  select(player_name, team, ts_pct, fg_pct, fg3_pct, ft_pct) |>
   head(10) |>
   print()
 
