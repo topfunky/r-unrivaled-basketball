@@ -76,7 +76,7 @@ list:
 	@echo "  wp           - Generate win probability model and visualizations"
 	@echo "  format       - Format all R files using air"
 	@echo ""
-	@echo "  all-tasks    - Run all task files in sequence (task02, rankings, elo, task06, task07, pbp, wp, task10, task11)"
+	@echo "  all-tasks    - Run all task files in sequence"
 	@echo ""
 	@echo "  task01       - Generate initial data analysis and visualizations"
 	@echo "  task02       - Scrape and process game data"
