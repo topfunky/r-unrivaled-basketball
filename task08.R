@@ -144,18 +144,23 @@ parse_box_score <- function(game_id) {
       str_trim(player_name) != "",
       str_trim(player_name) != "TEAM"
     ) |>
-    # Split shooting stats into made and missed
-    # TODO: Should be made and attempted (not missed)
+    # Split shooting stats into made and attempted
     mutate(
-      # Split FG into made and attempts
-      fg = as.numeric(str_extract(FG, "^\\d+")),
-      fg_attempts = as.numeric(str_extract(FG, "\\d+$")),
-      # Split 3PT into made and attempts
-      three_pt = as.numeric(str_extract(`3PT`, "^\\d+")),
-      three_pt_attempts = as.numeric(str_extract(`3PT`, "\\d+$")),
-      # Split FT into made and attempts
-      ft = as.numeric(str_extract(FT, "^\\d+")),
-      ft_attempts = as.numeric(str_extract(FT, "\\d+$"))
+      # Use field names from wehoop
+      field_goals_made = as.numeric(str_extract(FG, "^\\d+")),
+      field_goals_attempted = as.numeric(str_extract(FG, "\\d+$")),
+      three_point_field_goals_made = as.numeric(str_extract(`3PT`, "^\\d+")),
+      three_point_field_goals_attempted = as.numeric(str_extract(
+        `3PT`,
+        "\\d+$"
+      )),
+      free_throws_made = as.numeric(str_extract(FT, "^\\d+")),
+      free_throws_attempted = as.numeric(str_extract(FT, "\\d+$")),
+      # Calculate two-point field goals
+      two_point_field_goals_made = field_goals_made -
+        three_point_field_goals_made,
+      two_point_field_goals_attempted = field_goals_attempted -
+        three_point_field_goals_attempted
     ) |>
     # Reorder columns to put new columns first
     select(
@@ -163,12 +168,14 @@ parse_box_score <- function(game_id) {
       is_starter,
       player_name,
       MIN,
-      fg,
-      fg_attempts,
-      three_pt,
-      three_pt_attempts,
-      ft,
-      ft_attempts,
+      field_goals_made,
+      field_goals_attempted,
+      three_point_field_goals_made,
+      three_point_field_goals_attempted,
+      free_throws_made,
+      free_throws_attempted,
+      two_point_field_goals_made,
+      two_point_field_goals_attempted,
       REB,
       OREB,
       DREB,

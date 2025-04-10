@@ -7,6 +7,7 @@ library(tidyverse)
 library(wehoop)
 library(feather)
 library(glue)
+library(gghighcontrast)
 
 # Set seed for reproducibility
 set.seed(5150)
@@ -54,17 +55,16 @@ get_wnba_shooting_stats <- function(season = NULL) {
       team = TEAM_ABBREVIATION,
       games_played = GP,
       minutes_played = MIN,
-      fg_made = FGM,
-      fg_attempted = FGA,
-      fg_pct = FG_PCT,
-      fg3_made = FG3M,
-      fg3_attempted = FG3A,
-      fg3_pct = FG3_PCT,
-      ft_made = FTM,
-      ft_attempted = FTA,
-      ft_pct = FT_PCT,
-      points = PTS,
-      ts_pct = ts_pct
+      field_goals_made = FGM,
+      field_goals_attempted = FGA,
+      field_goal_pct = FG_PCT,
+      three_point_field_goals_made = FG3M,
+      three_point_field_goals_attempted = FG3A,
+      three_point_pct = FG3_PCT,
+      free_throws_made = FTM,
+      free_throws_attempted = FTA,
+      free_throw_pct = FT_PCT,
+      points = PTS
     ) |>
     # Select relevant columns
     select(
@@ -73,15 +73,15 @@ get_wnba_shooting_stats <- function(season = NULL) {
       season,
       games_played,
       minutes_played,
-      fg_made,
-      fg_attempted,
-      fg_pct,
-      fg3_made,
-      fg3_attempted,
-      fg3_pct,
-      ft_made,
-      ft_attempted,
-      ft_pct,
+      field_goals_made,
+      field_goals_attempted,
+      field_goal_pct,
+      three_point_field_goals_made,
+      three_point_field_goals_attempted,
+      three_point_pct,
+      free_throws_made,
+      free_throws_attempted,
+      free_throw_pct,
       points,
       ts_pct
     )
@@ -121,10 +121,156 @@ summary(wnba_shooting_stats)
 # Print top 10 players by true shooting percentage (minimum 100 attempts)
 message("Top 10 players by true shooting percentage (minimum 100 attempts):")
 wnba_shooting_stats |>
-  filter(fg_attempted >= 100) |>
+  filter(field_goals_attempted >= 100) |>
   arrange(desc(ts_pct)) |>
-  select(player_name, team, ts_pct, fg_pct, fg3_pct, ft_pct) |>
+  select(
+    player_name,
+    team,
+    ts_pct,
+    field_goal_pct,
+    three_point_pct,
+    free_throw_pct
+  ) |>
   head(10) |>
   print()
+
+# Create and save density plots with InputMono font
+fg_pct_plot <- ggplot(wnba_shooting_stats, aes(x = field_goal_pct)) +
+  geom_density(fill = "#FF8C00", alpha = 0.3) +
+  theme_high_contrast() +
+  theme(
+    text = element_text(family = "InputMono"),
+    legend.position = "none"
+  ) +
+  labs(
+    title = "Distribution of Field Goal Percentages",
+    x = "Field Goal Percentage",
+    y = "Density"
+  )
+
+ggsave(
+  "plots/fg_pct_density.png",
+  plot = fg_pct_plot,
+  width = 8,
+  height = 6,
+  dpi = 300
+)
+
+ts_pct_plot <- ggplot(wnba_shooting_stats, aes(x = ts_pct)) +
+  geom_density(fill = "#FF8C00", alpha = 0.3) +
+  theme_high_contrast() +
+  theme(
+    text = element_text(family = "InputMono"),
+    legend.position = "none"
+  ) +
+  labs(
+    title = "Distribution of True Shooting Percentages",
+    x = "True Shooting Percentage",
+    y = "Density"
+  )
+
+ggsave(
+  "plots/ts_pct_density.png",
+  plot = ts_pct_plot,
+  width = 8,
+  height = 6,
+  dpi = 300
+)
+
+# Write results to markdown file
+sink("plots/wnba_shooting_stats.md")
+
+cat("# WNBA Shooting Statistics\n\n")
+
+cat("## Top 10 Players by Field Goal Percentage (minimum 10 attempts)\n")
+cat("| Player | Team | FG% | FGM/FGA |\n")
+cat("|--------|------|-----|----------|\n")
+wnba_shooting_stats |>
+  filter(field_goals_attempted >= 10) |>
+  arrange(desc(field_goal_pct)) |>
+  head(10) |>
+  {
+    function(x) {
+      for (i in 1:nrow(x)) {
+        cat(sprintf(
+          "| %s | %s | %.1f%% | %d/%d |\n",
+          x$player_name[i],
+          x$team[i],
+          x$field_goal_pct[i] * 100,
+          x$field_goals_made[i],
+          x$field_goals_attempted[i]
+        ))
+      }
+    }
+  }()
+
+cat("\n## Top 10 Players by Three-Point Percentage (minimum 10 attempts)\n")
+cat("| Player | Team | 3P% | 3PM/3PA |\n")
+cat("|--------|------|-----|----------|\n")
+wnba_shooting_stats |>
+  filter(three_point_field_goals_attempted >= 10) |>
+  arrange(desc(three_point_pct)) |>
+  head(10) |>
+  {
+    function(x) {
+      for (i in 1:nrow(x)) {
+        cat(sprintf(
+          "| %s | %s | %.1f%% | %d/%d |\n",
+          x$player_name[i],
+          x$team[i],
+          x$three_point_pct[i] * 100,
+          x$three_point_field_goals_made[i],
+          x$three_point_field_goals_attempted[i]
+        ))
+      }
+    }
+  }()
+
+cat("\n## Top 10 Players by Free Throw Percentage (minimum 10 attempts)\n")
+cat("| Player | Team | FT% | FTM/FTA |\n")
+cat("|--------|------|-----|----------|\n")
+wnba_shooting_stats |>
+  filter(free_throws_attempted >= 10) |>
+  arrange(desc(free_throw_pct)) |>
+  head(10) |>
+  {
+    function(x) {
+      for (i in 1:nrow(x)) {
+        cat(sprintf(
+          "| %s | %s | %.1f%% | %d/%d |\n",
+          x$player_name[i],
+          x$team[i],
+          x$free_throw_pct[i] * 100,
+          x$free_throws_made[i],
+          x$free_throws_attempted[i]
+        ))
+      }
+    }
+  }()
+
+cat("\n## Top 10 Players by True Shooting Percentage (minimum 10 attempts)\n")
+cat("| Player | Team | TS% | PTS | FGA | FTA |\n")
+cat("|--------|------|-----|-----|-----|-----|\n")
+wnba_shooting_stats |>
+  filter(field_goals_attempted >= 10) |>
+  arrange(desc(ts_pct)) |>
+  head(10) |>
+  {
+    function(x) {
+      for (i in 1:nrow(x)) {
+        cat(sprintf(
+          "| %s | %s | %.1f%% | %d | %d | %d |\n",
+          x$player_name[i],
+          x$team[i],
+          x$ts_pct[i] * 100,
+          x$points[i],
+          x$field_goals_attempted[i],
+          x$free_throws_attempted[i]
+        ))
+      }
+    }
+  }()
+
+sink()
 
 message("Task completed successfully!")

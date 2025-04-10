@@ -21,17 +21,18 @@ player_comparison <- box_scores |>
   group_by(player_name) |>
   summarise(
     # Box score stats
-    box_fg_made = sum(fg, na.rm = TRUE),
-    box_fg_attempted = sum(fg_attempts, na.rm = TRUE),
+    box_fg_made = sum(field_goals_made, na.rm = TRUE),
+    box_fg_attempted = sum(field_goals_attempted, na.rm = TRUE),
     box_fg_pct = box_fg_made / box_fg_attempted,
     box_pts = sum(PTS, na.rm = TRUE),
-    box_ft_attempted = sum(ft_attempts, na.rm = TRUE),
+    box_ft_attempted = sum(free_throws_attempted, na.rm = TRUE),
     box_ts_pct = box_pts / (2 * (box_fg_attempted + 0.44 * box_ft_attempted))
   ) |>
   inner_join(wnba_stats, by = "player_name") |>
   mutate(
     # Calculate true shooting percentage for WNBA stats
-    wnba_ts_pct = points / (2 * (fg_attempted + 0.44 * ft_attempted))
+    wnba_ts_pct = points /
+      (2 * (field_goals_attempted + 0.44 * free_throws_attempted))
   ) |>
   select(
     player_name,
@@ -44,14 +45,14 @@ player_comparison <- box_scores |>
     box_ft_attempted,
     box_ts_pct,
     # WNBA stats
-    fg_made,
-    fg_attempted,
-    fg_pct,
+    field_goals_made,
+    field_goals_attempted,
+    field_goal_pct,
     points,
-    ft_attempted,
-    fg3_made,
-    fg3_attempted,
-    fg3_pct,
+    free_throws_attempted,
+    three_point_field_goals_made,
+    three_point_field_goals_attempted,
+    three_point_pct,
     wnba_ts_pct
   ) |>
   arrange(desc(box_pts))
@@ -59,7 +60,7 @@ player_comparison <- box_scores |>
 # Count total free throw attempts (using box score data for accuracy)
 total_ft_attempts <- box_scores |>
   summarise(
-    total_fta = sum(ft_attempts, na.rm = TRUE)
+    total_fta = sum(free_throws_attempted, na.rm = TRUE)
   ) |>
   pull(total_fta)
 
@@ -105,22 +106,20 @@ points_per_possession <- pbp_data |>
 player_fg_pct <- box_scores |>
   group_by(player_name) |>
   summarise(
-    fg_made = sum(fg, na.rm = TRUE),
-    fg_attempted = sum(fg_attempts, na.rm = TRUE),
+    fg_made = sum(field_goals_made, na.rm = TRUE),
+    fg_attempted = sum(field_goals_attempted, na.rm = TRUE),
     fg_pct = fg_made / fg_attempted
   )
 
 # Calculate true shooting percentage for each player (using box score data)
 # TS% = PTS / (2 * (FGA + 0.44 * FTA))
 # FGA includes both 2-point and 3-point attempts
-#
-# TODO: Needs to use 3-point attempts from pbp_data
 player_ts_pct <- box_scores |>
   group_by(player_name) |>
   summarise(
     points = sum(PTS, na.rm = TRUE),
-    fg_attempted = sum(fg_attempts, na.rm = TRUE), # Already includes 2pt and 3pt attempts
-    ft_attempted = sum(ft_attempts, na.rm = TRUE),
+    fg_attempted = sum(field_goals_attempted, na.rm = TRUE), # Already includes 2pt and 3pt attempts
+    ft_attempted = sum(free_throws_attempted, na.rm = TRUE),
     ts_pct = points / (2 * (fg_attempted + 0.44 * ft_attempted))
   )
 
@@ -128,17 +127,17 @@ player_ts_pct <- box_scores |>
 fg_density_plot <- ggplot() +
   geom_density(
     data = player_fg_pct,
-    aes(x = fg_pct, fill = "Box Scores"),
+    aes(x = fg_pct, fill = "Unrivaled"),
     alpha = 0.3
   ) +
   geom_density(
     data = player_comparison,
-    aes(x = fg_pct, fill = "WNBA Stats"),
+    aes(x = field_goal_pct, fill = "WNBA"),
     alpha = 0.3
   ) +
   scale_fill_manual(
     name = "Data Source",
-    values = c("Box Scores" = "#0077CC", "WNBA Stats" = "#CC7700")
+    values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
   ) +
   theme_high_contrast() +
   theme(
@@ -162,17 +161,17 @@ ggsave(
 ts_density_plot <- ggplot() +
   geom_density(
     data = player_ts_pct,
-    aes(x = ts_pct, fill = "Box Scores"),
+    aes(x = ts_pct, fill = "Unrivaled"),
     alpha = 0.3
   ) +
   geom_density(
     data = player_comparison,
-    aes(x = wnba_ts_pct, fill = "WNBA Stats"),
+    aes(x = wnba_ts_pct, fill = "WNBA"),
     alpha = 0.3
   ) +
   scale_fill_manual(
     name = "Data Source",
-    values = c("Box Scores" = "#0077CC", "WNBA Stats" = "#CC7700")
+    values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
   ) +
   theme_high_contrast() +
   theme(
@@ -246,9 +245,9 @@ player_comparison |>
           x$player_name[i],
           x$team[i],
           x$box_fg_pct[i] * 100,
-          x$fg_pct[i] * 100,
+          x$field_goal_pct[i] * 100,
           x$box_ts_pct[i] * 100,
-          x$fg3_pct[i] * 100,
+          x$three_point_pct[i] * 100,
           x$box_pts[i],
           x$points[i]
         ))
