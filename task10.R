@@ -128,12 +128,14 @@ fg_density_plot <- ggplot() +
   geom_density(
     data = player_fg_pct,
     aes(x = fg_pct, fill = "Unrivaled"),
-    alpha = 0.3
+    alpha = 0.7,
+    color = NA
   ) +
   geom_density(
     data = player_comparison,
     aes(x = field_goal_pct, fill = "WNBA"),
-    alpha = 0.3
+    alpha = 0.7,
+    color = NA
   ) +
   scale_fill_manual(
     name = "Data Source",
@@ -162,12 +164,14 @@ ts_density_plot <- ggplot() +
   geom_density(
     data = player_ts_pct,
     aes(x = ts_pct, fill = "Unrivaled"),
-    alpha = 0.3
+    alpha = 0.7,
+    color = NA
   ) +
   geom_density(
     data = player_comparison,
     aes(x = wnba_ts_pct, fill = "WNBA"),
-    alpha = 0.3
+    alpha = 0.7,
+    color = NA
   ) +
   scale_fill_manual(
     name = "Data Source",
