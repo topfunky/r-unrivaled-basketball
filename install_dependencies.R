@@ -22,7 +22,8 @@ required_packages <- c(
   "glue", # For string interpolation
   "wehoop", # For women's basketball data
   "patchwork", # For arranging plots
-  "ggforce"
+  "ggforce",
+  "ggrepel"
 )
 
 # List of GitHub packages
