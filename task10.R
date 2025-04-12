@@ -361,22 +361,17 @@ create_barbell_plot <- function(
         ~ seq(.x, .y, length.out = 100)
       )
     ) |>
-    unnest(gradient_points) |>
-    mutate(
-      # Calculate the position along the gradient (0 to 1)
-      gradient_position = (gradient_points - min({{ x1_var }})) /
-        (max({{ x2_var }}) - min({{ x1_var }}))
-    )
+    unnest(gradient_points)
 
   ggplot() +
-    # Add gradient lines between points
-    geom_line(
+    # Add gradient lines between points using ggforce
+    ggforce::geom_link2(
       data = gradient_data,
       aes(
         x = gradient_points,
         y = reorder({{ y_var }}, {{ x1_var }}),
         group = {{ y_var }},
-        color = gradient_position
+        color = gradient_points
       ),
       linewidth = 5.5
     ) +

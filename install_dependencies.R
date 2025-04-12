@@ -21,7 +21,8 @@ required_packages <- c(
   "ggbump", # For smooth bump charts
   "glue", # For string interpolation
   "wehoop", # For women's basketball data
-  "patchwork" # For arranging plots
+  "patchwork", # For arranging plots
+  "ggforce"
 )
 
 # List of GitHub packages
