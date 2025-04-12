@@ -340,6 +340,124 @@ ggsave(
   dpi = 300
 )
 
+# Create a function to generate barbell plots
+create_barbell_plot <- function(
+  data,
+  y_var,
+  x1_var,
+  x2_var,
+  x1_label,
+  x2_label,
+  title,
+  subtitle = NULL
+) {
+  ggplot(data, aes(y = reorder({{ y_var }}, {{ x1_var }}))) +
+    # Add a vertical line connecting the points
+    geom_segment(
+      aes(
+        x = {{ x1_var }},
+        xend = {{ x2_var }},
+        y = reorder({{ y_var }}, {{ x1_var }}),
+        yend = reorder({{ y_var }}, {{ x1_var }})
+      ),
+      color = "white",
+      linewidth = 3
+    ) +
+    # Add points for both metrics
+    geom_point(
+      aes(x = {{ x1_var }}, color = x1_label),
+      size = 5
+    ) +
+    geom_point(
+      aes(x = {{ x2_var }}, color = x2_label),
+      size = 5
+    ) +
+    # Set colors for the points
+    scale_color_manual(
+      name = "Data Source",
+      values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
+    ) +
+    # Format x-axis as percentages
+    scale_x_continuous(
+      labels = scales::label_percent(scale = 1),
+      name = paste(x1_label, "vs", x2_label)
+    ) +
+    # Apply high contrast theme
+    theme_high_contrast() +
+    theme(
+      text = element_text(family = "InputMono"),
+      legend.position = "bottom",
+      axis.title.y = element_blank()
+    ) +
+    labs(
+      title = title,
+      subtitle = subtitle,
+      x = paste(x1_label, "vs", x2_label)
+    )
+}
+
+# Create barbell plot for two-point shooting percentage differences
+# Get top 10 players with biggest differences in 2P%
+two_pt_diff_data <- player_comparison |>
+  mutate(
+    two_pt_diff = (ubb_two_pt_pct - wnba_two_pt_pct) * 100
+  ) |>
+  arrange(desc(abs(two_pt_diff))) |>
+  head(10) |>
+  mutate(
+    # Create a position variable for the y-axis
+    position = row_number()
+  )
+
+# Create the barbell plot using the new function
+two_pt_barbell_plot <- create_barbell_plot(
+  data = two_pt_diff_data,
+  y_var = player_name,
+  x1_var = wnba_two_pt_pct * 100,
+  x2_var = ubb_two_pt_pct * 100,
+  x1_label = "WNBA",
+  x2_label = "Unrivaled",
+  title = "Two-Point Shooting Percentage: Unrivaled vs WNBA",
+  subtitle = "Top 10 players with biggest differences"
+)
+
+# Save the barbell plot
+ggsave(
+  "plots/two_pt_barbell.png",
+  plot = two_pt_barbell_plot,
+  width = 10,
+  height = 8,
+  dpi = 300
+)
+
+# Example of how to use the function for another metric (e.g., three-point percentage)
+three_pt_diff_data <- player_comparison |>
+  mutate(
+    three_pt_diff = (ubb_three_pt_pct - three_point_pct) * 100
+  ) |>
+  arrange(desc(abs(three_pt_diff))) |>
+  head(10)
+
+three_pt_barbell_plot <- create_barbell_plot(
+  data = three_pt_diff_data,
+  y_var = player_name,
+  x1_var = three_point_pct * 100,
+  x2_var = ubb_three_pt_pct * 100,
+  x1_label = "WNBA",
+  x2_label = "Unrivaled",
+  title = "Three-Point Shooting Percentage: Unrivaled vs WNBA",
+  subtitle = "Top 10 players with biggest differences"
+)
+
+# Save the three-point barbell plot
+ggsave(
+  "plots/three_pt_barbell.png",
+  plot = three_pt_barbell_plot,
+  width = 10,
+  height = 8,
+  dpi = 300
+)
+
 # Write results to markdown file
 sink("plots/player_stats.md")
 
@@ -515,6 +633,119 @@ player_ts_pct |>
           x$ubb_pts[i],
           x$ubb_fg_attempted[i],
           x$ubb_ft_attempted[i]
+        ))
+      }
+    }
+  }()
+
+# Create histogram of field goal attempts by player
+# First, get the total field goal attempts for each player
+player_fga <- player_fg_pct |>
+  mutate(
+    total_fga = ubb_fg_attempted
+  ) |>
+  arrange(desc(total_fga))
+
+# Create base histogram plot
+base_histogram <- ggplot(player_fga, aes(x = total_fga)) +
+  geom_histogram(
+    bins = 15,
+    fill = "#6A0DAD",
+    alpha = 0.8
+  )
+
+# Get the histogram data for y-axis scaling
+hist_data <- ggplot_build(base_histogram)$data[[1]]
+max_count <- max(hist_data$count)
+
+# Create the final histogram with annotations
+fga_histogram <- base_histogram +
+  # Add vertical lines for mean and median
+  geom_vline(
+    aes(xintercept = mean(total_fga)),
+    color = "#FF8C00",
+    linetype = "dashed",
+    linewidth = 1
+  ) +
+  geom_vline(
+    aes(xintercept = median(total_fga)),
+    color = "#00CED1",
+    linetype = "dashed",
+    linewidth = 1
+  ) +
+  # Add labels for mean and median
+  annotate(
+    "text",
+    x = mean(player_fga$total_fga),
+    y = max_count * 0.9,
+    label = sprintf("Mean: %.1f", mean(player_fga$total_fga)),
+    color = "#FF8C00",
+    hjust = -0.1,
+    family = "InputMono",
+    fontface = "bold"
+  ) +
+  annotate(
+    "text",
+    x = median(player_fga$total_fga),
+    y = max_count * 0.8,
+    label = sprintf("Median: %.1f", median(player_fga$total_fga)),
+    color = "#00CED1",
+    hjust = -0.1,
+    family = "InputMono",
+    fontface = "bold"
+  ) +
+  # Apply high contrast theme
+  theme_high_contrast() +
+  theme(
+    text = element_text(family = "InputMono")
+  ) +
+  labs(
+    title = "Distribution of Field Goal Attempts by Player",
+    subtitle = "Unrivaled Season",
+    x = "Total Field Goal Attempts",
+    y = "Number of Players"
+  )
+
+# Save the histogram
+ggsave(
+  "plots/fga_histogram.png",
+  plot = fga_histogram,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+
+# Create a table of top 10 players by field goal attempts
+top_fga_table <- player_fga |>
+  select(player_name, total_fga, ubb_fg_made, ubb_fg_attempted, ubb_fg_pct) |>
+  head(10) |>
+  mutate(
+    ubb_fg_pct = sprintf("%.1f%%", ubb_fg_pct * 100)
+  ) |>
+  rename(
+    "Player" = player_name,
+    "FGA" = total_fga,
+    "FGM" = ubb_fg_made,
+    "FGA Total" = ubb_fg_attempted,
+    "FG%" = ubb_fg_pct
+  )
+
+cat("\n### Top 10 Players by Field Goal Attempts\n")
+cat("| Player | FGA | FGM | FGA Total | FG% |\n")
+cat("|--------|-----|-----|-----------|-----|\n")
+player_fg_pct |>
+  arrange(desc(ubb_fg_attempted)) |>
+  head(10) |>
+  {
+    function(x) {
+      for (i in 1:nrow(x)) {
+        cat(sprintf(
+          "| %s | %d | %d | %d | %.1f%% |\n",
+          x$player_name[i],
+          x$ubb_fg_attempted[i],
+          x$ubb_fg_made[i],
+          x$ubb_fg_attempted[i],
+          x$ubb_fg_pct[i] * 100
         ))
       }
     }
