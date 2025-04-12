@@ -379,8 +379,8 @@ create_barbell_plot <- function(
     )
 
   ggplot() +
-    # Add gradient lines between points
-    geom_line(
+    # Add gradient lines between points with rounded ends
+    geom_path(
       data = gradient_data,
       aes(
         x = gradient_points,
@@ -388,37 +388,10 @@ create_barbell_plot <- function(
         group = {{ y_var }},
         color = gradient_position
       ),
-      linewidth = 5.5
+      linewidth = 5.5,
+      lineend = "round"
     ) +
-    # Add points for both metrics
-    geom_point(
-      data = data,
-      aes(
-        x = {{ x1_var }},
-        y = reorder({{ y_var }}, {{ x2_var }}),
-        fill = x1_label
-      ),
-      size = 5,
-      shape = 21,
-      color = "transparent"
-    ) +
-    geom_point(
-      data = data,
-      aes(
-        x = {{ x2_var }},
-        y = reorder({{ y_var }}, {{ x2_var }}),
-        fill = x2_label
-      ),
-      size = 5,
-      shape = 21,
-      color = "transparent"
-    ) +
-    # Set colors for the points
-    scale_fill_manual(
-      name = "Data Source",
-      values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
-    ) +
-    # Add gradient scale for the connecting line
+    # Set colors for the gradient
     scale_color_gradient(
       low = "#FF8C00", # WNBA color
       high = "#6A0DAD", # Unrivaled color
@@ -426,20 +399,19 @@ create_barbell_plot <- function(
     ) +
     # Format x-axis as percentages
     scale_x_continuous(
-      labels = scales::label_percent(scale = 1),
-      name = paste(x1_label, "vs", x2_label)
+      labels = scales::label_percent(scale = 1)
     ) +
     # Apply high contrast theme
     theme_high_contrast() +
     theme(
       text = element_text(family = "InputMono"),
       legend.position = "bottom",
-      axis.title.y = element_blank()
+      axis.title.y = element_blank(),
+      axis.title.x = element_blank()
     ) +
     labs(
       title = title,
-      subtitle = subtitle,
-      x = paste(x1_label, "vs", x2_label)
+      subtitle = subtitle
     )
 }
 
@@ -467,8 +439,8 @@ two_pt_barbell_plot <- create_barbell_plot(
   x2_var = ubb_two_pt_pct * 100,
   x1_label = "WNBA",
   x2_label = "Unrivaled",
-  title = "Two-Point Shooting Percentage: Unrivaled vs WNBA",
-  subtitle = "Top 10 players with biggest positive differences"
+  title = "Two-Point Shooting Percentage: WNBA vs Unrivaled",
+  subtitle = "Players with biggest improvement in Unrivaled (purple)"
 )
 
 # Save the barbell plot
@@ -499,8 +471,8 @@ two_pt_negative_barbell_plot <- create_barbell_plot(
   x2_var = ubb_two_pt_pct * 100,
   x1_label = "WNBA",
   x2_label = "Unrivaled",
-  title = "Two-Point Shooting Percentage: Unrivaled vs WNBA",
-  subtitle = "Top 10 players with biggest negative differences"
+  title = "Two-Point Shooting Percentage: WNBA vs Unrivaled",
+  subtitle = "Players with biggest decrease in Unrivaled (purple)"
 )
 
 # Save the negative difference barbell plot
@@ -514,7 +486,7 @@ ggsave(
 
 # Example of how to use the function for another metric (e.g., three-point percentage)
 three_pt_diff_data <- player_comparison |>
-  filter(ubb_three_pt_attempted >= 40) |> # Filter by shot attempts
+  filter(ubb_three_pt_attempted >= 10) |> # Filter by shot attempts
   mutate(
     three_pt_diff = (ubb_three_pt_pct - three_point_pct) * 100
   ) |>
@@ -528,8 +500,8 @@ three_pt_barbell_plot <- create_barbell_plot(
   x2_var = ubb_three_pt_pct * 100,
   x1_label = "WNBA",
   x2_label = "Unrivaled",
-  title = "Three-Point Shooting Percentage: Unrivaled vs WNBA",
-  subtitle = "Top 10 players with biggest differences (minimum 40 attempts)"
+  title = "Three-Point Shooting Percentage: WNBA vs Unrivaled",
+  subtitle = "Players with biggest change in Unrivaled (purple)"
 )
 
 # Save the three-point barbell plot
