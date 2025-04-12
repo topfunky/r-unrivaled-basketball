@@ -359,19 +359,26 @@ create_barbell_plot <- function(
         {{ x1_var }},
         {{ x2_var }},
         ~ seq(.x, .y, length.out = 100)
-      )
+      ),
+      # Calculate the position along the gradient (0 to 1) for each player
+      min_val = {{ x1_var }},
+      max_val = {{ x2_var }}
     ) |>
-    unnest(gradient_points)
+    unnest(gradient_points) |>
+    mutate(
+      # Calculate the position along the gradient (0 to 1) for each point
+      gradient_position = (gradient_points - min_val) / (max_val - min_val)
+    )
 
   ggplot() +
-    # Add gradient lines between points using ggforce
-    ggforce::geom_link2(
+    # Add gradient lines between points
+    geom_line(
       data = gradient_data,
       aes(
         x = gradient_points,
         y = reorder({{ y_var }}, {{ x2_var }}),
         group = {{ y_var }},
-        color = gradient_points
+        color = gradient_position
       ),
       linewidth = 5.5
     ) +
@@ -472,6 +479,7 @@ two_pt_negative_diff_data <- player_comparison |>
     two_pt_diff = (ubb_two_pt_pct - wnba_two_pt_pct) * 100
   ) |>
   arrange(two_pt_diff) |>
+  head(10) |>
   arrange(desc(ubb_two_pt_pct))
 
 
