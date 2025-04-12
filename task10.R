@@ -43,7 +43,12 @@ player_comparison <- box_scores |>
   mutate(
     # Calculate true shooting percentage for WNBA stats
     wnba_ts_pct = points /
-      (2 * (field_goals_attempted + 0.44 * free_throws_attempted))
+      (2 * (field_goals_attempted + 0.44 * free_throws_attempted)),
+    # Calculate WNBA two-point statistics
+    wnba_two_pt_made = field_goals_made - three_point_field_goals_made,
+    wnba_two_pt_attempted = field_goals_attempted -
+      three_point_field_goals_attempted,
+    wnba_two_pt_pct = wnba_two_pt_made / wnba_two_pt_attempted
   ) |>
   select(
     player_name,
@@ -70,7 +75,10 @@ player_comparison <- box_scores |>
     three_point_field_goals_made,
     three_point_field_goals_attempted,
     three_point_pct,
-    wnba_ts_pct
+    wnba_ts_pct,
+    wnba_two_pt_made,
+    wnba_two_pt_attempted,
+    wnba_two_pt_pct
   ) |>
   arrange(desc(ubb_pts))
 
@@ -349,24 +357,54 @@ cat("## Player Shooting Statistics\n")
 
 cat("### Player Comparison: Unrivaled vs WNBA Stats\n")
 cat(
-  "| Player | UBB FG% | WNBA FG% | UBB 2P% | UBB 3P% | WNBA 3P% | UBB TS% |\n"
+  "| Player | UBB FG% | WNBA FG% | UBB 2P% | WNBA 2P% | UBB 3P% | WNBA 3P% | UBB TS% |\n"
 )
 cat(
-  "|--------|----------|----------|----------|----------|----------|----------|\n"
+  "|--------|----------|----------|----------|----------|----------|----------|----------|\n"
 )
 player_comparison |>
   {
     function(x) {
       for (i in 1:nrow(x)) {
         cat(sprintf(
-          "| %s | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% |\n",
+          "| %s | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% |\n",
           x$player_name[i],
           x$ubb_fg_pct[i] * 100,
           x$field_goal_pct[i] * 100,
           x$ubb_two_pt_pct[i] * 100,
+          x$wnba_two_pt_pct[i] * 100,
           x$ubb_three_pt_pct[i] * 100,
           x$three_point_pct[i] * 100,
           x$ubb_ts_pct[i] * 100
+        ))
+      }
+    }
+  }()
+
+cat("\n### Shooting Percentage Differences (UBB - WNBA)\n")
+cat(
+  "| Player | UBB FGA | FG% Diff | 2P% Diff | 3P% Diff |\n"
+)
+cat(
+  "|--------|----------|----------|----------|----------|\n"
+)
+player_comparison |>
+  mutate(
+    fg_diff = (ubb_fg_pct - field_goal_pct) * 100,
+    two_pt_diff = (ubb_two_pt_pct - wnba_two_pt_pct) * 100,
+    three_pt_diff = (ubb_three_pt_pct - three_point_pct) * 100
+  ) |>
+  arrange(desc(fg_diff)) |>
+  {
+    function(x) {
+      for (i in 1:nrow(x)) {
+        cat(sprintf(
+          "| %s | %d | %+.1f%% | %+.1f%% | %+.1f%% |\n",
+          x$player_name[i],
+          x$ubb_fg_attempted[i],
+          x$fg_diff[i],
+          x$two_pt_diff[i],
+          x$three_pt_diff[i]
         ))
       }
     }
