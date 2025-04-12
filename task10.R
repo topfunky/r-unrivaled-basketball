@@ -471,14 +471,9 @@ two_pt_negative_diff_data <- player_comparison |>
   mutate(
     two_pt_diff = (ubb_two_pt_pct - wnba_two_pt_pct) * 100
   ) |>
-  arrange(two_pt_diff) |> # Sort by ascending difference (most negative first)
-  head(10) |>
+  arrange(two_pt_diff) |>
   arrange(desc(ubb_two_pt_pct))
 
-print(
-  two_pt_negative_diff_data |>
-    select(player_name, ubb_two_pt_pct, wnba_two_pt_pct, two_pt_diff)
-)
 
 # Create the negative difference barbell plot
 two_pt_negative_barbell_plot <- create_barbell_plot(
