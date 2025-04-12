@@ -369,7 +369,7 @@ create_barbell_plot <- function(
       data = gradient_data,
       aes(
         x = gradient_points,
-        y = reorder({{ y_var }}, {{ x1_var }}),
+        y = reorder({{ y_var }}, {{ x2_var }}),
         group = {{ y_var }},
         color = gradient_points
       ),
@@ -380,7 +380,7 @@ create_barbell_plot <- function(
       data = data,
       aes(
         x = {{ x1_var }},
-        y = reorder({{ y_var }}, {{ x1_var }}),
+        y = reorder({{ y_var }}, {{ x2_var }}),
         fill = x1_label
       ),
       size = 5,
@@ -391,7 +391,7 @@ create_barbell_plot <- function(
       data = data,
       aes(
         x = {{ x2_var }},
-        y = reorder({{ y_var }}, {{ x1_var }}),
+        y = reorder({{ y_var }}, {{ x2_var }}),
         fill = x2_label
       ),
       size = 5,
@@ -431,15 +431,18 @@ create_barbell_plot <- function(
 # Create barbell plot for two-point shooting percentage differences
 # Get top 10 players with biggest differences in 2P%
 two_pt_diff_data <- player_comparison |>
+  filter(ubb_two_pt_attempted >= 40) |> # Filter by shot attempts
   mutate(
     two_pt_diff = (ubb_two_pt_pct - wnba_two_pt_pct) * 100
   ) |>
-  arrange(desc(abs(two_pt_diff))) |>
+  arrange(desc(two_pt_diff)) |>
   head(10) |>
-  mutate(
-    # Create a position variable for the y-axis
-    position = row_number()
-  )
+  arrange(desc(ubb_two_pt_pct))
+
+print(
+  two_pt_diff_data |>
+    select(player_name, ubb_two_pt_pct, wnba_two_pt_pct, two_pt_diff)
+)
 
 # Create the barbell plot using the new function
 two_pt_barbell_plot <- create_barbell_plot(
@@ -450,13 +453,49 @@ two_pt_barbell_plot <- create_barbell_plot(
   x1_label = "WNBA",
   x2_label = "Unrivaled",
   title = "Two-Point Shooting Percentage: Unrivaled vs WNBA",
-  subtitle = "Top 10 players with biggest differences"
+  subtitle = "Top 10 players with biggest positive differences (minimum 40 attempts)"
 )
 
 # Save the barbell plot
 ggsave(
-  "plots/two_pt_barbell.png",
+  "plots/two_pt_barbell_positive.png",
   plot = two_pt_barbell_plot,
+  width = 10,
+  height = 8,
+  dpi = 300
+)
+
+# Create a second barbell plot for players with the greatest negative differences
+two_pt_negative_diff_data <- player_comparison |>
+  filter(ubb_two_pt_attempted >= 40) |> # Filter by shot attempts
+  mutate(
+    two_pt_diff = (ubb_two_pt_pct - wnba_two_pt_pct) * 100
+  ) |>
+  arrange(two_pt_diff) |> # Sort by ascending difference (most negative first)
+  head(10) |>
+  arrange(desc(ubb_two_pt_pct))
+
+print(
+  two_pt_negative_diff_data |>
+    select(player_name, ubb_two_pt_pct, wnba_two_pt_pct, two_pt_diff)
+)
+
+# Create the negative difference barbell plot
+two_pt_negative_barbell_plot <- create_barbell_plot(
+  data = two_pt_negative_diff_data,
+  y_var = player_name,
+  x1_var = wnba_two_pt_pct * 100,
+  x2_var = ubb_two_pt_pct * 100,
+  x1_label = "WNBA",
+  x2_label = "Unrivaled",
+  title = "Two-Point Shooting Percentage: Unrivaled vs WNBA",
+  subtitle = "Top 10 players with biggest negative differences (minimum 40 attempts)"
+)
+
+# Save the negative difference barbell plot
+ggsave(
+  "plots/two_pt_barbell_negative.png",
+  plot = two_pt_negative_barbell_plot,
   width = 10,
   height = 8,
   dpi = 300
@@ -464,6 +503,7 @@ ggsave(
 
 # Example of how to use the function for another metric (e.g., three-point percentage)
 three_pt_diff_data <- player_comparison |>
+  filter(ubb_three_pt_attempted >= 40) |> # Filter by shot attempts
   mutate(
     three_pt_diff = (ubb_three_pt_pct - three_point_pct) * 100
   ) |>
@@ -478,7 +518,7 @@ three_pt_barbell_plot <- create_barbell_plot(
   x1_label = "WNBA",
   x2_label = "Unrivaled",
   title = "Three-Point Shooting Percentage: Unrivaled vs WNBA",
-  subtitle = "Top 10 players with biggest differences"
+  subtitle = "Top 10 players with biggest differences (minimum 40 attempts)"
 )
 
 # Save the three-point barbell plot
