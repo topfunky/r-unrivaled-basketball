@@ -351,27 +351,54 @@ create_barbell_plot <- function(
   title,
   subtitle = NULL
 ) {
-  ggplot(data, aes(y = reorder({{ y_var }}, {{ x1_var }}))) +
-    # Add gradient line (removed the white stroke)
-    geom_segment(
+  # Create a data frame with interpolated points for the gradient
+  gradient_data <- data |>
+    mutate(
+      # Create a sequence of points between x1 and x2 for each player
+      gradient_points = map2(
+        {{ x1_var }},
+        {{ x2_var }},
+        ~ seq(.x, .y, length.out = 100)
+      )
+    ) |>
+    unnest(gradient_points) |>
+    mutate(
+      # Calculate the position along the gradient (0 to 1)
+      gradient_position = (gradient_points - min({{ x1_var }})) /
+        (max({{ x2_var }}) - min({{ x1_var }}))
+    )
+
+  ggplot() +
+    # Add gradient lines between points
+    geom_line(
+      data = gradient_data,
       aes(
-        x = {{ x1_var }},
-        xend = {{ x2_var }},
+        x = gradient_points,
         y = reorder({{ y_var }}, {{ x1_var }}),
-        yend = reorder({{ y_var }}, {{ x1_var }}),
-        color = {{ x1_var }}
+        group = {{ y_var }},
+        color = gradient_position
       ),
       linewidth = 5.5
     ) +
     # Add points for both metrics
     geom_point(
-      aes(x = {{ x1_var }}, fill = x1_label),
+      data = data,
+      aes(
+        x = {{ x1_var }},
+        y = reorder({{ y_var }}, {{ x1_var }}),
+        fill = x1_label
+      ),
       size = 5,
       shape = 21,
       color = "transparent"
     ) +
     geom_point(
-      aes(x = {{ x2_var }}, fill = x2_label),
+      data = data,
+      aes(
+        x = {{ x2_var }},
+        y = reorder({{ y_var }}, {{ x1_var }}),
+        fill = x2_label
+      ),
       size = 5,
       shape = 21,
       color = "transparent"
