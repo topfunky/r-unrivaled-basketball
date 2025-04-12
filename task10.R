@@ -352,30 +352,40 @@ create_barbell_plot <- function(
   subtitle = NULL
 ) {
   ggplot(data, aes(y = reorder({{ y_var }}, {{ x1_var }}))) +
-    # Add a vertical line connecting the points
+    # Add gradient line (removed the white stroke)
     geom_segment(
       aes(
         x = {{ x1_var }},
         xend = {{ x2_var }},
         y = reorder({{ y_var }}, {{ x1_var }}),
-        yend = reorder({{ y_var }}, {{ x1_var }})
+        yend = reorder({{ y_var }}, {{ x1_var }}),
+        color = {{ x1_var }}
       ),
-      color = "white",
-      linewidth = 3
+      linewidth = 5.5
     ) +
     # Add points for both metrics
     geom_point(
-      aes(x = {{ x1_var }}, color = x1_label),
-      size = 5
+      aes(x = {{ x1_var }}, fill = x1_label),
+      size = 5,
+      shape = 21,
+      color = "transparent"
     ) +
     geom_point(
-      aes(x = {{ x2_var }}, color = x2_label),
-      size = 5
+      aes(x = {{ x2_var }}, fill = x2_label),
+      size = 5,
+      shape = 21,
+      color = "transparent"
     ) +
     # Set colors for the points
-    scale_color_manual(
+    scale_fill_manual(
       name = "Data Source",
       values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
+    ) +
+    # Add gradient scale for the connecting line
+    scale_color_gradient(
+      low = "#FF8C00", # WNBA color
+      high = "#6A0DAD", # Unrivaled color
+      guide = "none" # Hide the gradient legend
     ) +
     # Format x-axis as percentages
     scale_x_continuous(
