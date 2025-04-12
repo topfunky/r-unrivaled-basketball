@@ -196,7 +196,8 @@ fg_density_plot <- ggplot() +
     legend.position = "bottom"
   ) +
   labs(
-    title = "Distribution of Field Goal Percentages",
+    title = "Distribution of Field Goal Shot Accuracy",
+    subtitle = "Per player across the entire season",
     x = "Field Goal Percentage",
     y = "Density"
   )
@@ -219,7 +220,7 @@ two_pt_density_plot <- ggplot() +
   ) +
   geom_density(
     data = player_comparison,
-    aes(x = field_goal_pct, fill = "WNBA"),
+    aes(x = wnba_two_pt_pct, fill = "WNBA"),
     alpha = 0.7,
     color = NA
   ) +
@@ -227,13 +228,15 @@ two_pt_density_plot <- ggplot() +
     name = "Data Source",
     values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
   ) +
+  scale_x_continuous(labels = scales::label_percent()) +
   theme_high_contrast() +
   theme(
     text = element_text(family = "InputMono"),
     legend.position = "bottom"
   ) +
   labs(
-    title = "Distribution of Two-Point Percentages",
+    title = "Distribution of Two-Point Shot Accuracy",
+    subtitle = "Per player across the entire season",
     x = "Two-Point Percentage",
     y = "Density"
   )
@@ -249,13 +252,13 @@ ggsave(
 # Create three-point percentage density plot
 three_pt_density_plot <- ggplot() +
   geom_density(
-    data = player_fg_pct,
+    data = player_fg_pct |> filter(player_name != "Aaliyah Edwards"),
     aes(x = ubb_three_pt_pct, fill = "Unrivaled"),
     alpha = 0.7,
     color = NA
   ) +
   geom_density(
-    data = player_comparison,
+    data = player_comparison |> filter(player_name != "Aaliyah Edwards"),
     aes(x = three_point_pct, fill = "WNBA"),
     alpha = 0.7,
     color = NA
@@ -264,13 +267,15 @@ three_pt_density_plot <- ggplot() +
     name = "Data Source",
     values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
   ) +
+  scale_x_continuous(labels = scales::label_percent()) +
   theme_high_contrast() +
   theme(
     text = element_text(family = "InputMono"),
     legend.position = "bottom"
   ) +
   labs(
-    title = "Distribution of Three-Point Percentages",
+    title = "Distribution of Three-Point Shot Accuracy",
+    subtitle = "Per player across the entire season",
     x = "Three-Point Percentage",
     y = "Density"
   )
@@ -286,10 +291,8 @@ ggsave(
 # Render 2pt and 3pt density plots side by side
 
 # Create a combined plot with both density plots side by side
-combined_shooting_plot <- (two_pt_density_plot +
-  labs(title = "Two-Point Percentage Distribution")) +
-  (three_pt_density_plot +
-    labs(title = "Three-Point Percentage Distribution")) +
+combined_shooting_plot <- (two_pt_density_plot) +
+  (three_pt_density_plot) +
   plot_layout(ncol = 2)
 
 ggsave(
