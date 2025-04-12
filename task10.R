@@ -196,7 +196,7 @@ fg_density_plot <- ggplot() +
     legend.position = "bottom"
   ) +
   labs(
-    title = "Distribution of Field Goal Shot Accuracy",
+    title = "Unrivaled vs WNBA: Distribution of Field Goal Shot Accuracy",
     subtitle = "Per player across the entire season",
     x = "Field Goal Percentage",
     y = "Density"
@@ -235,7 +235,7 @@ two_pt_density_plot <- ggplot() +
     legend.position = "bottom"
   ) +
   labs(
-    title = "Distribution of Two-Point Shot Accuracy",
+    title = "Unrivaled vs WNBA: Distribution of Two-Point Shot Accuracy",
     subtitle = "Per player across the entire season",
     x = "Two-Point Percentage",
     y = "Density"
@@ -274,7 +274,7 @@ three_pt_density_plot <- ggplot() +
     legend.position = "bottom"
   ) +
   labs(
-    title = "Distribution of Three-Point Shot Accuracy",
+    title = "Unrivaled vs WNBA: Distribution of Three-Point Shot Accuracy",
     subtitle = "Per player across the entire season",
     x = "Three-Point Percentage",
     y = "Density"
