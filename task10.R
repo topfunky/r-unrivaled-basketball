@@ -21,20 +21,23 @@ player_comparison <- box_scores |>
   group_by(player_name) |>
   summarise(
     # Box score stats
-    unrvld_fg_made = sum(field_goals_made, na.rm = TRUE),
-    unrvld_fg_attempted = sum(field_goals_attempted, na.rm = TRUE),
-    unrvld_fg_pct = unrvld_fg_made / unrvld_fg_attempted,
-    unrvld_pts = sum(PTS, na.rm = TRUE),
-    unrvld_ft_attempted = sum(free_throws_attempted, na.rm = TRUE),
-    unrvld_ts_pct = unrvld_pts /
-      (2 * (unrvld_fg_attempted + 0.44 * unrvld_ft_attempted)),
+    ubb_fg_made = sum(field_goals_made, na.rm = TRUE),
+    ubb_fg_attempted = sum(field_goals_attempted, na.rm = TRUE),
+    ubb_fg_pct = ubb_fg_made / ubb_fg_attempted,
+    ubb_pts = sum(PTS, na.rm = TRUE),
+    ubb_ft_attempted = sum(free_throws_attempted, na.rm = TRUE),
+    ubb_ts_pct = ubb_pts / (2 * (ubb_fg_attempted + 0.44 * ubb_ft_attempted)),
     # Add three-point statistics
-    unrvld_three_pt_made = sum(three_point_field_goals_made, na.rm = TRUE),
-    unrvld_three_pt_attempted = sum(
+    ubb_three_pt_made = sum(three_point_field_goals_made, na.rm = TRUE),
+    ubb_three_pt_attempted = sum(
       three_point_field_goals_attempted,
       na.rm = TRUE
     ),
-    unrvld_three_pt_pct = unrvld_three_pt_made / unrvld_three_pt_attempted
+    ubb_three_pt_pct = ubb_three_pt_made / ubb_three_pt_attempted,
+    # Add two-point statistics
+    ubb_two_pt_made = ubb_fg_made - ubb_three_pt_made,
+    ubb_two_pt_attempted = ubb_fg_attempted - ubb_three_pt_attempted,
+    ubb_two_pt_pct = ubb_two_pt_made / ubb_two_pt_attempted
   ) |>
   inner_join(wnba_stats, by = "player_name") |>
   mutate(
@@ -46,15 +49,18 @@ player_comparison <- box_scores |>
     player_name,
     team,
     # Box score stats
-    unrvld_fg_made,
-    unrvld_fg_attempted,
-    unrvld_fg_pct,
-    unrvld_pts,
-    unrvld_ft_attempted,
-    unrvld_ts_pct,
-    unrvld_three_pt_made,
-    unrvld_three_pt_attempted,
-    unrvld_three_pt_pct,
+    ubb_fg_made,
+    ubb_fg_attempted,
+    ubb_fg_pct,
+    ubb_pts,
+    ubb_ft_attempted,
+    ubb_ts_pct,
+    ubb_three_pt_made,
+    ubb_three_pt_attempted,
+    ubb_three_pt_pct,
+    ubb_two_pt_made,
+    ubb_two_pt_attempted,
+    ubb_two_pt_pct,
     # WNBA stats
     field_goals_made,
     field_goals_attempted,
@@ -66,7 +72,7 @@ player_comparison <- box_scores |>
     three_point_pct,
     wnba_ts_pct
   ) |>
-  arrange(desc(unrvld_pts))
+  arrange(desc(ubb_pts))
 
 # Count total free throw attempts (using box score data for accuracy)
 total_ft_attempts <- box_scores |>
@@ -117,16 +123,20 @@ points_per_possession <- pbp_data |>
 player_fg_pct <- box_scores |>
   group_by(player_name) |>
   summarise(
-    unrvld_fg_made = sum(field_goals_made, na.rm = TRUE),
-    unrvld_fg_attempted = sum(field_goals_attempted, na.rm = TRUE),
-    unrvld_fg_pct = unrvld_fg_made / unrvld_fg_attempted,
+    ubb_fg_made = sum(field_goals_made, na.rm = TRUE),
+    ubb_fg_attempted = sum(field_goals_attempted, na.rm = TRUE),
+    ubb_fg_pct = ubb_fg_made / ubb_fg_attempted,
     # Add three-point statistics
-    unrvld_three_pt_made = sum(three_point_field_goals_made, na.rm = TRUE),
-    unrvld_three_pt_attempted = sum(
+    ubb_three_pt_made = sum(three_point_field_goals_made, na.rm = TRUE),
+    ubb_three_pt_attempted = sum(
       three_point_field_goals_attempted,
       na.rm = TRUE
     ),
-    unrvld_three_pt_pct = unrvld_three_pt_made / unrvld_three_pt_attempted
+    ubb_three_pt_pct = ubb_three_pt_made / ubb_three_pt_attempted,
+    # Add two-point statistics
+    ubb_two_pt_made = ubb_fg_made - ubb_three_pt_made,
+    ubb_two_pt_attempted = ubb_fg_attempted - ubb_three_pt_attempted,
+    ubb_two_pt_pct = ubb_two_pt_made / ubb_two_pt_attempted
   )
 
 # Calculate true shooting percentage for each player (using box score data)
@@ -135,25 +145,29 @@ player_fg_pct <- box_scores |>
 player_ts_pct <- box_scores |>
   group_by(player_name) |>
   summarise(
-    unrvld_pts = sum(PTS, na.rm = TRUE),
-    unrvld_fg_attempted = sum(field_goals_attempted, na.rm = TRUE), # Already includes 2pt and 3pt attempts
-    unrvld_ft_attempted = sum(free_throws_attempted, na.rm = TRUE),
-    unrvld_ts_pct = unrvld_pts /
-      (2 * (unrvld_fg_attempted + 0.44 * unrvld_ft_attempted)),
+    ubb_pts = sum(PTS, na.rm = TRUE),
+    ubb_fg_made = sum(field_goals_made, na.rm = TRUE),
+    ubb_fg_attempted = sum(field_goals_attempted, na.rm = TRUE), # Already includes 2pt and 3pt attempts
+    ubb_ft_attempted = sum(free_throws_attempted, na.rm = TRUE),
+    ubb_ts_pct = ubb_pts / (2 * (ubb_fg_attempted + 0.44 * ubb_ft_attempted)),
     # Add three-point statistics
-    unrvld_three_pt_made = sum(three_point_field_goals_made, na.rm = TRUE),
-    unrvld_three_pt_attempted = sum(
+    ubb_three_pt_made = sum(three_point_field_goals_made, na.rm = TRUE),
+    ubb_three_pt_attempted = sum(
       three_point_field_goals_attempted,
       na.rm = TRUE
     ),
-    unrvld_three_pt_pct = unrvld_three_pt_made / unrvld_three_pt_attempted
+    ubb_three_pt_pct = ubb_three_pt_made / ubb_three_pt_attempted,
+    # Add two-point statistics
+    ubb_two_pt_made = ubb_fg_made - ubb_three_pt_made,
+    ubb_two_pt_attempted = ubb_fg_attempted - ubb_three_pt_attempted,
+    ubb_two_pt_pct = ubb_two_pt_made / ubb_two_pt_attempted
   )
 
 # Create and save density plots with InputMono font
 fg_density_plot <- ggplot() +
   geom_density(
     data = player_fg_pct,
-    aes(x = unrvld_fg_pct, fill = "Unrivaled"),
+    aes(x = ubb_fg_pct, fill = "Unrivaled"),
     alpha = 0.7,
     color = NA
   ) +
@@ -186,11 +200,48 @@ ggsave(
   dpi = 300
 )
 
+# Create two-point percentage density plot
+two_pt_density_plot <- ggplot() +
+  geom_density(
+    data = player_fg_pct,
+    aes(x = ubb_two_pt_pct, fill = "Unrivaled"),
+    alpha = 0.7,
+    color = NA
+  ) +
+  geom_density(
+    data = player_comparison,
+    aes(x = field_goal_pct, fill = "WNBA"),
+    alpha = 0.7,
+    color = NA
+  ) +
+  scale_fill_manual(
+    name = "Data Source",
+    values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
+  ) +
+  theme_high_contrast() +
+  theme(
+    text = element_text(family = "InputMono"),
+    legend.position = "bottom"
+  ) +
+  labs(
+    title = "Distribution of Two-Point Percentages",
+    x = "Two-Point Percentage",
+    y = "Density"
+  )
+
+ggsave(
+  "plots/two_pt_density.png",
+  plot = two_pt_density_plot,
+  width = 8,
+  height = 6,
+  dpi = 300
+)
+
 # Create three-point percentage density plot
 three_pt_density_plot <- ggplot() +
   geom_density(
     data = player_fg_pct,
-    aes(x = unrvld_three_pt_pct, fill = "Unrivaled"),
+    aes(x = ubb_three_pt_pct, fill = "Unrivaled"),
     alpha = 0.7,
     color = NA
   ) +
@@ -226,7 +277,7 @@ ggsave(
 ts_density_plot <- ggplot() +
   geom_density(
     data = player_ts_pct,
-    aes(x = unrvld_ts_pct, fill = "Unrivaled"),
+    aes(x = ubb_ts_pct, fill = "Unrivaled"),
     alpha = 0.7,
     color = NA
   ) +
@@ -298,26 +349,24 @@ cat("## Player Shooting Statistics\n")
 
 cat("### Player Comparison: Unrivaled vs WNBA Stats\n")
 cat(
-  "| Player | Team | Unrivaled FG% | WNBA FG% | Unrivaled 3P% | WNBA 3P% | Unrivaled TS% | Unrivaled PTS | WNBA PTS |\n"
+  "| Player | UBB FG% | WNBA FG% | UBB 2P% | UBB 3P% | WNBA 3P% | UBB TS% |\n"
 )
 cat(
-  "|--------|------|---------------|----------|---------------|----------|---------------|---------------|----------|\n"
+  "|--------|----------|----------|----------|----------|----------|----------|\n"
 )
 player_comparison |>
   {
     function(x) {
       for (i in 1:nrow(x)) {
         cat(sprintf(
-          "| %s | %s | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %d | %d |\n",
+          "| %s | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% |\n",
           x$player_name[i],
-          x$team[i],
-          x$unrvld_fg_pct[i] * 100,
+          x$ubb_fg_pct[i] * 100,
           x$field_goal_pct[i] * 100,
-          x$unrvld_three_pt_pct[i] * 100,
+          x$ubb_two_pt_pct[i] * 100,
+          x$ubb_three_pt_pct[i] * 100,
           x$three_point_pct[i] * 100,
-          x$unrvld_ts_pct[i] * 100,
-          x$unrvld_pts[i],
-          x$points[i]
+          x$ubb_ts_pct[i] * 100
         ))
       }
     }
@@ -327,8 +376,8 @@ cat("\n### Top 10 Players by Field Goal Percentage (minimum 10 attempts)\n")
 cat("| Player | FG% | FGM/FGA |\n")
 cat("|--------|-----|----------|\n")
 player_fg_pct |>
-  filter(unrvld_fg_attempted >= 10) |>
-  arrange(desc(unrvld_fg_pct)) |>
+  filter(ubb_fg_attempted >= 10) |>
+  arrange(desc(ubb_fg_pct)) |>
   head(10) |>
   {
     function(x) {
@@ -336,9 +385,30 @@ player_fg_pct |>
         cat(sprintf(
           "| %s | %.1f%% | %d/%d |\n",
           x$player_name[i],
-          x$unrvld_fg_pct[i] * 100,
-          x$unrvld_fg_made[i],
-          x$unrvld_fg_attempted[i]
+          x$ubb_fg_pct[i] * 100,
+          x$ubb_fg_made[i],
+          x$ubb_fg_attempted[i]
+        ))
+      }
+    }
+  }()
+
+cat("\n### Top 10 Players by Two-Point Percentage (minimum 10 attempts)\n")
+cat("| Player | 2P% | 2PM/2PA |\n")
+cat("|--------|-----|----------|\n")
+player_fg_pct |>
+  filter(ubb_two_pt_attempted >= 10) |>
+  arrange(desc(ubb_two_pt_pct)) |>
+  head(10) |>
+  {
+    function(x) {
+      for (i in 1:nrow(x)) {
+        cat(sprintf(
+          "| %s | %.1f%% | %d/%d |\n",
+          x$player_name[i],
+          x$ubb_two_pt_pct[i] * 100,
+          x$ubb_two_pt_made[i],
+          x$ubb_two_pt_attempted[i]
         ))
       }
     }
@@ -348,8 +418,8 @@ cat("\n### Top 10 Players by Three-Point Percentage (minimum 5 attempts)\n")
 cat("| Player | 3P% | 3PM/3PA |\n")
 cat("|--------|-----|----------|\n")
 player_fg_pct |>
-  filter(unrvld_three_pt_attempted >= 5) |>
-  arrange(desc(unrvld_three_pt_pct)) |>
+  filter(ubb_three_pt_attempted >= 5) |>
+  arrange(desc(ubb_three_pt_pct)) |>
   head(10) |>
   {
     function(x) {
@@ -357,9 +427,9 @@ player_fg_pct |>
         cat(sprintf(
           "| %s | %.1f%% | %d/%d |\n",
           x$player_name[i],
-          x$unrvld_three_pt_pct[i] * 100,
-          x$unrvld_three_pt_made[i],
-          x$unrvld_three_pt_attempted[i]
+          x$ubb_three_pt_pct[i] * 100,
+          x$ubb_three_pt_made[i],
+          x$ubb_three_pt_attempted[i]
         ))
       }
     }
@@ -369,8 +439,8 @@ cat("\n### Top 10 Players by True Shooting Percentage (minimum 10 attempts)\n")
 cat("| Player | TS% | PTS | FGA | FTA |\n")
 cat("|--------|-----|-----|-----|-----|\n")
 player_ts_pct |>
-  filter(unrvld_fg_attempted >= 10) |>
-  arrange(desc(unrvld_ts_pct)) |>
+  filter(ubb_fg_attempted >= 10) |>
+  arrange(desc(ubb_ts_pct)) |>
   head(10) |>
   {
     function(x) {
@@ -378,10 +448,10 @@ player_ts_pct |>
         cat(sprintf(
           "| %s | %.1f%% | %d | %d | %d |\n",
           x$player_name[i],
-          x$unrvld_ts_pct[i] * 100,
-          x$unrvld_pts[i],
-          x$unrvld_fg_attempted[i],
-          x$unrvld_ft_attempted[i]
+          x$ubb_ts_pct[i] * 100,
+          x$ubb_pts[i],
+          x$ubb_fg_attempted[i],
+          x$ubb_ft_attempted[i]
         ))
       }
     }
