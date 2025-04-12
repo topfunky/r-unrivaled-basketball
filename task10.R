@@ -9,6 +9,7 @@
 library(tidyverse)
 library(feather)
 library(gghighcontrast)
+library(patchwork)
 
 
 # Load data
@@ -281,6 +282,24 @@ ggsave(
   height = 6,
   dpi = 300
 )
+
+# Render 2pt and 3pt density plots side by side
+
+# Create a combined plot with both density plots side by side
+combined_shooting_plot <- (two_pt_density_plot +
+  labs(title = "Two-Point Percentage Distribution")) +
+  (three_pt_density_plot +
+    labs(title = "Three-Point Percentage Distribution")) +
+  plot_layout(ncol = 2)
+
+ggsave(
+  "plots/combined_shooting.png",
+  plot = combined_shooting_plot,
+  width = 16, # Double the width
+  height = 6, # Same height
+  dpi = 300
+)
+
 
 ts_density_plot <- ggplot() +
   geom_density(
