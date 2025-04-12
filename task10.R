@@ -431,6 +431,7 @@ print(
     select(player_name, ubb_two_pt_pct, wnba_two_pt_pct, two_pt_diff)
 )
 
+
 # Create the barbell plot using the new function
 two_pt_barbell_plot <- create_barbell_plot(
   data = two_pt_diff_data,
@@ -801,6 +802,34 @@ player_fg_pct |>
           x$ubb_fg_made[i],
           x$ubb_fg_attempted[i],
           x$ubb_fg_pct[i] * 100
+        ))
+      }
+    }
+  }()
+
+
+# Create a Markdown table for two_pt_diff_data
+cat("\n### Two-Point Shooting Percentage Differences (Top 10 Improvements)\n")
+cat("| Player | Unrivaled 2P% | WNBA 2P% | Difference | Unrivaled 2PA |\n")
+cat("|--------|---------------|----------|------------|---------------|\n")
+two_pt_diff_data |>
+  select(
+    player_name,
+    ubb_two_pt_pct,
+    wnba_two_pt_pct,
+    two_pt_diff,
+    ubb_two_pt_attempted
+  ) |>
+  {
+    function(x) {
+      for (i in 1:nrow(x)) {
+        cat(sprintf(
+          "| %s | %.0f%% | %.0f%% | %+.0f%% | %d |\n",
+          x$player_name[i],
+          x$ubb_two_pt_pct[i] * 100,
+          x$wnba_two_pt_pct[i] * 100,
+          x$two_pt_diff[i],
+          x$ubb_two_pt_attempted[i]
         ))
       }
     }
