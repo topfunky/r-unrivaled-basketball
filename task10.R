@@ -11,6 +11,13 @@ library(feather)
 library(gghighcontrast)
 library(patchwork)
 
+# Define plot parameters
+line_width <- 4
+dot_size <- 8
+label_size <- 3
+chart_width <- 6
+chart_width_double <- chart_width * 2
+chart_height <- 4
 
 # Load data
 pbp_data <- read_feather("unrivaled_play_by_play.feather")
@@ -205,8 +212,8 @@ fg_density_plot <- ggplot() +
 ggsave(
   "plots/fg_density.png",
   plot = fg_density_plot,
-  width = 8,
-  height = 6,
+  width = chart_width,
+  height = chart_height,
   dpi = 300
 )
 
@@ -235,7 +242,7 @@ two_pt_density_plot <- ggplot() +
     legend.position = "bottom"
   ) +
   labs(
-    title = "Unrivaled vs WNBA: Distribution of Two-Point Shot Accuracy",
+    title = "Unrivaled vs WNBA: Two-Point Shot Accuracy",
     subtitle = "Per player across the entire season",
     x = "Two-Point Percentage",
     y = "Density"
@@ -244,8 +251,8 @@ two_pt_density_plot <- ggplot() +
 ggsave(
   "plots/two_pt_density.png",
   plot = two_pt_density_plot,
-  width = 8,
-  height = 6,
+  width = chart_width,
+  height = chart_height,
   dpi = 300
 )
 
@@ -274,7 +281,7 @@ three_pt_density_plot <- ggplot() +
     legend.position = "bottom"
   ) +
   labs(
-    title = "Unrivaled vs WNBA: Distribution of Three-Point Shot Accuracy",
+    title = "Unrivaled vs WNBA: Three-Point Shot Accuracy",
     subtitle = "Per player across the entire season",
     x = "Three-Point Percentage",
     y = "Density"
@@ -283,8 +290,8 @@ three_pt_density_plot <- ggplot() +
 ggsave(
   "plots/three_pt_density.png",
   plot = three_pt_density_plot,
-  width = 8,
-  height = 6,
+  width = chart_width,
+  height = chart_height,
   dpi = 300
 )
 
@@ -293,13 +300,14 @@ ggsave(
 # Create a combined plot with both density plots side by side
 combined_shooting_plot <- (two_pt_density_plot) +
   (three_pt_density_plot) +
-  plot_layout(ncol = 2)
+  plot_layout(ncol = 2) +
+  plot_annotation(theme = theme(plot.margin = margin(0, 0, 0, 0)))
 
 ggsave(
   "plots/combined_shooting.png",
   plot = combined_shooting_plot,
-  width = 16, # Double the width
-  height = 6, # Same height
+  width = chart_width_double,
+  height = chart_height,
   dpi = 300
 )
 
@@ -335,8 +343,8 @@ ts_density_plot <- ggplot() +
 ggsave(
   "plots/ts_density.png",
   plot = ts_density_plot,
-  width = 8,
-  height = 6,
+  width = chart_width,
+  height = chart_height,
   dpi = 300
 )
 
@@ -460,15 +468,15 @@ two_pt_barbell_plot <- create_barbell_plot(
   x1_label = "WNBA",
   x2_label = "Unrivaled",
   title = "Two-Point Shooting Percentage: Unrivaled vs WNBA",
-  subtitle = "Top 10 players with biggest positive differences (minimum 40 attempts)"
+  subtitle = "Top 10 players with biggest positive differences"
 )
 
 # Save the barbell plot
 ggsave(
   "plots/two_pt_barbell_positive.png",
   plot = two_pt_barbell_plot,
-  width = 10,
-  height = 8,
+  width = chart_width,
+  height = chart_height,
   dpi = 300
 )
 
@@ -492,15 +500,15 @@ two_pt_negative_barbell_plot <- create_barbell_plot(
   x1_label = "WNBA",
   x2_label = "Unrivaled",
   title = "Two-Point Shooting Percentage: Unrivaled vs WNBA",
-  subtitle = "Top 10 players with biggest negative differences (minimum 40 attempts)"
+  subtitle = "Top 10 players with biggest negative differences"
 )
 
 # Save the negative difference barbell plot
 ggsave(
   "plots/two_pt_barbell_negative.png",
   plot = two_pt_negative_barbell_plot,
-  width = 10,
-  height = 8,
+  width = chart_width,
+  height = chart_height,
   dpi = 300
 )
 
@@ -528,8 +536,8 @@ three_pt_barbell_plot <- create_barbell_plot(
 ggsave(
   "plots/three_pt_barbell.png",
   plot = three_pt_barbell_plot,
-  width = 10,
-  height = 8,
+  width = chart_width,
+  height = chart_height,
   dpi = 300
 )
 
@@ -785,8 +793,8 @@ fga_histogram <- base_histogram +
 ggsave(
   "plots/fga_histogram.png",
   plot = fga_histogram,
-  width = 10,
-  height = 6,
+  width = chart_width,
+  height = chart_height,
   dpi = 300
 )
 
