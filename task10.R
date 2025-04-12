@@ -10,6 +10,7 @@ library(tidyverse)
 library(feather)
 library(gghighcontrast)
 library(patchwork)
+library(ggrepel)
 
 # Define plot parameters
 line_width <- 4
@@ -416,7 +417,7 @@ create_barbell_plot <- function(
 }
 
 # Create barbell plot for two-point shooting percentage differences
-# Get top 10 players with biggest differences in 2P%
+# Get top 10 players with biggest improvement in 2P%
 two_pt_diff_data <- player_comparison |>
   filter(ubb_two_pt_attempted >= 40) |> # Filter by shot attempts
   mutate(
@@ -867,5 +868,136 @@ player_comparison |>
       }
     }
   }()
+
+# Create a function to generate scatter plots
+create_scatter_plot <- function(
+  data,
+  x_var,
+  y_var,
+  size_var,
+  label_var,
+  title,
+  subtitle = NULL,
+  x_label = NULL,
+  y_label = NULL,
+  color = "#6A0DAD",
+  label_size = 2,
+  point_size_range = c(3, 10)
+) {
+  ggplot(data, aes(x = {{ x_var }}, y = {{ y_var }})) +
+    geom_vline(
+      xintercept = 0,
+      linetype = "dashed",
+      color = "white",
+      alpha = 0.5
+    ) +
+    geom_abline(intercept = 0, slope = 1, color = "grey", alpha = 0.3) +
+    geom_point(aes(size = {{ size_var }}), color = color) +
+    geom_text_repel(
+      aes(label = {{ label_var }}),
+      size = label_size,
+      family = "InputMono",
+      color = "white",
+      box.padding = 0.5
+    ) +
+    scale_size_continuous(
+      name = "Field Goal Attempts",
+      range = point_size_range,
+      trans = "log10"
+    ) +
+    scale_x_continuous(
+      labels = scales::label_percent()
+    ) +
+    scale_y_continuous(
+      labels = scales::label_percent()
+    ) +
+    theme_high_contrast() +
+    theme(
+      text = element_text(family = "InputMono"),
+      legend.position = "bottom"
+    ) +
+    labs(
+      title = title,
+      subtitle = subtitle,
+      x = x_label,
+      y = y_label
+    )
+}
+
+# Create the scatterplot using the new function
+scatter_data <- player_comparison |>
+  filter(ubb_fg_attempted >= 10) |> # Filter players with at least 10 field goal attempts
+  mutate(
+    # Calculate percentages of 2pt and 3pt attempts
+    ubb_2pt_pct = ubb_two_pt_attempted / ubb_fg_attempted,
+    ubb_3pt_pct = ubb_three_pt_attempted / ubb_fg_attempted,
+    wnba_2pt_pct = wnba_two_pt_attempted / field_goals_attempted,
+    wnba_3pt_pct = three_point_field_goals_attempted / field_goals_attempted,
+    # Calculate increases
+    two_pt_pct_increase = (ubb_two_pt_pct - wnba_two_pt_pct),
+    two_pt_attempted_pct_increase = (ubb_2pt_pct - wnba_2pt_pct)
+  )
+
+scatter_plot <- create_scatter_plot(
+  data = scatter_data,
+  x_var = two_pt_pct_increase,
+  y_var = two_pt_attempted_pct_increase,
+  size_var = ubb_fg_attempted,
+  label_var = player_name,
+  title = "Two-Point Shooting: Percentage vs Attempt Rate Changes",
+  subtitle = "Comparing Unrivaled to WNBA performance",
+  x_label = "Change in 2P Accuracy",
+  y_label = "Change in 2P Att. Rate"
+)
+
+# Save the scatterplot
+ggsave(
+  "plots/two_pt_scatter_all.png",
+  plot = scatter_plot,
+  width = chart_width,
+  height = chart_height,
+  dpi = 300
+)
+
+
+# Display scatter plot with only the most improved players
+scatter_data_best <- player_comparison |>
+  filter(ubb_two_pt_attempted >= 40) |> # Filter by shot attempts
+
+  mutate(
+    # Calculate percentages of 2pt and 3pt attempts
+    ubb_2pt_pct = ubb_two_pt_attempted / ubb_fg_attempted,
+    ubb_3pt_pct = ubb_three_pt_attempted / ubb_fg_attempted,
+    wnba_2pt_pct = wnba_two_pt_attempted / field_goals_attempted,
+    wnba_3pt_pct = three_point_field_goals_attempted / field_goals_attempted,
+    # Calculate increases
+    # TODO: Improve variable naming
+    two_pt_pct_increase = (ubb_two_pt_pct - wnba_two_pt_pct),
+    two_pt_attempted_pct_increase = (ubb_2pt_pct - wnba_2pt_pct)
+  ) |>
+  arrange(desc(two_pt_pct_increase)) |>
+  head(10)
+
+
+scatter_plot <- create_scatter_plot(
+  data = scatter_data_best,
+  x_var = two_pt_pct_increase,
+  y_var = two_pt_attempted_pct_increase,
+  size_var = ubb_fg_attempted,
+  label_var = player_name,
+  title = "Did hot players take more 2P shots?",
+  subtitle = "Unrivaled vs WNBA shot selection",
+  x_label = "Change in 2P Accuracy",
+  y_label = "Change in 2P Att. Rate"
+)
+
+# Save the scatterplot
+ggsave(
+  "plots/two_pt_scatter_best.png",
+  plot = scatter_plot,
+  width = chart_width,
+  height = chart_height,
+  dpi = 300
+)
 
 sink()
