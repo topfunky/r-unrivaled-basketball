@@ -426,11 +426,6 @@ two_pt_diff_data <- player_comparison |>
   head(10) |>
   arrange(desc(ubb_two_pt_pct))
 
-print(
-  two_pt_diff_data |>
-    select(player_name, ubb_two_pt_pct, wnba_two_pt_pct, two_pt_diff)
-)
-
 
 # Create the barbell plot using the new function
 two_pt_barbell_plot <- create_barbell_plot(
@@ -810,7 +805,7 @@ player_fg_pct |>
 
 # Create a Markdown table for two_pt_diff_data
 cat("\n### Two-Point Shooting Percentage Differences (Top 10 Improvements)\n")
-cat("| Player | Unrivaled 2P% | WNBA 2P% | Difference | Unrivaled 2PA |\n")
+cat("| Player | UBB 2P% | WNBA 2P% | Difference | UBB 2PA |\n")
 cat("|--------|---------------|----------|------------|---------------|\n")
 two_pt_diff_data |>
   select(
@@ -834,5 +829,52 @@ two_pt_diff_data |>
       }
     }
   }()
+
+# Calculate stats and create a Markdown table that shows percentage of 2pt attempts vs 3pt attempts in Unrivaled vs the WNBA for the entire league
+cat("\n### Two-Point vs Three-Point Attempts in Unrivaled vs WNBA\n")
+cat("| WNBA 2pt% | UBB 2pt% | WNBA 3pt% | UBB 3pt% |\n")
+cat("|----------|-----------|------|------------|\n")
+
+# Calculate total attempts and percentages
+total_attempts <- player_comparison |>
+  summarise(
+    total_wnba_2pt_attempts = sum(wnba_two_pt_attempted),
+    total_ubb_2pt_attempts = sum(ubb_two_pt_attempted),
+    total_wnba_3pt_attempts = sum(three_point_field_goals_attempted),
+    total_ubb_3pt_attempts = sum(ubb_three_pt_attempted)
+  )
+
+# Calculate Percentages
+total_attempts |>
+  mutate(
+    wnba_2pt_percentage = total_wnba_2pt_attempts /
+      (total_wnba_2pt_attempts + total_wnba_3pt_attempts),
+    ubb_2pt_percentage = total_ubb_2pt_attempts /
+      (total_ubb_2pt_attempts + total_ubb_3pt_attempts),
+    wnba_3pt_percentage = total_wnba_3pt_attempts /
+      (total_wnba_2pt_attempts + total_wnba_3pt_attempts),
+    ubb_3pt_percentage = total_ubb_3pt_attempts /
+      (total_ubb_2pt_attempts + total_ubb_3pt_attempts)
+  ) |>
+  select(
+    wnba_2pt_percentage,
+    ubb_2pt_percentage,
+    wnba_3pt_percentage,
+    ubb_3pt_percentage
+  ) |>
+  {
+    function(x) {
+      for (i in 1:nrow(x)) {
+        cat(sprintf(
+          "| %s | %.1f%% | %.1f%% | %.1f%% |\n",
+          x$wnba_2pt_percentage[i] * 100,
+          x$ubb_2pt_percentage[i] * 100,
+          x$wnba_3pt_percentage[i] * 100,
+          x$ubb_3pt_percentage[i] * 100
+        ))
+      }
+    }
+  }()
+
 
 sink()
