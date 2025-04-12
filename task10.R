@@ -830,51 +830,42 @@ two_pt_diff_data |>
     }
   }()
 
-# Calculate stats and create a Markdown table that shows percentage of 2pt attempts vs 3pt attempts in Unrivaled vs the WNBA for the entire league
-cat("\n### Two-Point vs Three-Point Attempts in Unrivaled vs WNBA\n")
-cat("| WNBA 2pt% | UBB 2pt% | WNBA 3pt% | UBB 3pt% |\n")
-cat("|----------|-----------|------|------------|\n")
+# Calculate and display a Markdown table with each player's percentage of 2pt shots vs 3pt shots taken in Unrivaled vs WNBA
+cat("\n### Shot Distribution: 2-Point vs 3-Point Attempts\n")
+cat(
+  "| Player | UBB 2P% | UBB 3P% | WNBA 2P% | WNBA 3P% | UBB 2PA | UBB 3PA | WNBA 2PA | WNBA 3PA |\n"
+)
+cat(
+  "|--------|---------|---------|----------|----------|---------|---------|----------|----------|\n"
+)
 
-# Calculate total attempts and percentages
-total_attempts <- player_comparison |>
-  summarise(
-    total_wnba_2pt_attempts = sum(wnba_two_pt_attempted),
-    total_ubb_2pt_attempts = sum(ubb_two_pt_attempted),
-    total_wnba_3pt_attempts = sum(three_point_field_goals_attempted),
-    total_ubb_3pt_attempts = sum(ubb_three_pt_attempted)
-  )
-
-# Calculate Percentages
-total_attempts |>
+player_comparison |>
+  filter(ubb_fg_attempted >= 10) |> # Filter players with at least 10 field goal attempts
   mutate(
-    wnba_2pt_percentage = total_wnba_2pt_attempts /
-      (total_wnba_2pt_attempts + total_wnba_3pt_attempts),
-    ubb_2pt_percentage = total_ubb_2pt_attempts /
-      (total_ubb_2pt_attempts + total_ubb_3pt_attempts),
-    wnba_3pt_percentage = total_wnba_3pt_attempts /
-      (total_wnba_2pt_attempts + total_wnba_3pt_attempts),
-    ubb_3pt_percentage = total_ubb_3pt_attempts /
-      (total_ubb_2pt_attempts + total_ubb_3pt_attempts)
+    # Calculate percentages of 2pt and 3pt attempts
+    ubb_2pt_pct = ubb_two_pt_attempted / ubb_fg_attempted,
+    ubb_3pt_pct = ubb_three_pt_attempted / ubb_fg_attempted,
+    wnba_2pt_pct = wnba_two_pt_attempted / field_goals_attempted,
+    wnba_3pt_pct = three_point_field_goals_attempted / field_goals_attempted
   ) |>
-  select(
-    wnba_2pt_percentage,
-    ubb_2pt_percentage,
-    wnba_3pt_percentage,
-    ubb_3pt_percentage
-  ) |>
+  arrange(desc(ubb_fg_attempted)) |> # Sort by most field goal attempts
   {
     function(x) {
       for (i in 1:nrow(x)) {
         cat(sprintf(
-          "| %s | %.1f%% | %.1f%% | %.1f%% |\n",
-          x$wnba_2pt_percentage[i] * 100,
-          x$ubb_2pt_percentage[i] * 100,
-          x$wnba_3pt_percentage[i] * 100,
-          x$ubb_3pt_percentage[i] * 100
+          "| %s | %.0f%% | %.0f%% | %.0f%% | %.0f%% | %d | %d | %d | %d |\n",
+          x$player_name[i],
+          x$ubb_2pt_pct[i] * 100,
+          x$ubb_3pt_pct[i] * 100,
+          x$wnba_2pt_pct[i] * 100,
+          x$wnba_3pt_pct[i] * 100,
+          x$ubb_two_pt_attempted[i],
+          x$ubb_three_pt_attempted[i],
+          x$wnba_two_pt_attempted[i],
+          x$three_point_field_goals_attempted[i]
         ))
       }
     }
   }()
-
 
 sink()
