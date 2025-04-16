@@ -207,7 +207,7 @@ p <- game_rankings |>
   # Use geom_bump for smooth lines and points
   geom_bump(
     linewidth = line_width,
-    size = dot_size,
+    size = dot_size, # TODO: Might not be needed if linewidth is set
     show.legend = FALSE # Don't show in legend
   ) +
   # Use team colors from imported palette

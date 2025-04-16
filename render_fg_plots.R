@@ -6,6 +6,8 @@ library(gghighcontrast)
 library(patchwork)
 library(ggrepel)
 
+source("team_colors.R")
+
 #' Render and save field goal density plot
 #' @param player_fg_pct Data frame with player FG%
 #' @param player_comparison Data frame with player comparison stats
@@ -32,7 +34,7 @@ render_fg_density_plot <- function(
     ) +
     scale_fill_manual(
       name = "Data Source",
-      values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
+      values = c("Unrivaled" = ubb_color, "WNBA" = wnba_color)
     ) +
     theme_high_contrast() +
     theme(
@@ -82,7 +84,7 @@ render_two_pt_density_plot <- function(
     ) +
     scale_fill_manual(
       name = "Data Source",
-      values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
+      values = c("Unrivaled" = ubb_color, "WNBA" = wnba_color)
     ) +
     scale_x_continuous(labels = scales::label_percent()) +
     theme_high_contrast() +
@@ -133,7 +135,7 @@ render_three_pt_density_plot <- function(
     ) +
     scale_fill_manual(
       name = "Data Source",
-      values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
+      values = c("Unrivaled" = ubb_color, "WNBA" = wnba_color)
     ) +
     scale_x_continuous(labels = scales::label_percent()) +
     theme_high_contrast() +
@@ -210,7 +212,7 @@ render_ts_density_plot <- function(
     ) +
     scale_fill_manual(
       name = "Data Source",
-      values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
+      values = c("Unrivaled" = ubb_color, "WNBA" = wnba_color)
     ) +
     theme_high_contrast() +
     theme(
@@ -292,8 +294,8 @@ render_barbell_plot <- function(
     ) +
     # Set colors for the gradient
     scale_color_gradient(
-      low = "#FF8C00", # WNBA color
-      high = "#6A0DAD", # Unrivaled color
+      low = wnba_color,
+      high = ubb_color,
       guide = "none" # Hide the gradient legend
     ) +
     # Format x-axis as percentages
@@ -490,7 +492,7 @@ render_fga_histogram <- function(player_fga, chart_width, chart_height) {
   base_histogram <- ggplot(player_fga, aes(x = total_fga)) +
     geom_histogram(
       bins = 15,
-      fill = "#6A0DAD",
+      fill = ubb_color,
       alpha = 0.8
     )
 
@@ -503,13 +505,13 @@ render_fga_histogram <- function(player_fga, chart_width, chart_height) {
     # Add vertical lines for mean and median
     geom_vline(
       aes(xintercept = mean(total_fga)),
-      color = "#FF8C00",
+      color = wnba_color,
       linetype = "dashed",
       linewidth = 1
     ) +
     geom_vline(
       aes(xintercept = median(total_fga)),
-      color = "#00CED1",
+      color = median_color,
       linetype = "dashed",
       linewidth = 1
     ) +
@@ -519,7 +521,7 @@ render_fga_histogram <- function(player_fga, chart_width, chart_height) {
       x = mean(player_fga$total_fga),
       y = max_count * 0.9,
       label = sprintf("Mean: %.1f", mean(player_fga$total_fga)),
-      color = "#FF8C00",
+      color = wnba_color,
       hjust = -0.1,
       family = "InputMono",
       fontface = "bold"
@@ -529,7 +531,7 @@ render_fga_histogram <- function(player_fga, chart_width, chart_height) {
       x = median(player_fga$total_fga),
       y = max_count * 0.8,
       label = sprintf("Median: %.1f", median(player_fga$total_fga)),
-      color = "#00CED1",
+      color = median_color,
       hjust = -0.1,
       family = "InputMono",
       fontface = "bold"

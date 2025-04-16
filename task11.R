@@ -9,6 +9,8 @@ library(feather)
 library(glue)
 library(gghighcontrast)
 
+source("team_colors.R")
+
 # Set seed for reproducibility
 set.seed(5150)
 
@@ -136,7 +138,7 @@ wnba_shooting_stats |>
 
 # Create and save density plots with InputMono font
 fg_pct_plot <- ggplot(wnba_shooting_stats, aes(x = field_goal_pct)) +
-  geom_density(fill = "#FF8C00", alpha = 0.3) +
+  geom_density(fill = wnba_color, alpha = 0.3) +
   theme_high_contrast() +
   theme(
     text = element_text(family = "InputMono"),
@@ -157,7 +159,7 @@ ggsave(
 )
 
 ts_pct_plot <- ggplot(wnba_shooting_stats, aes(x = ts_pct)) +
-  geom_density(fill = "#FF8C00", alpha = 0.3) +
+  geom_density(fill = wnba_color, alpha = 0.3) +
   theme_high_contrast() +
   theme(
     text = element_text(family = "InputMono"),

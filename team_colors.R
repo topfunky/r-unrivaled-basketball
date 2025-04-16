@@ -10,3 +10,9 @@ TEAM_COLORS <- c(
   "Phantom" = "#606060", # Dark grey
   "Vinyl" = "#E6E6E6" # Very light grey
 )
+
+# Define comparison colors
+ubb_color <- "#6A0DAD" # Unrivaled Basketball purple
+wnba_color <- "#FF8C00" # WNBA orange
+mean_color <- wnba_color # Use WNBA orange for mean line
+median_color <- "#00CED1" # Turquoise for median line

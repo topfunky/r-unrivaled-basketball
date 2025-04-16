@@ -15,6 +15,7 @@ library(ggrepel)
 # Source rendering functions
 source("render_stats.R")
 source("render_fg_plots.R")
+source("team_colors.R")
 
 # Define plot parameters
 line_width <- 4
@@ -29,7 +30,7 @@ scatter_point_size <- 6
 scatter_label_size <- 2.5
 scatter_quadrant_label_size <- 2
 scatter_min_attempts <- 80 # Minimum attempts for showing player labels
-scatter_point_color <- "#6A0DAD"
+scatter_point_color <- ubb_color
 scatter_label_color <- "white"
 scatter_quadrant_label_color <- "grey"
 scatter_reference_line_color <- "white"
