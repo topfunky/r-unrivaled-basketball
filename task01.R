@@ -10,6 +10,11 @@ library(tidyverse)
 library(ggplot2)
 library(lubridate)
 library(gghighcontrast)
+library(feather)
+
+# Create plots directory if it doesn't exist
+message("Creating plots directory if it doesn't exist...")
+dir.create("plots", showWarnings = FALSE, recursive = TRUE)
 
 # Read fixture data from CSV file in fixtures subdirectory
 fixtures <- read_csv("fixtures/fixtures.csv") |>
@@ -98,12 +103,9 @@ p <- ggplot(weekly_rankings, aes(x = week_number, y = rank, group = team)) +
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
-# Display the plot
-print(p)
 
 # Save the plot to a PNG file
-ggsave("unrivaled_rankings_1.png", p, width = 12, height = 8, dpi = 300)
+ggsave("plots/unrivaled_rankings_1.png", p, width = 12, height = 8, dpi = 300)
 
 # Save the data to a feather file
-library(feather)
 write_feather(weekly_rankings, "unrivaled_rankings_1.feather")

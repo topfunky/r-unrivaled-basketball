@@ -14,6 +14,11 @@ library(feather) # For saving data in feather format
 # Import team colors
 source("team_colors.R")
 
+# Create plots directory if it doesn't exist
+message("Creating plots directory if it doesn't exist...")
+dir.create("plots", showWarnings = FALSE, recursive = TRUE)
+
+
 # Read the CSV data
 games <- read_csv("fixtures/unrivaled_scores.csv")
 
@@ -266,7 +271,7 @@ p <- game_rankings |>
   )
 
 # Save the plot
-ggsave("unrivaled_rankings_3.png", p, width = 6, height = 4, dpi = 300)
+ggsave("plots/unrivaled_rankings_3.png", p, width = 6, height = 4, dpi = 300)
 
 # Save the data
 write_feather(game_rankings, "unrivaled_rankings_3.feather")

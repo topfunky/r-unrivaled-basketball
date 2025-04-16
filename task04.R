@@ -218,7 +218,7 @@ p <- plot_data |>
   )
 
 # Save the plot
-ggsave("unrivaled_elo_ratings.png", p, width = 6, height = 4, dpi = 300)
+ggsave("plots/unrivaled_elo_ratings.png", p, width = 6, height = 4, dpi = 300)
 
 # Save the ELO rankings
 write_feather(ratings_history, "unrivaled_elo_rankings.feather")
