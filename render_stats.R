@@ -1,5 +1,6 @@
-# Functions for rendering basketball statistics in markdown format
-# This file contains functions that take aggregated data and render it as markdown
+# Functions for rendering basketball statistics in Markdown format
+# This file contains functions that take aggregated data and render it as Markdown
+# for later use in a blog post or other documentation.
 
 library(tidyverse)
 

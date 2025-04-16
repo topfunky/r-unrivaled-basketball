@@ -12,8 +12,9 @@ library(gghighcontrast)
 library(patchwork)
 library(ggrepel)
 
-# Source the rendering functions
+# Source rendering functions
 source("render_stats.R")
+source("render_plots.R")
 
 # Define plot parameters
 line_width <- 4
@@ -194,243 +195,47 @@ player_ts_pct <- box_scores |>
     ubb_two_pt_pct = ubb_two_pt_made / ubb_two_pt_attempted
   )
 
-# Create and save density plots with InputMono font
-fg_density_plot <- ggplot() +
-  geom_density(
-    data = player_fg_pct,
-    aes(x = ubb_fg_pct, fill = "Unrivaled"),
-    alpha = 0.7,
-    color = NA
-  ) +
-  geom_density(
-    data = player_comparison,
-    aes(x = field_goal_pct, fill = "WNBA"),
-    alpha = 0.7,
-    color = NA
-  ) +
-  scale_fill_manual(
-    name = "Data Source",
-    values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
-  ) +
-  theme_high_contrast() +
-  theme(
-    text = element_text(family = "InputMono"),
-    legend.position = "bottom"
-  ) +
-  labs(
-    title = "Unrivaled vs WNBA: Distribution of Field Goal Shot Accuracy",
-    subtitle = "Per player across the entire season",
-    x = "Field Goal Percentage",
-    y = "Density"
-  )
-
-ggsave(
-  "plots/fg_density.png",
-  plot = fg_density_plot,
-  width = chart_width,
-  height = chart_height,
-  dpi = 300
+# Render density plots
+render_fg_density_plot(
+  player_fg_pct,
+  player_comparison,
+  chart_width,
+  chart_height
 )
 
-# Create two-point percentage density plot
-two_pt_density_plot <- ggplot() +
-  geom_density(
-    data = player_fg_pct,
-    aes(x = ubb_two_pt_pct, fill = "Unrivaled"),
-    alpha = 0.7,
-    color = NA
-  ) +
-  geom_density(
-    data = player_comparison,
-    aes(x = wnba_two_pt_pct, fill = "WNBA"),
-    alpha = 0.7,
-    color = NA
-  ) +
-  scale_fill_manual(
-    name = "Data Source",
-    values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
-  ) +
-  scale_x_continuous(labels = scales::label_percent()) +
-  theme_high_contrast() +
-  theme(
-    text = element_text(family = "InputMono"),
-    legend.position = "bottom"
-  ) +
-  labs(
-    title = "Unrivaled vs WNBA: Two-Point Shot Accuracy",
-    subtitle = "Per player across the entire season",
-    x = "Two-Point Percentage",
-    y = "Density"
-  )
-
-ggsave(
-  "plots/two_pt_density.png",
-  plot = two_pt_density_plot,
-  width = chart_width,
-  height = chart_height,
-  dpi = 300
+two_pt_plot <- render_two_pt_density_plot(
+  player_fg_pct,
+  player_comparison,
+  chart_width,
+  chart_height
 )
 
-# Create three-point percentage density plot
-three_pt_density_plot <- ggplot() +
-  geom_density(
-    data = player_fg_pct |> filter(player_name != "Aaliyah Edwards"),
-    aes(x = ubb_three_pt_pct, fill = "Unrivaled"),
-    alpha = 0.7,
-    color = NA
-  ) +
-  geom_density(
-    data = player_comparison |> filter(player_name != "Aaliyah Edwards"),
-    aes(x = three_point_pct, fill = "WNBA"),
-    alpha = 0.7,
-    color = NA
-  ) +
-  scale_fill_manual(
-    name = "Data Source",
-    values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
-  ) +
-  scale_x_continuous(labels = scales::label_percent()) +
-  theme_high_contrast() +
-  theme(
-    text = element_text(family = "InputMono"),
-    legend.position = "bottom"
-  ) +
-  labs(
-    title = "Unrivaled vs WNBA: Three-Point Shot Accuracy",
-    subtitle = "Per player across the entire season",
-    x = "Three-Point Percentage",
-    y = "Density"
-  )
-
-ggsave(
-  "plots/three_pt_density.png",
-  plot = three_pt_density_plot,
-  width = chart_width,
-  height = chart_height,
-  dpi = 300
+three_pt_plot <- render_three_pt_density_plot(
+  player_fg_pct,
+  player_comparison,
+  chart_width,
+  chart_height
 )
 
-# Render 2pt and 3pt density plots side by side
+# Render combined shooting plot
+render_combined_shooting_plot(
+  two_pt_plot,
+  three_pt_plot,
+  chart_width_double,
+  chart_height
+)
 
-# Create a combined plot with both density plots side by side
-combined_shooting_plot <- (two_pt_density_plot) +
-  (three_pt_density_plot) +
-  plot_layout(ncol = 2) +
-  plot_annotation(theme = theme(plot.margin = margin(0, 0, 0, 0)))
-
-ggsave(
-  "plots/combined_shooting.png",
-  plot = combined_shooting_plot,
-  width = chart_width_double,
-  height = chart_height,
-  dpi = 300
+# Render TS density plot
+render_ts_density_plot(
+  player_ts_pct,
+  player_comparison,
+  chart_width,
+  chart_height
 )
 
 
-ts_density_plot <- ggplot() +
-  geom_density(
-    data = player_ts_pct,
-    aes(x = ubb_ts_pct, fill = "Unrivaled"),
-    alpha = 0.7,
-    color = NA
-  ) +
-  geom_density(
-    data = player_comparison,
-    aes(x = wnba_ts_pct, fill = "WNBA"),
-    alpha = 0.7,
-    color = NA
-  ) +
-  scale_fill_manual(
-    name = "Data Source",
-    values = c("Unrivaled" = "#6A0DAD", "WNBA" = "#FF8C00")
-  ) +
-  theme_high_contrast() +
-  theme(
-    text = element_text(family = "InputMono"),
-    legend.position = "bottom"
-  ) +
-  labs(
-    title = "Distribution of True Shooting Percentages",
-    x = "True Shooting Percentage",
-    y = "Density"
-  )
+# Create data for barbell plots
 
-ggsave(
-  "plots/ts_density.png",
-  plot = ts_density_plot,
-  width = chart_width,
-  height = chart_height,
-  dpi = 300
-)
-
-# Create a function to generate barbell plots
-create_barbell_plot <- function(
-  data,
-  y_var,
-  x1_var,
-  x2_var,
-  x1_label,
-  x2_label,
-  title,
-  subtitle = NULL
-) {
-  # Create a data frame with interpolated points for the gradient
-  gradient_data <- data |>
-    mutate(
-      # Create a sequence of points between x1 and x2 for each player
-      gradient_points = map2(
-        {{ x1_var }},
-        {{ x2_var }},
-        ~ seq(.x, .y, length.out = 100)
-      ),
-      # Calculate the position along the gradient (0 to 1) for each player
-      min_val = {{ x1_var }},
-      max_val = {{ x2_var }}
-    ) |>
-    unnest(gradient_points) |>
-    mutate(
-      # Calculate the position along the gradient (0 to 1) for each point
-      gradient_position = (gradient_points - min_val) / (max_val - min_val)
-    )
-
-  ggplot() +
-    # Add gradient lines between points with rounded ends
-    geom_path(
-      data = gradient_data,
-      aes(
-        x = gradient_points,
-        y = reorder({{ y_var }}, {{ x2_var }}),
-        group = {{ y_var }},
-        color = gradient_position
-      ),
-      linewidth = 5.5,
-      lineend = "round"
-    ) +
-    # Set colors for the gradient
-    scale_color_gradient(
-      low = "#FF8C00", # WNBA color
-      high = "#6A0DAD", # Unrivaled color
-      guide = "none" # Hide the gradient legend
-    ) +
-    # Format x-axis as percentages
-    scale_x_continuous(
-      labels = scales::label_percent(scale = 1)
-    ) +
-    # Apply high contrast theme
-    theme_high_contrast() +
-    theme(
-      text = element_text(family = "InputMono"),
-      legend.position = "bottom",
-      axis.title.y = element_blank(),
-      axis.title.x = element_blank()
-    ) +
-    labs(
-      title = title,
-      subtitle = subtitle
-    )
-}
-
-# Create barbell plot for two-point shooting percentage differences
 # Get top 10 players with biggest improvement in 2P%
 two_pt_diff_data <- player_comparison |>
   filter(ubb_two_pt_attempted >= 40) |> # Filter by shot attempts
@@ -441,29 +246,7 @@ two_pt_diff_data <- player_comparison |>
   head(10) |>
   arrange(desc(ubb_two_pt_pct))
 
-
-# Create the barbell plot using the new function
-two_pt_barbell_plot <- create_barbell_plot(
-  data = two_pt_diff_data,
-  y_var = player_name,
-  x1_var = wnba_two_pt_pct * 100,
-  x2_var = ubb_two_pt_pct * 100,
-  x1_label = "WNBA",
-  x2_label = "Unrivaled",
-  title = "Two-Point Shooting Percentage: WNBA vs Unrivaled",
-  subtitle = "Players with biggest improvement in Unrivaled (purple)"
-)
-
-# Save the barbell plot
-ggsave(
-  "plots/two_pt_barbell_positive.png",
-  plot = two_pt_barbell_plot,
-  width = chart_width,
-  height = chart_height,
-  dpi = 300
-)
-
-# Create a second barbell plot for players with the greatest negative differences
+# Get top 10 players with biggest decrease in 2P%
 two_pt_negative_diff_data <- player_comparison |>
   filter(ubb_two_pt_attempted >= 40) |> # Filter by shot attempts
   mutate(
@@ -473,9 +256,22 @@ two_pt_negative_diff_data <- player_comparison |>
   head(10) |>
   arrange(desc(ubb_two_pt_pct))
 
+# Render barbell plots
+render_barbell_plot(
+  data = two_pt_diff_data,
+  y_var = player_name,
+  x1_var = wnba_two_pt_pct * 100,
+  x2_var = ubb_two_pt_pct * 100,
+  x1_label = "WNBA",
+  x2_label = "Unrivaled",
+  title = "Two-Point Shooting Percentage: WNBA vs Unrivaled",
+  subtitle = "Players with biggest improvement in Unrivaled (purple)",
+  file_path = "plots/two_pt_barbell_positive.png",
+  chart_width = chart_width,
+  chart_height = chart_height
+)
 
-# Create the negative difference barbell plot
-two_pt_negative_barbell_plot <- create_barbell_plot(
+render_barbell_plot(
   data = two_pt_negative_diff_data,
   y_var = player_name,
   x1_var = wnba_two_pt_pct * 100,
@@ -483,21 +279,13 @@ two_pt_negative_barbell_plot <- create_barbell_plot(
   x1_label = "WNBA",
   x2_label = "Unrivaled",
   title = "Two-Point Shooting Percentage: WNBA vs Unrivaled",
-  subtitle = "Players with biggest decrease in Unrivaled (purple)"
+  subtitle = "Players with biggest decrease in Unrivaled (purple)",
+  file_path = "plots/two_pt_barbell_negative.png",
+  chart_width = chart_width,
+  chart_height = chart_height
 )
 
-# Save the negative difference barbell plot
-ggsave(
-  "plots/two_pt_barbell_negative.png",
-  plot = two_pt_negative_barbell_plot,
-  width = chart_width,
-  height = chart_height,
-  dpi = 300
-)
-
-
-# Create a scatter plot comparing 2-point and 3-point shooting percentage improvements
-# Calculate the improvement in shooting percentages
+# Calculate shooting improvement data
 shooting_improvement <- player_comparison |>
   mutate(
     # Calculate percentage point improvements (in percentage points)
@@ -514,306 +302,63 @@ shooting_improvement <- player_comparison |>
     ubb_three_pt_attempted >= 10
   )
 
-# Create the scatter plot
-improvement_scatter <- ggplot(
-  shooting_improvement,
-  aes(x = two_pt_improvement, y = three_pt_improvement)
-) +
-  # Add trend line
-  geom_smooth(
-    method = "lm",
-    se = TRUE,
-    color = "black",
-    alpha = 0.2,
-    linewidth = 1
-  ) +
-  # Add reference lines at 0
-  geom_hline(
-    yintercept = 0,
-    linetype = "solid",
-    color = scatter_reference_line_color
-  ) +
-  geom_vline(
-    xintercept = 0,
-    linetype = "solid",
-    color = scatter_reference_line_color
-  ) +
-  # Add points
-  geom_point(
-    aes(size = ubb_fg_attempted),
-    color = scatter_point_color
-  ) +
-  # Add player labels only for players with at least scatter_min_attempts field goal attempts
-  geom_text_repel(
-    data = shooting_improvement |>
-      filter(ubb_fg_attempted >= scatter_min_attempts),
-    aes(label = player_name),
-    size = scatter_label_size,
-    family = "InputMono",
-    box.padding = 0.5,
-    color = scatter_label_color
-  ) +
-  # Add quadrant labels with appropriate alignment
-  annotate(
-    "text",
-    x = max(shooting_improvement$two_pt_improvement) *
-      scatter_quadrant_position_factor,
-    y = max(shooting_improvement$three_pt_improvement) *
-      scatter_quadrant_position_factor,
-    label = "Improved in both",
-    color = scatter_quadrant_label_color,
-    family = "InputMono",
-    size = scatter_quadrant_label_size,
-    hjust = 1 # Right align for NE quadrant
-  ) +
-  annotate(
-    "text",
-    x = min(shooting_improvement$two_pt_improvement) *
-      scatter_quadrant_position_factor,
-    y = max(shooting_improvement$three_pt_improvement) *
-      scatter_quadrant_position_factor,
-    label = "Better 3PT",
-    color = scatter_quadrant_label_color,
-    family = "InputMono",
-    size = scatter_quadrant_label_size,
-    hjust = 0 # Left align for NW quadrant
-  ) +
-  annotate(
-    "text",
-    x = max(shooting_improvement$two_pt_improvement) *
-      scatter_quadrant_position_factor,
-    y = min(shooting_improvement$three_pt_improvement) *
-      scatter_quadrant_position_factor,
-    label = "Better 2PT",
-    color = scatter_quadrant_label_color,
-    family = "InputMono",
-    size = scatter_quadrant_label_size,
-    hjust = 1 # Right align for SE quadrant
-  ) +
-  annotate(
-    "text",
-    x = min(shooting_improvement$two_pt_improvement) *
-      scatter_quadrant_position_factor,
-    y = min(shooting_improvement$three_pt_improvement) *
-      scatter_quadrant_position_factor,
-    label = "Worse in both",
-    color = scatter_quadrant_label_color,
-    family = "InputMono",
-    size = scatter_quadrant_label_size,
-    hjust = 0 # Left align for SW quadrant
-  ) +
-  # Customize the plot
-  scale_size_continuous(
-    name = "Field Goal Attempts",
-    range = c(3, scatter_point_size),
-    guide = "none" # Hide the size legend
-  ) +
-  theme_high_contrast() +
-  theme(
-    text = element_text(family = "InputMono"),
-    legend.position = "bottom"
-  ) +
-  labs(
-    title = "Shooting Improvement: Unrivaled vs WNBA",
-    subtitle = "Comparing 2P and 3P shooting",
-    x = "2P (percentage points)",
-    y = "3P (percentage points)"
-  )
-
-# Save the plot
-ggsave(
-  "plots/shooting_improvement_scatter.png",
-  plot = improvement_scatter,
-  width = chart_width,
-  height = chart_height,
-  dpi = 300
+# Render scatter plots
+render_improvement_scatter(
+  shooting_improvement = shooting_improvement,
+  x_var = two_pt_improvement,
+  y_var = three_pt_improvement,
+  x_lab = "2P (percentage points)",
+  y_lab = "3P (percentage points)",
+  title = "Shooting Improvement: Unrivaled vs WNBA",
+  subtitle = "Comparing 2P and 3P shooting",
+  file_path = "plots/shooting_improvement_scatter.png",
+  chart_width = chart_width,
+  chart_height = chart_height,
+  scatter_point_size = scatter_point_size,
+  scatter_label_size = scatter_label_size,
+  scatter_min_attempts = scatter_min_attempts,
+  scatter_point_color = scatter_point_color,
+  scatter_label_color = scatter_label_color,
+  scatter_quadrant_label_color = scatter_quadrant_label_color,
+  scatter_quadrant_label_size = scatter_quadrant_label_size,
+  scatter_reference_line_color = scatter_reference_line_color,
+  scatter_quadrant_position_factor = scatter_quadrant_position_factor,
+  add_trendline = TRUE
 )
 
-# Create a second version with relative improvements
-relative_improvement_scatter <- ggplot(
-  shooting_improvement,
-  aes(x = two_pt_relative_improvement, y = three_pt_relative_improvement)
-) +
-  # Add reference lines at 0
-  geom_hline(
-    yintercept = 0,
-    linetype = "solid",
-    color = scatter_reference_line_color
-  ) +
-  geom_vline(
-    xintercept = 0,
-    linetype = "solid",
-    color = scatter_reference_line_color
-  ) +
-  # Add points
-  geom_point(
-    aes(size = ubb_fg_attempted),
-    color = scatter_point_color
-  ) +
-  # Add player labels only for players with at least scatter_min_attempts field goal attempts
-  geom_text_repel(
-    data = shooting_improvement |>
-      filter(ubb_fg_attempted >= scatter_min_attempts),
-    aes(label = player_name),
-    size = scatter_label_size,
-    family = "InputMono",
-    box.padding = 0.5,
-    color = scatter_label_color
-  ) +
-  # Add quadrant labels with appropriate alignment
-  annotate(
-    "text",
-    x = max(shooting_improvement$two_pt_relative_improvement) *
-      scatter_quadrant_position_factor,
-    y = max(shooting_improvement$three_pt_relative_improvement) *
-      scatter_quadrant_position_factor,
-    label = "Improved in both",
-    color = scatter_quadrant_label_color,
-    family = "InputMono",
-    size = scatter_quadrant_label_size,
-    hjust = 1 # Right align for NE quadrant
-  ) +
-  annotate(
-    "text",
-    x = min(shooting_improvement$two_pt_relative_improvement) *
-      scatter_quadrant_position_factor,
-    y = max(shooting_improvement$three_pt_relative_improvement) *
-      scatter_quadrant_position_factor,
-    label = "Better 3PT, worse 2PT",
-    color = scatter_quadrant_label_color,
-    family = "InputMono",
-    size = scatter_quadrant_label_size,
-    hjust = 0 # Left align for NW quadrant
-  ) +
-  annotate(
-    "text",
-    x = max(shooting_improvement$two_pt_relative_improvement) *
-      scatter_quadrant_position_factor,
-    y = min(shooting_improvement$three_pt_relative_improvement) *
-      scatter_quadrant_position_factor,
-    label = "Better 2PT, worse 3PT",
-    color = scatter_quadrant_label_color,
-    family = "InputMono",
-    size = scatter_quadrant_label_size,
-    hjust = 1 # Right align for SE quadrant
-  ) +
-  annotate(
-    "text",
-    x = min(shooting_improvement$two_pt_relative_improvement) *
-      scatter_quadrant_position_factor,
-    y = min(shooting_improvement$three_pt_relative_improvement) *
-      scatter_quadrant_position_factor,
-    label = "Worse in both",
-    color = scatter_quadrant_label_color,
-    family = "InputMono",
-    size = scatter_quadrant_label_size,
-    hjust = 0 # Left align for SW quadrant
-  ) +
-  # Customize the plot
-  scale_size_continuous(
-    name = "Field Goal Attempts",
-    range = c(3, scatter_point_size),
-    guide = "none" # Hide the size legend
-  ) +
-  theme_high_contrast() +
-  theme(
-    text = element_text(family = "InputMono"),
-    legend.position = "bottom"
-  ) +
-  labs(
-    title = "Relative Shooting Improvement: Unrivaled vs WNBA",
-    subtitle = "Comparing relative improvements in 2-point and 3-point shooting",
-    x = "2-Point Shooting Improvement (%)",
-    y = "3-Point Shooting Improvement (%)"
-  )
-
-# Save the relative improvement plot
-ggsave(
-  "plots/relative_shooting_improvement_scatter.png",
-  plot = relative_improvement_scatter,
-  width = chart_width,
-  height = chart_height,
-  dpi = 300
+render_improvement_scatter(
+  shooting_improvement = shooting_improvement,
+  x_var = two_pt_relative_improvement,
+  y_var = three_pt_relative_improvement,
+  x_lab = "2-Point Shooting Improvement (%)",
+  y_lab = "3-Point Shooting Improvement (%)",
+  title = "Relative Shooting Improvement: Unrivaled vs WNBA",
+  subtitle = "Comparing relative improvements in 2-point and 3-point shooting",
+  file_path = "plots/relative_shooting_improvement_scatter.png",
+  chart_width = chart_width,
+  chart_height = chart_height,
+  scatter_point_size = scatter_point_size,
+  scatter_label_size = scatter_label_size,
+  scatter_min_attempts = scatter_min_attempts,
+  scatter_point_color = scatter_point_color,
+  scatter_label_color = scatter_label_color,
+  scatter_quadrant_label_color = scatter_quadrant_label_color,
+  scatter_quadrant_label_size = scatter_quadrant_label_size,
+  scatter_reference_line_color = scatter_reference_line_color,
+  scatter_quadrant_position_factor = scatter_quadrant_position_factor
 )
 
-# Create histogram of field goal attempts by player
-# First, get the total field goal attempts for each player
+# Calculate data for FGA histogram
 player_fga <- player_fg_pct |>
   mutate(
     total_fga = ubb_fg_attempted
   ) |>
   arrange(desc(total_fga))
 
-# Create base histogram plot
-base_histogram <- ggplot(player_fga, aes(x = total_fga)) +
-  geom_histogram(
-    bins = 15,
-    fill = "#6A0DAD",
-    alpha = 0.8
-  )
+# Render FGA histogram
+render_fga_histogram(player_fga, chart_width, chart_height)
 
-# Get the histogram data for y-axis scaling
-hist_data <- ggplot_build(base_histogram)$data[[1]]
-max_count <- max(hist_data$count)
-
-# Create the final histogram with annotations
-fga_histogram <- base_histogram +
-  # Add vertical lines for mean and median
-  geom_vline(
-    aes(xintercept = mean(total_fga)),
-    color = "#FF8C00",
-    linetype = "dashed",
-    linewidth = 1
-  ) +
-  geom_vline(
-    aes(xintercept = median(total_fga)),
-    color = "#00CED1",
-    linetype = "dashed",
-    linewidth = 1
-  ) +
-  # Add labels for mean and median
-  annotate(
-    "text",
-    x = mean(player_fga$total_fga),
-    y = max_count * 0.9,
-    label = sprintf("Mean: %.1f", mean(player_fga$total_fga)),
-    color = "#FF8C00",
-    hjust = -0.1,
-    family = "InputMono",
-    fontface = "bold"
-  ) +
-  annotate(
-    "text",
-    x = median(player_fga$total_fga),
-    y = max_count * 0.8,
-    label = sprintf("Median: %.1f", median(player_fga$total_fga)),
-    color = "#00CED1",
-    hjust = -0.1,
-    family = "InputMono",
-    fontface = "bold"
-  ) +
-  # Apply high contrast theme
-  theme_high_contrast() +
-  theme(
-    text = element_text(family = "InputMono")
-  ) +
-  labs(
-    title = "Distribution of Field Goal Attempts by Player",
-    subtitle = "Unrivaled Season",
-    x = "Total Field Goal Attempts",
-    y = "Number of Players"
-  )
-
-# Save the histogram
-ggsave(
-  "plots/fga_histogram.png",
-  plot = fga_histogram,
-  width = chart_width,
-  height = chart_height,
-  dpi = 300
-)
-
-# Create a table of top 10 players by field goal attempts
+# Prepare data for markdown tables (These remain here as they are data prep)
 top_fga_table <- player_fga |>
   select(player_name, total_fga, ubb_fg_made, ubb_fg_attempted, ubb_fg_pct) |>
   head(10) |>
