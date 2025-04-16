@@ -14,7 +14,7 @@ library(ggrepel)
 
 # Source rendering functions
 source("render_stats.R")
-source("render_plots.R")
+source("render_fg_plots.R")
 
 # Define plot parameters
 line_width <- 4

@@ -14,7 +14,7 @@ dir.create("plots", showWarnings = FALSE, recursive = TRUE)
 # Source calibration functions
 source("calibration.R")
 # Source visualization functions
-source("visualizations.R")
+source("render_wp_plots.R")
 
 # Read play by play data
 message("Reading play by play data...")

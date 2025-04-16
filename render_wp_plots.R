@@ -101,7 +101,7 @@ create_win_probability_plot <- function(game_data, game_id) {
       )
     )
 
-  return(p)
+  invisible(p)
 }
 
 #' Generate and save win probability visualizations for all games
@@ -138,5 +138,5 @@ generate_win_probability_plots <- function(
   }
 
   message("All visualizations saved to ", output_dir, "/ directory!")
-  return(invisible(NULL))
+  invisible(NULL)
 }
