@@ -4,6 +4,7 @@
 # Load required libraries
 library(tidyverse)
 library(feather)
+library(knitr)
 
 # Read the data files
 rankings <- read_feather("unrivaled_regular_season_standings.feather")
@@ -20,23 +21,15 @@ final_stats <- rankings |>
   arrange(desc(elo_rating))
 
 # Print in markdown format
-cat("\n| Team | Record | Point Differential | ELO Rating |\n")
-cat("|------|---------|-------------------|------------|\n")
 final_stats |>
-  {
-    \(x)
-      walk(
-        seq_len(nrow(x)),
-        \(i)
-          cat(sprintf(
-            "| %s | %s | %s | %d |\n",
-            x$team[i],
-            x$record[i],
-            x$point_differential[i],
-            x$elo_rating[i]
-          ))
-      )
-  }()
+  select(
+    Team = team,
+    Record = record,
+    `Point Differential` = point_differential,
+    `ELO Rating` = elo_rating
+  ) |>
+  kable(format = "markdown") |>
+  print()
 
 # Save the data
 write_feather(final_stats, "unrivaled_final_stats.feather")

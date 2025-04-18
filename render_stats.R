@@ -3,33 +3,39 @@
 # for later use in a blog post or other documentation.
 
 library(tidyverse)
+library(knitr) # Added for kable
+
+# Helper function for percentage formatting
+format_pct <- function(value, digits = 1) {
+  sprintf(paste0("%.", digits, "f%%"), value * 100)
+}
+
+# Helper function for signed percentage formatting
+format_signed_pct <- function(value, digits = 1) {
+  sprintf(paste0("%+.", digits, "f%%"), value)
+}
 
 #' Render a markdown table of shooting improvements
 #' @param shooting_improvement Data frame with shooting improvement statistics
 render_shooting_improvements <- function(shooting_improvement) {
   cat("\n### Shooting Percentage Improvements: Unrivaled vs WNBA\n")
-  cat(
-    "| Player | 2PT% Improvement | 3PT% Improvement | 2PT% Relative | 3PT% Relative |\n"
-  )
-  cat(
-    "|--------|------------------|------------------|---------------|---------------|\n"
-  )
   shooting_improvement |>
     arrange(desc(two_pt_improvement + three_pt_improvement)) |>
-    {
-      function(x) {
-        for (i in 1:nrow(x)) {
-          cat(sprintf(
-            "| %s | %+.1f%% | %+.1f%% | %+.1f%% | %+.1f%% |\n",
-            x$player_name[i],
-            x$two_pt_improvement[i],
-            x$three_pt_improvement[i],
-            x$two_pt_relative_improvement[i],
-            x$three_pt_relative_improvement[i]
-          ))
-        }
-      }
-    }()
+    mutate(
+      `2PT% Improvement` = format_signed_pct(two_pt_improvement),
+      `3PT% Improvement` = format_signed_pct(three_pt_improvement),
+      `2PT% Relative` = format_signed_pct(two_pt_relative_improvement),
+      `3PT% Relative` = format_signed_pct(three_pt_relative_improvement)
+    ) |>
+    select(
+      Player = player_name,
+      `2PT% Improvement`,
+      `3PT% Improvement`,
+      `2PT% Relative`,
+      `3PT% Relative`
+    ) |>
+    kable(format = "markdown") |>
+    print()
 }
 
 #' Render free throw and points per possession statistics
@@ -70,67 +76,57 @@ render_possession_stats <- function(total_ft_attempts, points_per_possession) {
 #' Render player comparison statistics
 #' @param player_comparison Data frame with player comparison statistics
 render_player_comparison <- function(player_comparison) {
-  cat("### Player Comparison: Unrivaled vs WNBA Stats\n")
-  cat(
-    "| Player | UBB FG% | WNBA FG% | UBB 2P% | WNBA 2P% | UBB 3P% | WNBA 3P% | UBB TS% | WNBA TS% |\n"
-  )
-  cat(
-    "|--------|----------|----------|----------|----------|----------|----------|----------|----------|\n"
-  )
+  cat("\n### Player Comparison: Unrivaled vs WNBA Stats\n")
   player_comparison |>
-    {
-      function(x) {
-        for (i in 1:nrow(x)) {
-          cat(sprintf(
-            "| %s | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% | %.1f%% |\n",
-            x$player_name[i],
-            x$ubb_fg_pct[i] * 100,
-            x$field_goal_pct[i] * 100,
-            x$ubb_two_pt_pct[i] * 100,
-            x$wnba_two_pt_pct[i] * 100,
-            x$ubb_three_pt_pct[i] * 100,
-            x$three_point_pct[i] * 100,
-            x$ubb_ts_pct[i] * 100,
-            x$wnba_ts_pct[i] * 100
-          ))
-        }
-      }
-    }()
+    mutate(
+      `UBB FG%` = format_pct(ubb_fg_pct),
+      `WNBA FG%` = format_pct(field_goal_pct),
+      `UBB 2P%` = format_pct(ubb_two_pt_pct),
+      `WNBA 2P%` = format_pct(wnba_two_pt_pct),
+      `UBB 3P%` = format_pct(ubb_three_pt_pct),
+      `WNBA 3P%` = format_pct(three_point_pct),
+      `UBB TS%` = format_pct(ubb_ts_pct),
+      `WNBA TS%` = format_pct(wnba_ts_pct)
+    ) |>
+    select(
+      Player = player_name,
+      `UBB FG%`,
+      `WNBA FG%`,
+      `UBB 2P%`,
+      `WNBA 2P%`,
+      `UBB 3P%`,
+      `WNBA 3P%`,
+      `UBB TS%`,
+      `WNBA TS%`
+    ) |>
+    kable(format = "markdown") |>
+    print()
 }
 
 #' Render shooting percentage differences
 #' @param player_comparison Data frame with player comparison statistics
 render_shooting_differences <- function(player_comparison) {
   cat("\n### Shooting Percentage Differences (UBB - WNBA)\n")
-  cat(
-    "| Player | UBB FGA | FG% Diff | 2P% Diff | 3P% Diff | TS% Diff |\n"
-  )
-  cat(
-    "|--------|----------|----------|----------|----------|----------|\n"
-  )
   player_comparison |>
     mutate(
-      fg_diff = (ubb_fg_pct - field_goal_pct) * 100,
-      two_pt_diff = (ubb_two_pt_pct - wnba_two_pt_pct) * 100,
-      three_pt_diff = (ubb_three_pt_pct - three_point_pct) * 100,
-      ts_diff = (ubb_ts_pct - wnba_ts_pct) * 100
+      `FG% Diff` = format_signed_pct((ubb_fg_pct - field_goal_pct) * 100),
+      `2P% Diff` = format_signed_pct((ubb_two_pt_pct - wnba_two_pt_pct) * 100),
+      `3P% Diff` = format_signed_pct(
+        (ubb_three_pt_pct - three_point_pct) * 100
+      ),
+      `TS% Diff` = format_signed_pct((ubb_ts_pct - wnba_ts_pct) * 100)
     ) |>
-    arrange(desc(fg_diff)) |>
-    {
-      function(x) {
-        for (i in 1:nrow(x)) {
-          cat(sprintf(
-            "| %s | %d | %+.1f%% | %+.1f%% | %+.1f%% | %+.1f%% |\n",
-            x$player_name[i],
-            x$ubb_fg_attempted[i],
-            x$fg_diff[i],
-            x$two_pt_diff[i],
-            x$three_pt_diff[i],
-            x$ts_diff[i]
-          ))
-        }
-      }
-    }()
+    arrange(desc((ubb_fg_pct - field_goal_pct))) |>
+    select(
+      Player = player_name,
+      `UBB FGA` = ubb_fg_attempted,
+      `FG% Diff`,
+      `2P% Diff`,
+      `3P% Diff`,
+      `TS% Diff`
+    ) |>
+    kable(format = "markdown") |>
+    print()
 }
 
 #' Render top players by shooting percentage
@@ -138,69 +134,45 @@ render_shooting_differences <- function(player_comparison) {
 render_top_shooters <- function(player_fg_pct) {
   # Top 10 by FG%
   cat("\n### Top 10 Players by Field Goal Percentage (minimum 10 attempts)\n")
-  cat("| Player | FG% | FGM/FGA |\n")
-  cat("|--------|-----|----------|\n")
   player_fg_pct |>
     filter(ubb_fg_attempted >= 10) |>
     arrange(desc(ubb_fg_pct)) |>
     head(10) |>
-    {
-      function(x) {
-        for (i in 1:nrow(x)) {
-          cat(sprintf(
-            "| %s | %.1f%% | %d/%d |\n",
-            x$player_name[i],
-            x$ubb_fg_pct[i] * 100,
-            x$ubb_fg_made[i],
-            x$ubb_fg_attempted[i]
-          ))
-        }
-      }
-    }()
+    mutate(
+      `FG%` = format_pct(ubb_fg_pct),
+      `FGM/FGA` = paste0(ubb_fg_made, "/", ubb_fg_attempted)
+    ) |>
+    select(Player = player_name, `FG%`, `FGM/FGA`) |>
+    kable(format = "markdown") |>
+    print()
 
   # Top 10 by 2P%
   cat("\n### Top 10 Players by Two-Point Percentage (minimum 10 attempts)\n")
-  cat("| Player | 2P% | 2PM/2PA |\n")
-  cat("|--------|-----|----------|\n")
   player_fg_pct |>
     filter(ubb_two_pt_attempted >= 10) |>
     arrange(desc(ubb_two_pt_pct)) |>
     head(10) |>
-    {
-      function(x) {
-        for (i in 1:nrow(x)) {
-          cat(sprintf(
-            "| %s | %.1f%% | %d/%d |\n",
-            x$player_name[i],
-            x$ubb_two_pt_pct[i] * 100,
-            x$ubb_two_pt_made[i],
-            x$ubb_two_pt_attempted[i]
-          ))
-        }
-      }
-    }()
+    mutate(
+      `2P%` = format_pct(ubb_two_pt_pct),
+      `2PM/2PA` = paste0(ubb_two_pt_made, "/", ubb_two_pt_attempted)
+    ) |>
+    select(Player = player_name, `2P%`, `2PM/2PA`) |>
+    kable(format = "markdown") |>
+    print()
 
   # Top 10 by 3P%
   cat("\n### Top 10 Players by Three-Point Percentage (minimum 5 attempts)\n")
-  cat("| Player | 3P% | 3PM/3PA |\n")
-  cat("|--------|-----|----------|\n")
   player_fg_pct |>
     filter(ubb_three_pt_attempted >= 5) |>
     arrange(desc(ubb_three_pt_pct)) |>
     head(10) |>
-    {
-      function(x) {
-        for (i in 1:nrow(x)) {
-          cat(sprintf(
-            "| %s | %.1f%% | %d/%d |\n",
-            x$player_name[i],
-            x$ubb_three_pt_pct[i] * 100,
-            x$ubb_three_pt_made[i],
-            x$ubb_three_pt_attempted[i]
-          ))
-        }
-      }
-    }()
+    mutate(
+      `3P%` = format_pct(ubb_three_pt_pct),
+      `3PM/3PA` = paste0(ubb_three_pt_made, "/", ubb_three_pt_attempted)
+    ) |>
+    select(Player = player_name, `3P%`, `3PM/3PA`) |>
+    kable(format = "markdown") |>
+    print()
 }
 
 #' Render top players by true shooting percentage
@@ -209,26 +181,22 @@ render_top_ts_shooters <- function(player_ts_pct) {
   cat(
     "\n### Top 10 Players by True Shooting Percentage (minimum 10 attempts)\n"
   )
-  cat("| Player | TS% | PTS | FGA | FTA |\n")
-  cat("|--------|-----|-----|-----|-----|\n")
   player_ts_pct |>
     filter(ubb_fg_attempted >= 10) |>
     arrange(desc(ubb_ts_pct)) |>
     head(10) |>
-    {
-      function(x) {
-        for (i in 1:nrow(x)) {
-          cat(sprintf(
-            "| %s | %.1f%% | %d | %d | %d |\n",
-            x$player_name[i],
-            x$ubb_ts_pct[i] * 100,
-            x$ubb_pts[i],
-            x$ubb_fg_attempted[i],
-            x$ubb_ft_attempted[i]
-          ))
-        }
-      }
-    }()
+    mutate(
+      `TS%` = format_pct(ubb_ts_pct)
+    ) |>
+    select(
+      Player = player_name,
+      `TS%`,
+      PTS = ubb_pts,
+      FGA = ubb_fg_attempted,
+      FTA = ubb_ft_attempted
+    ) |>
+    kable(format = "markdown") |>
+    print()
 }
 
 #' Render all statistics to a markdown file
@@ -242,7 +210,7 @@ render_all_stats <- function(output_file, stats) {
   # Render possession stats
   render_possession_stats(stats$total_ft_attempts, stats$points_per_possession)
 
-  cat("## Player Shooting Statistics\n")
+  cat("\n## Player Shooting Statistics\n") # Added newline
 
   # Render player comparison
   render_player_comparison(stats$player_comparison)
