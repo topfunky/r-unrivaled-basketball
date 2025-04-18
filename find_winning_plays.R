@@ -5,6 +5,7 @@
 
 library(tidyverse)
 library(feather)
+library(knitr)
 
 # Load play-by-play data
 pbp_data <- read_feather("unrivaled_play_by_play.feather")
@@ -18,12 +19,12 @@ schedule_teams <- schedule_data |>
   select(game_id, home_team, away_team)
 
 pbp_data <- pbp_data |>
-  left_join(schedule_teams, by = "game_id") |>
-  filter(play != "End of Game", !str_detect(play, "assist")) # Irrelevant end of game plays
+  left_join(schedule_teams, by = "game_id", relationship = "many-to-many") |>
+  # Remove irrelevant end of game plays
+  filter(play != "End of Game", !str_detect(play, "assist"))
 
 # Find the last scoring play for each game
 winning_plays <- pbp_data |>
-
   # Group by game
   group_by(game_id) |>
   # Find last play in each game
@@ -40,7 +41,7 @@ winning_plays <- pbp_data |>
   )
 
 # Print the list of winning plays
-print(winning_plays)
+kable(winning_plays, format = "markdown")
 
 # Count the types of winning plays
 play_type_counts <- winning_plays |>
@@ -55,5 +56,21 @@ play_type_counts <- winning_plays |>
   ) |>
   count(play_type)
 
-# Print the table of play type counts
-print(play_type_counts)
+# Extract player name and count winning plays per player
+winning_player_counts <- winning_plays |>
+  # Extract player name by splitting on ' made ' and taking the first part
+  mutate(
+    player_name = sapply(str_split(play, " makes "), `[`, 1),
+    # Trim whitespace from extracted name
+    player_name = str_trim(player_name)
+  ) |>
+  # Filter out rows where player name couldn't be extracted (e.g., team rebounds)
+  filter(!is.na(player_name)) |>
+  # Count winning plays per player
+  count(player_name, sort = TRUE, name = "winning_plays_count")
+
+# Print the table of winning player counts
+kable(winning_player_counts, format = "markdown")
+
+# Print the tibble as a Markdown table
+kable(play_type_counts, format = "markdown")
