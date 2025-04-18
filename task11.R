@@ -8,6 +8,7 @@ library(wehoop)
 library(feather)
 library(glue)
 library(gghighcontrast)
+library(knitr)
 
 source("team_colors.R")
 
@@ -17,6 +18,11 @@ set.seed(5150)
 # Create fixtures directory if it doesn't exist
 message("Creating fixtures directory if it doesn't exist...")
 dir.create("fixtures", showWarnings = FALSE, recursive = TRUE)
+
+# Helper function for percentage formatting
+format_pct <- function(value, digits = 1) {
+  sprintf(paste0("%.", digits, "f%%"), value * 100)
+}
 
 # Function to get WNBA player shooting stats
 get_wnba_shooting_stats <- function(season = NULL) {
@@ -184,94 +190,65 @@ sink("plots/wnba_shooting_stats.md")
 
 cat("# WNBA Shooting Statistics\n\n")
 
-cat("## Top 10 Players by Field Goal Percentage (minimum 10 attempts)\n")
-cat("| Player | Team | FG% | FGM/FGA |\n")
-cat("|--------|------|-----|----------|\n")
+cat("\n## Top 10 Players by Field Goal Percentage (minimum 10 attempts)\n")
 wnba_shooting_stats |>
   filter(field_goals_attempted >= 10) |>
   arrange(desc(field_goal_pct)) |>
   head(10) |>
-  {
-    function(x) {
-      for (i in 1:nrow(x)) {
-        cat(sprintf(
-          "| %s | %s | %.1f%% | %d/%d |\n",
-          x$player_name[i],
-          x$team[i],
-          x$field_goal_pct[i] * 100,
-          x$field_goals_made[i],
-          x$field_goals_attempted[i]
-        ))
-      }
-    }
-  }()
+  mutate(
+    `FG%` = format_pct(field_goal_pct),
+    `FGM/FGA` = paste0(field_goals_made, "/", field_goals_attempted)
+  ) |>
+  select(Player = player_name, Team = team, `FG%`, `FGM/FGA`) |>
+  kable(format = "markdown") |>
+  print()
 
 cat("\n## Top 10 Players by Three-Point Percentage (minimum 10 attempts)\n")
-cat("| Player | Team | 3P% | 3PM/3PA |\n")
-cat("|--------|------|-----|----------|\n")
 wnba_shooting_stats |>
   filter(three_point_field_goals_attempted >= 10) |>
   arrange(desc(three_point_pct)) |>
   head(10) |>
-  {
-    function(x) {
-      for (i in 1:nrow(x)) {
-        cat(sprintf(
-          "| %s | %s | %.1f%% | %d/%d |\n",
-          x$player_name[i],
-          x$team[i],
-          x$three_point_pct[i] * 100,
-          x$three_point_field_goals_made[i],
-          x$three_point_field_goals_attempted[i]
-        ))
-      }
-    }
-  }()
+  mutate(
+    `3P%` = format_pct(three_point_pct),
+    `3PM/3PA` = paste0(
+      three_point_field_goals_made,
+      "/",
+      three_point_field_goals_attempted
+    )
+  ) |>
+  select(Player = player_name, Team = team, `3P%`, `3PM/3PA`) |>
+  kable(format = "markdown") |>
+  print()
 
 cat("\n## Top 10 Players by Free Throw Percentage (minimum 10 attempts)\n")
-cat("| Player | Team | FT% | FTM/FTA |\n")
-cat("|--------|------|-----|----------|\n")
 wnba_shooting_stats |>
   filter(free_throws_attempted >= 10) |>
   arrange(desc(free_throw_pct)) |>
   head(10) |>
-  {
-    function(x) {
-      for (i in 1:nrow(x)) {
-        cat(sprintf(
-          "| %s | %s | %.1f%% | %d/%d |\n",
-          x$player_name[i],
-          x$team[i],
-          x$free_throw_pct[i] * 100,
-          x$free_throws_made[i],
-          x$free_throws_attempted[i]
-        ))
-      }
-    }
-  }()
+  mutate(
+    `FT%` = format_pct(free_throw_pct),
+    `FTM/FTA` = paste0(free_throws_made, "/", free_throws_attempted)
+  ) |>
+  select(Player = player_name, Team = team, `FT%`, `FTM/FTA`) |>
+  kable(format = "markdown") |>
+  print()
 
 cat("\n## Top 10 Players by True Shooting Percentage (minimum 10 attempts)\n")
-cat("| Player | Team | TS% | PTS | FGA | FTA |\n")
-cat("|--------|------|-----|-----|-----|-----|\n")
 wnba_shooting_stats |>
   filter(field_goals_attempted >= 10) |>
   arrange(desc(ts_pct)) |>
   head(10) |>
-  {
-    function(x) {
-      for (i in 1:nrow(x)) {
-        cat(sprintf(
-          "| %s | %s | %.1f%% | %d | %d | %d |\n",
-          x$player_name[i],
-          x$team[i],
-          x$ts_pct[i] * 100,
-          x$points[i],
-          x$field_goals_attempted[i],
-          x$free_throws_attempted[i]
-        ))
-      }
-    }
-  }()
+  mutate(`TS%` = format_pct(ts_pct)) |>
+  select(
+    Player = player_name,
+    Team = team,
+    `TS%`,
+    PTS = points,
+    FGA = field_goals_attempted,
+    FTA = free_throws_attempted
+  ) |>
+  kable(format = "markdown") |>
+  print()
 
 sink()
 
