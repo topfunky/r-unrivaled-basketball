@@ -17,25 +17,6 @@ source("render_stats.R")
 source("render_fg_plots.R")
 source("team_colors.R")
 
-# Define plot parameters
-line_width <- 4
-dot_size <- 8
-label_size <- 3
-chart_width <- 6
-chart_width_double <- chart_width * 2
-chart_height <- 4
-
-# Define scatter plot parameters
-scatter_point_size <- 6
-scatter_label_size <- 2.5
-scatter_quadrant_label_size <- 2
-scatter_min_attempts <- 80 # Minimum attempts for showing player labels
-scatter_point_color <- ubb_color
-scatter_label_color <- "white"
-scatter_quadrant_label_color <- "grey"
-scatter_reference_line_color <- "white"
-scatter_quadrant_position_factor <- 0.99 # Factor for positioning quadrant labels
-
 # Load data
 pbp_data <- read_feather("unrivaled_play_by_play.feather")
 box_scores <- read_feather("unrivaled_box_scores.feather")
@@ -199,39 +180,29 @@ player_ts_pct <- box_scores |>
 # Render density plots
 render_fg_density_plot(
   player_fg_pct,
-  player_comparison,
-  chart_width,
-  chart_height
+  player_comparison
 )
 
 two_pt_plot <- render_two_pt_density_plot(
   player_fg_pct,
-  player_comparison,
-  chart_width,
-  chart_height
+  player_comparison
 )
 
 three_pt_plot <- render_three_pt_density_plot(
   player_fg_pct,
-  player_comparison,
-  chart_width,
-  chart_height
+  player_comparison
 )
 
 # Render combined shooting plot
 render_combined_shooting_plot(
   two_pt_plot,
-  three_pt_plot,
-  chart_width_double,
-  chart_height
+  three_pt_plot
 )
 
 # Render TS density plot
 render_ts_density_plot(
   player_ts_pct,
-  player_comparison,
-  chart_width,
-  chart_height
+  player_comparison
 )
 
 
@@ -267,9 +238,7 @@ render_barbell_plot(
   x2_label = "Unrivaled",
   title = "Two-Point Shooting Percentage: WNBA vs Unrivaled",
   subtitle = "Players with biggest improvement in Unrivaled (purple)",
-  file_path = "plots/two_pt_barbell_positive.png",
-  chart_width = chart_width,
-  chart_height = chart_height
+  file_path = "plots/two_pt_barbell_positive.png"
 )
 
 render_barbell_plot(
@@ -281,9 +250,7 @@ render_barbell_plot(
   x2_label = "Unrivaled",
   title = "Two-Point Shooting Percentage: WNBA vs Unrivaled",
   subtitle = "Players with biggest decrease in Unrivaled (purple)",
-  file_path = "plots/two_pt_barbell_negative.png",
-  chart_width = chart_width,
-  chart_height = chart_height
+  file_path = "plots/two_pt_barbell_negative.png"
 )
 
 # Calculate shooting improvement data
@@ -313,17 +280,6 @@ render_improvement_scatter(
   title = "Shooting Improvement: Unrivaled vs WNBA",
   subtitle = "Comparing 2P and 3P shooting",
   file_path = "plots/shooting_improvement_scatter.png",
-  chart_width = chart_width,
-  chart_height = chart_height,
-  scatter_point_size = scatter_point_size,
-  scatter_label_size = scatter_label_size,
-  scatter_min_attempts = scatter_min_attempts,
-  scatter_point_color = scatter_point_color,
-  scatter_label_color = scatter_label_color,
-  scatter_quadrant_label_color = scatter_quadrant_label_color,
-  scatter_quadrant_label_size = scatter_quadrant_label_size,
-  scatter_reference_line_color = scatter_reference_line_color,
-  scatter_quadrant_position_factor = scatter_quadrant_position_factor,
   add_trendline = TRUE
 )
 
@@ -335,18 +291,7 @@ render_improvement_scatter(
   y_lab = "3-Point Shooting Improvement (%)",
   title = "Relative Shooting Improvement: Unrivaled vs WNBA",
   subtitle = "Comparing relative improvements in 2-point and 3-point shooting",
-  file_path = "plots/relative_shooting_improvement_scatter.png",
-  chart_width = chart_width,
-  chart_height = chart_height,
-  scatter_point_size = scatter_point_size,
-  scatter_label_size = scatter_label_size,
-  scatter_min_attempts = scatter_min_attempts,
-  scatter_point_color = scatter_point_color,
-  scatter_label_color = scatter_label_color,
-  scatter_quadrant_label_color = scatter_quadrant_label_color,
-  scatter_quadrant_label_size = scatter_quadrant_label_size,
-  scatter_reference_line_color = scatter_reference_line_color,
-  scatter_quadrant_position_factor = scatter_quadrant_position_factor
+  file_path = "plots/relative_shooting_improvement_scatter.png"
 )
 
 # Calculate data for FGA histogram
@@ -357,7 +302,7 @@ player_fga <- player_fg_pct |>
   arrange(desc(total_fga))
 
 # Render FGA histogram
-render_fga_histogram(player_fga, chart_width, chart_height)
+render_fga_histogram(player_fga)
 
 # Prepare data for markdown tables (These remain here as they are data prep)
 top_fga_table <- player_fga |>

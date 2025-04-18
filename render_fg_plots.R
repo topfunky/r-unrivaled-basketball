@@ -8,6 +8,25 @@ library(ggrepel)
 
 source("team_colors.R")
 
+# Define plot parameters
+line_width <- 4
+dot_size <- 8
+label_size <- 3
+chart_width <- 6
+chart_width_double <- chart_width * 2
+chart_height <- 4
+
+# Define scatter plot parameters
+scatter_point_size <- 6
+scatter_label_size <- 2.5
+scatter_quadrant_label_size <- 2
+scatter_min_attempts <- 80 # Minimum attempts for showing player labels
+scatter_point_color <- ubb_color
+scatter_label_color <- "white"
+scatter_quadrant_label_color <- "grey"
+scatter_reference_line_color <- "white"
+scatter_quadrant_position_factor <- 0.99 # Factor for positioning quadrant labels
+
 #' Render and save field goal density plot
 #' @param player_fg_pct Data frame with player FG%
 #' @param player_comparison Data frame with player comparison stats
@@ -15,9 +34,7 @@ source("team_colors.R")
 #' @param chart_height Height of the chart
 render_fg_density_plot <- function(
   player_fg_pct,
-  player_comparison,
-  chart_width,
-  chart_height
+  player_comparison
 ) {
   fg_density_plot <- ggplot() +
     geom_density(
@@ -65,9 +82,7 @@ render_fg_density_plot <- function(
 #' @param chart_height Height of the chart
 render_two_pt_density_plot <- function(
   player_fg_pct,
-  player_comparison,
-  chart_width,
-  chart_height
+  player_comparison
 ) {
   two_pt_density_plot <- ggplot() +
     geom_density(
@@ -116,9 +131,7 @@ render_two_pt_density_plot <- function(
 #' @param chart_height Height of the chart
 render_three_pt_density_plot <- function(
   player_fg_pct,
-  player_comparison,
-  chart_width,
-  chart_height
+  player_comparison
 ) {
   three_pt_density_plot <- ggplot() +
     geom_density(
@@ -167,9 +180,7 @@ render_three_pt_density_plot <- function(
 #' @param chart_height Height for the combined chart
 render_combined_shooting_plot <- function(
   two_pt_plot,
-  three_pt_plot,
-  chart_width_double,
-  chart_height
+  three_pt_plot
 ) {
   combined_shooting_plot <- (two_pt_plot) +
     (three_pt_plot) +
@@ -193,9 +204,7 @@ render_combined_shooting_plot <- function(
 #' @param chart_height Height of the chart
 render_ts_density_plot <- function(
   player_ts_pct,
-  player_comparison,
-  chart_width,
-  chart_height
+  player_comparison
 ) {
   ts_density_plot <- ggplot() +
     geom_density(
@@ -256,9 +265,7 @@ render_barbell_plot <- function(
   x2_label,
   title,
   subtitle = NULL,
-  file_path,
-  chart_width,
-  chart_height
+  file_path
 ) {
   # Create a data frame with interpolated points for the gradient
   gradient_data <- data |>
@@ -355,17 +362,6 @@ render_improvement_scatter <- function(
   title,
   subtitle,
   file_path,
-  chart_width,
-  chart_height,
-  scatter_point_size,
-  scatter_label_size,
-  scatter_min_attempts,
-  scatter_point_color,
-  scatter_label_color,
-  scatter_quadrant_label_color,
-  scatter_quadrant_label_size,
-  scatter_reference_line_color,
-  scatter_quadrant_position_factor,
   add_trendline = FALSE
 ) {
   plot <- ggplot(shooting_improvement, aes(x = {{ x_var }}, y = {{ y_var }})) +
@@ -487,7 +483,7 @@ render_improvement_scatter <- function(
 #' @param player_fga Data frame with player FGA stats
 #' @param chart_width Width of the chart
 #' @param chart_height Height of the chart
-render_fga_histogram <- function(player_fga, chart_width, chart_height) {
+render_fga_histogram <- function(player_fga) {
   # Create base histogram plot
   base_histogram <- ggplot(player_fga, aes(x = total_fga)) +
     geom_histogram(
