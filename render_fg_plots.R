@@ -41,13 +41,15 @@ render_fg_density_plot <- function(
       data = player_fg_pct,
       aes(x = ubb_fg_pct, fill = "Unrivaled"),
       alpha = 0.7,
-      color = NA
+      color = NA,
+      na.rm = TRUE
     ) +
     geom_density(
       data = player_comparison,
       aes(x = field_goal_pct, fill = "WNBA"),
       alpha = 0.7,
-      color = NA
+      color = NA,
+      na.rm = TRUE
     ) +
     scale_fill_manual(
       name = "Data Source",
@@ -89,13 +91,15 @@ render_two_pt_density_plot <- function(
       data = player_fg_pct,
       aes(x = ubb_two_pt_pct, fill = "Unrivaled"),
       alpha = 0.7,
-      color = NA
+      color = NA,
+      na.rm = TRUE
     ) +
     geom_density(
       data = player_comparison,
       aes(x = wnba_two_pt_pct, fill = "WNBA"),
       alpha = 0.7,
-      color = NA
+      color = NA,
+      na.rm = TRUE
     ) +
     scale_fill_manual(
       name = "Data Source",
@@ -138,13 +142,15 @@ render_three_pt_density_plot <- function(
       data = player_fg_pct |> filter(player_name != "Aaliyah Edwards"),
       aes(x = ubb_three_pt_pct, fill = "Unrivaled"),
       alpha = 0.7,
-      color = NA
+      color = NA,
+      na.rm = TRUE
     ) +
     geom_density(
       data = player_comparison |> filter(player_name != "Aaliyah Edwards"),
       aes(x = three_point_pct, fill = "WNBA"),
       alpha = 0.7,
-      color = NA
+      color = NA,
+      na.rm = TRUE
     ) +
     scale_fill_manual(
       name = "Data Source",
@@ -211,13 +217,15 @@ render_ts_density_plot <- function(
       data = player_ts_pct,
       aes(x = ubb_ts_pct, fill = "Unrivaled"),
       alpha = 0.7,
-      color = NA
+      color = NA,
+      na.rm = TRUE
     ) +
     geom_density(
       data = player_comparison,
       aes(x = wnba_ts_pct, fill = "WNBA"),
       alpha = 0.7,
-      color = NA
+      color = NA,
+      na.rm = TRUE
     ) +
     scale_fill_manual(
       name = "Data Source",
@@ -462,10 +470,11 @@ render_improvement_scatter <- function(
     plot <- plot +
       geom_smooth(
         method = "lm",
-        se = TRUE,
-        color = "black",
-        alpha = 0.2,
-        linewidth = 1
+        formula = y ~ x,
+        se = FALSE,
+        color = scatter_reference_line_color,
+        linewidth = 0.5,
+        na.rm = TRUE
       )
   }
 

@@ -26,35 +26,62 @@ wnba_stats <- read_feather("fixtures/wnba_shooting_stats_2024.feather")
 player_comparison <- box_scores |>
   group_by(player_name) |>
   summarise(
-    # Box score stats
     ubb_fg_made = sum(field_goals_made, na.rm = TRUE),
     ubb_fg_attempted = sum(field_goals_attempted, na.rm = TRUE),
-    ubb_fg_pct = ubb_fg_made / ubb_fg_attempted,
     ubb_pts = sum(PTS, na.rm = TRUE),
     ubb_ft_attempted = sum(free_throws_attempted, na.rm = TRUE),
-    ubb_ts_pct = ubb_pts / (2 * (ubb_fg_attempted + 0.44 * ubb_ft_attempted)),
-    # Add three-point statistics
     ubb_three_pt_made = sum(three_point_field_goals_made, na.rm = TRUE),
     ubb_three_pt_attempted = sum(
       three_point_field_goals_attempted,
       na.rm = TRUE
     ),
-    ubb_three_pt_pct = ubb_three_pt_made / ubb_three_pt_attempted,
-    # Add two-point statistics
+    .groups = "drop"
+  ) |>
+  # Calculate derived stats safely
+  mutate(
+    ubb_fg_pct = if_else(
+      ubb_fg_attempted > 0,
+      ubb_fg_made / ubb_fg_attempted,
+      NA_real_
+    ),
+    ubb_ts_denominator = 2 * (ubb_fg_attempted + 0.44 * ubb_ft_attempted),
+    ubb_ts_pct = if_else(
+      ubb_ts_denominator > 0,
+      ubb_pts / ubb_ts_denominator,
+      NA_real_
+    ),
+    ubb_three_pt_pct = if_else(
+      ubb_three_pt_attempted > 0,
+      ubb_three_pt_made / ubb_three_pt_attempted,
+      NA_real_
+    ),
     ubb_two_pt_made = ubb_fg_made - ubb_three_pt_made,
     ubb_two_pt_attempted = ubb_fg_attempted - ubb_three_pt_attempted,
-    ubb_two_pt_pct = ubb_two_pt_made / ubb_two_pt_attempted
+    ubb_two_pt_pct = if_else(
+      ubb_two_pt_attempted > 0,
+      ubb_two_pt_made / ubb_two_pt_attempted,
+      NA_real_
+    )
   ) |>
   inner_join(wnba_stats, by = "player_name") |>
   mutate(
-    # Calculate true shooting percentage for WNBA stats
-    wnba_ts_pct = points /
-      (2 * (field_goals_attempted + 0.44 * free_throws_attempted)),
-    # Calculate WNBA two-point statistics
+    # Calculate true shooting percentage for WNBA stats safely
+    wnba_ts_denominator = 2 *
+      (field_goals_attempted + 0.44 * free_throws_attempted),
+    wnba_ts_pct = if_else(
+      wnba_ts_denominator > 0,
+      points / wnba_ts_denominator,
+      NA_real_
+    ),
+    # Calculate WNBA two-point statistics safely
     wnba_two_pt_made = field_goals_made - three_point_field_goals_made,
     wnba_two_pt_attempted = field_goals_attempted -
       three_point_field_goals_attempted,
-    wnba_two_pt_pct = wnba_two_pt_made / wnba_two_pt_attempted
+    wnba_two_pt_pct = if_else(
+      wnba_two_pt_attempted > 0,
+      wnba_two_pt_made / wnba_two_pt_attempted,
+      NA_real_
+    )
   ) |>
   select(
     player_name,
@@ -139,23 +166,37 @@ player_fg_pct <- box_scores |>
   summarise(
     ubb_fg_made = sum(field_goals_made, na.rm = TRUE),
     ubb_fg_attempted = sum(field_goals_attempted, na.rm = TRUE),
-    ubb_fg_pct = ubb_fg_made / ubb_fg_attempted,
-    # Add three-point statistics
     ubb_three_pt_made = sum(three_point_field_goals_made, na.rm = TRUE),
     ubb_three_pt_attempted = sum(
       three_point_field_goals_attempted,
       na.rm = TRUE
     ),
-    ubb_three_pt_pct = ubb_three_pt_made / ubb_three_pt_attempted,
-    # Add two-point statistics
+    .groups = "drop"
+  ) |>
+  mutate(
+    ubb_fg_pct = if_else(
+      ubb_fg_attempted > 0,
+      ubb_fg_made / ubb_fg_attempted,
+      NA_real_
+    ),
+    ubb_three_pt_pct = if_else(
+      ubb_three_pt_attempted > 0,
+      ubb_three_pt_made / ubb_three_pt_attempted,
+      NA_real_
+    ),
     ubb_two_pt_made = ubb_fg_made - ubb_three_pt_made,
     ubb_two_pt_attempted = ubb_fg_attempted - ubb_three_pt_attempted,
-    ubb_two_pt_pct = ubb_two_pt_made / ubb_two_pt_attempted
-  )
+    ubb_two_pt_pct = if_else(
+      ubb_two_pt_attempted > 0,
+      ubb_two_pt_made / ubb_two_pt_attempted,
+      NA_real_
+    )
+  ) |>
+  # Filter out players with no attempts for density plots if needed
+  filter(ubb_fg_attempted > 0)
 
 # Calculate true shooting percentage for each player (using box score data)
 # TS% = PTS / (2 * (FGA + 0.44 * FTA))
-# FGA includes both 2-point and 3-point attempts
 player_ts_pct <- box_scores |>
   group_by(player_name) |>
   summarise(
@@ -163,19 +204,38 @@ player_ts_pct <- box_scores |>
     ubb_fg_made = sum(field_goals_made, na.rm = TRUE),
     ubb_fg_attempted = sum(field_goals_attempted, na.rm = TRUE), # Already includes 2pt and 3pt attempts
     ubb_ft_attempted = sum(free_throws_attempted, na.rm = TRUE),
-    ubb_ts_pct = ubb_pts / (2 * (ubb_fg_attempted + 0.44 * ubb_ft_attempted)),
-    # Add three-point statistics
+    # Also summarize 3pt stats here needed for later mutate
     ubb_three_pt_made = sum(three_point_field_goals_made, na.rm = TRUE),
     ubb_three_pt_attempted = sum(
       three_point_field_goals_attempted,
       na.rm = TRUE
     ),
-    ubb_three_pt_pct = ubb_three_pt_made / ubb_three_pt_attempted,
-    # Add two-point statistics
+    .groups = "drop"
+  ) |>
+  mutate(
+    ubb_ts_denominator = 2 * (ubb_fg_attempted + 0.44 * ubb_ft_attempted),
+    ubb_ts_pct = if_else(
+      ubb_ts_denominator > 0,
+      ubb_pts / ubb_ts_denominator,
+      NA_real_
+    ),
+    # Calculate three-point statistics safely using summarized values
+    ubb_three_pt_pct = if_else(
+      ubb_three_pt_attempted > 0,
+      ubb_three_pt_made / ubb_three_pt_attempted,
+      NA_real_
+    ),
+    # Calculate two-point statistics safely using summarized values
     ubb_two_pt_made = ubb_fg_made - ubb_three_pt_made,
     ubb_two_pt_attempted = ubb_fg_attempted - ubb_three_pt_attempted,
-    ubb_two_pt_pct = ubb_two_pt_made / ubb_two_pt_attempted
-  )
+    ubb_two_pt_pct = if_else(
+      ubb_two_pt_attempted > 0,
+      ubb_two_pt_made / ubb_two_pt_attempted,
+      NA_real_
+    )
+  ) |>
+  # Filter out players with no attempts/denominator for density plots
+  filter(ubb_ts_denominator > 0)
 
 # Render density plots
 render_fg_density_plot(
@@ -264,7 +324,20 @@ shooting_improvement <- player_comparison |>
     three_pt_relative_improvement = (ubb_three_pt_pct / three_point_pct - 1) *
       100
   ) |>
-  # Filter out players with too few attempts to be meaningful
+  # Replace Inf generated by division by zero (e.g., WNBA pct = 0) with NA
+  mutate(
+    two_pt_relative_improvement = if_else(
+      is.infinite(two_pt_relative_improvement),
+      NA_real_,
+      two_pt_relative_improvement
+    ),
+    three_pt_relative_improvement = if_else(
+      is.infinite(three_pt_relative_improvement),
+      NA_real_,
+      three_pt_relative_improvement
+    )
+  ) |>
+  # Filter out players with too few attempts or NA/NaN/Inf values
   filter(
     ubb_two_pt_attempted >= 20,
     ubb_three_pt_attempted >= 10
@@ -303,86 +376,6 @@ player_fga <- player_fg_pct |>
 
 # Render FGA histogram
 render_fga_histogram(player_fga)
-
-# Prepare data for markdown tables (These remain here as they are data prep)
-top_fga_table <- player_fga |>
-  select(player_name, total_fga, ubb_fg_made, ubb_fg_attempted, ubb_fg_pct) |>
-  head(10) |>
-  mutate(
-    ubb_fg_pct = sprintf("%.1f%%", ubb_fg_pct * 100)
-  ) |>
-  rename(
-    "Player" = player_name,
-    "FGA" = total_fga,
-    "FGM" = ubb_fg_made,
-    "FGA Total" = ubb_fg_attempted,
-    "FG%" = ubb_fg_pct
-  )
-
-# Create a Markdown table for two_pt_diff_data
-cat("\n### Two-Point Shooting Percentage Differences (Top 10 Improvements)\n")
-cat("| Player | UBB 2P% | WNBA 2P% | Difference | UBB 2PA |\n")
-cat("|--------|---------------|----------|------------|---------------|\n")
-two_pt_diff_data |>
-  select(
-    player_name,
-    ubb_two_pt_pct,
-    wnba_two_pt_pct,
-    two_pt_diff,
-    ubb_two_pt_attempted
-  ) |>
-  {
-    function(x) {
-      for (i in 1:nrow(x)) {
-        cat(sprintf(
-          "| %s | %.0f%% | %.0f%% | %+.0f%% | %d |\n",
-          x$player_name[i],
-          x$ubb_two_pt_pct[i] * 100,
-          x$wnba_two_pt_pct[i] * 100,
-          x$two_pt_diff[i],
-          x$ubb_two_pt_attempted[i]
-        ))
-      }
-    }
-  }()
-
-# Calculate and display a Markdown table with each player's percentage of 2pt shots vs 3pt shots taken in Unrivaled vs WNBA
-cat("\n### Shot Distribution: 2-Point vs 3-Point Attempts\n")
-cat(
-  "| Player | UBB 2P% | UBB 3P% | WNBA 2P% | WNBA 3P% | UBB 2PA | UBB 3PA | WNBA 2PA | WNBA 3PA |\n"
-)
-cat(
-  "|--------|---------|---------|----------|----------|---------|---------|----------|----------|\n"
-)
-
-player_comparison |>
-  filter(ubb_fg_attempted >= 10) |> # Filter players with at least 10 field goal attempts
-  mutate(
-    # Calculate percentages of 2pt and 3pt attempts
-    ubb_2pt_pct = ubb_two_pt_attempted / ubb_fg_attempted,
-    ubb_3pt_pct = ubb_three_pt_attempted / ubb_fg_attempted,
-    wnba_2pt_pct = wnba_two_pt_attempted / field_goals_attempted,
-    wnba_3pt_pct = three_point_field_goals_attempted / field_goals_attempted
-  ) |>
-  arrange(desc(ubb_fg_attempted)) |> # Sort by most field goal attempts
-  {
-    function(x) {
-      for (i in 1:nrow(x)) {
-        cat(sprintf(
-          "| %s | %.0f%% | %.0f%% | %.0f%% | %.0f%% | %d | %d | %d | %d |\n",
-          x$player_name[i],
-          x$ubb_2pt_pct[i] * 100,
-          x$ubb_3pt_pct[i] * 100,
-          x$wnba_2pt_pct[i] * 100,
-          x$wnba_3pt_pct[i] * 100,
-          x$ubb_two_pt_attempted[i],
-          x$ubb_three_pt_attempted[i],
-          x$wnba_two_pt_attempted[i],
-          x$three_point_field_goals_attempted[i]
-        ))
-      }
-    }
-  }()
 
 # Create a list of all statistics for rendering
 stats <- list(

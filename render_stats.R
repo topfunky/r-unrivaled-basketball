@@ -199,6 +199,83 @@ render_top_ts_shooters <- function(player_ts_pct) {
     print()
 }
 
+#' Render top 10 2pt shooting differences
+#' @param player_comparison Data frame with player comparison stats
+render_top_2pt_diff <- function(player_comparison) {
+  cat(
+    "
+### Two-Point Shooting Percentage Differences (Top 10 Improvements)
+"
+  )
+
+  # Calculate top 10 differences internally, mirroring task10.R logic
+  two_pt_diff_data <- player_comparison |>
+    filter(ubb_two_pt_attempted >= 40) |> # Filter by shot attempts
+    mutate(
+      two_pt_diff = (ubb_two_pt_pct - wnba_two_pt_pct) * 100
+    ) |>
+    arrange(desc(two_pt_diff)) |>
+    head(10) |>
+    arrange(desc(ubb_two_pt_pct)) # Keep original sorting for display
+
+  two_pt_diff_data |>
+    select(
+      Player = player_name,
+      `UBB 2P%` = ubb_two_pt_pct,
+      `WNBA 2P%` = wnba_two_pt_pct,
+      Difference = two_pt_diff,
+      `UBB 2PA` = ubb_two_pt_attempted
+    ) |>
+    mutate(
+      # Apply formatting consistent with other tables
+      `UBB 2P%` = format_pct(`UBB 2P%`),
+      `WNBA 2P%` = format_pct(`WNBA 2P%`),
+      Difference = sprintf("%+.1fpp", Difference) # Using pp for percentage points
+    ) |>
+    kable(format = "markdown") |>
+    print()
+}
+
+#' Render shot distribution comparison
+#' @param player_comparison Data frame comparing player stats
+render_shot_distribution <- function(player_comparison) {
+  cat(
+    "
+### Shot Distribution: 2-Point vs 3-Point Attempts
+"
+  )
+  player_comparison |>
+    filter(ubb_fg_attempted >= 10) |> # Filter players with at least 10 field goal attempts
+    mutate(
+      # Calculate percentages of 2pt and 3pt attempts
+      ubb_2pt_pct = ubb_two_pt_attempted / ubb_fg_attempted,
+      ubb_3pt_pct = ubb_three_pt_attempted / ubb_fg_attempted,
+      wnba_2pt_pct = wnba_two_pt_attempted / field_goals_attempted,
+      wnba_3pt_pct = three_point_field_goals_attempted / field_goals_attempted
+    ) |>
+    arrange(desc(ubb_fg_attempted)) |> # Sort by most field goal attempts
+    select(
+      Player = player_name,
+      `UBB 2P%` = ubb_2pt_pct,
+      `UBB 3P%` = ubb_3pt_pct,
+      `WNBA 2P%` = wnba_2pt_pct,
+      `WNBA 3P%` = wnba_3pt_pct,
+      `UBB 2PA` = ubb_two_pt_attempted,
+      `UBB 3PA` = ubb_three_pt_attempted,
+      `WNBA 2PA` = wnba_two_pt_attempted,
+      `WNBA 3PA` = three_point_field_goals_attempted
+    ) |>
+    mutate(
+      # Apply percentage formatting
+      `UBB 2P%` = format_pct(`UBB 2P%`, 0),
+      `UBB 3P%` = format_pct(`UBB 3P%`, 0),
+      `WNBA 2P%` = format_pct(`WNBA 2P%`, 0),
+      `WNBA 3P%` = format_pct(`WNBA 3P%`, 0)
+    ) |>
+    kable(format = "markdown") |>
+    print()
+}
+
 #' Render all statistics to a markdown file
 #' @param output_file Path to output markdown file
 #' @param stats List containing all statistics data frames
@@ -226,6 +303,12 @@ render_all_stats <- function(output_file, stats) {
 
   # Render top TS shooters
   render_top_ts_shooters(stats$player_ts_pct)
+
+  # Render top 2pt diff
+  render_top_2pt_diff(stats$player_comparison)
+
+  # Render shot distribution
+  render_shot_distribution(stats$player_comparison)
 
   # Close the sink
   while (sink.number() > 0) sink()
