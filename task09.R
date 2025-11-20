@@ -91,6 +91,9 @@ model_data <- play_by_play |>
   ) |>
   ungroup()
 
+# Write full play by play with extra fields
+write_feather(model_data, "unrivaled_play_by_play_enhanced.feather")
+
 # Split data into quarters 1-3 and quarter 4
 message("Splitting data into quarters 1-3 and quarter 4...")
 data_q1q3 <- model_data |>
