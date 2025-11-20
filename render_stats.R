@@ -311,5 +311,7 @@ render_all_stats <- function(output_file, stats) {
   render_shot_distribution(stats$player_comparison)
 
   # Close the sink
-  while (sink.number() > 0) sink()
+  while (sink.number() > 0) {
+    sink()
+  }
 }

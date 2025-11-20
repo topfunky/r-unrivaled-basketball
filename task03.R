@@ -120,7 +120,9 @@ game_rankings <- team_records |>
         pull(team)
 
       # If no tied team, return 0
-      if (length(next_team) == 0) return(0)
+      if (length(next_team) == 0) {
+        return(0)
+      }
 
       # Count wins against the specific tied team
       team_games <- games_long |>
@@ -162,17 +164,19 @@ cat("\n| Team | Record | Point Differential |\n")
 cat("|------|---------|-------------------|\n")
 final_standings |>
   {
-    \(x)
+    \(x) {
       walk(
         seq_len(nrow(x)),
-        \(i)
+        \(i) {
           cat(sprintf(
             "| %s | %s | %s |\n",
             x$team[i],
             x$record[i],
             x$point_differential[i]
           ))
+        }
       )
+    }
   }()
 write_feather(final_standings, "unrivaled_regular_season_standings.feather")
 
