@@ -1,12 +1,22 @@
 # Purpose: Installs all required R packages for the project
 
+install.packages(
+  "pak",
+  repos = sprintf(
+    "https://r-lib.github.io/p/pak/stable/%s/%s/%s",
+    .Platform$pkgType,
+    R.Version()$os,
+    R.Version()$arch
+  )
+)
+
 # Set CRAN mirror
-options(repos = c(CRAN = "https://cloud.r-project.org"))
+# options(repos = c(CRAN = "https://cloud.r-project.org"))
 
 # Install remotes if not already installed
-if (!require("remotes", quietly = TRUE)) {
-  install.packages("remotes")
-}
+# if (!require("remotes", quietly = TRUE)) {
+# pak::pkg_install("remotes")
+# }
 
 # List of required packages from CRAN
 required_packages <- c(
@@ -20,7 +30,6 @@ required_packages <- c(
   "elo", # For ELO calculations
   "ggbump", # For smooth bump charts
   "glue", # For string interpolation
-  "wehoop", # For women's basketball data
   "patchwork", # For arranging plots
   "ggforce",
   "ggrepel"
@@ -35,7 +44,7 @@ github_packages <- c(
 install_and_load <- function(package) {
   if (!require(package, character.only = TRUE)) {
     message(sprintf("Installing %s from CRAN...", package))
-    install.packages(package)
+    pak::pkg_install(package)
     library(package, character.only = TRUE)
   } else {
     message(sprintf("%s is already installed.", package))
@@ -47,7 +56,7 @@ install_and_load_github <- function(package) {
   pkg_name <- basename(package)
   if (!require(pkg_name, character.only = TRUE)) {
     message(sprintf("Installing %s from GitHub...", package))
-    remotes::install_github(package)
+    pak::pkg_install(package)
     library(pkg_name, character.only = TRUE)
   } else {
     message(sprintf("%s is already installed.", pkg_name))
@@ -66,5 +75,40 @@ for (package in required_packages) {
 for (package in github_packages) {
   install_and_load_github(package)
 }
+
+# Reinstall openssl package to ensure it's linked against correct system libraries
+# This is necessary if openssl was previously installed but system OpenSSL libraries
+# were missing or have been updated
+message("Checking and reinstalling openssl package if needed...")
+tryCatch({
+  # Try to load openssl to check if it works
+  if (requireNamespace("openssl", quietly = TRUE)) {
+    # Try to actually use it to verify it works
+    test_result <- tryCatch({
+      openssl::md5("test")
+      TRUE
+    }, error = function(e) FALSE)
+    
+    if (!test_result) {
+      message("openssl package exists but is broken. Reinstalling...")
+      pak::pkg_remove("openssl")
+      pak::pkg_install("openssl")
+    }
+  } else {
+    message("Installing openssl package...")
+    pak::pkg_install("openssl")
+  }
+}, error = function(e) {
+  message("Error checking openssl, attempting reinstall...")
+  pak::pkg_remove("openssl")
+  pak::pkg_install("openssl")
+})
+
+# You can install wehoop using the pacman package using the following code:
+if (!requireNamespace('pacman', quietly = TRUE)){
+  install.packages('pacman')
+}
+
+pacman::p_load(wehoop, dplyr, tictoc, progressr)
 
 message("All dependencies installed and loaded successfully!")
