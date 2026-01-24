@@ -1,7 +1,7 @@
-team,record,point_differential,elo_rating
-Lunar Owls,13-1,+170,1617
-Rose,8-6,+34,1562
-Laces,7-7,+20,1474
-Mist,5-9,-30,1462
-Vinyl,5-9,-54,1455
-Phantom,4-10,-140,1430
+"team","record","point_differential","elo_rating","season"
+"Lunar Owls","13-1",170,1617,2025
+"Rose","8-6",34,1562,2025
+"Laces","7-7",20,1474,2025
+"Mist","5-9",-30,1462,2025
+"Vinyl","5-9",-54,1455,2025
+"Phantom","4-10",-140,1430,2025

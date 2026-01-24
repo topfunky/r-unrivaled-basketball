@@ -7,9 +7,9 @@ library(fs)
 library(feather)
 
 # Function to parse play by play data
-parse_play_by_play <- function(game_id) {
+parse_play_by_play <- function(game_id, season_year) {
   # Read the play by play HTML file
-  play_by_play_file <- path("games", game_id, "play-by-play.html")
+  play_by_play_file <- path("games", season_year, game_id, "play-by-play.html")
   if (!file_exists(play_by_play_file)) {
     warning(sprintf("Play by play file not found for game %s", game_id))
     return(NULL)
@@ -55,6 +55,7 @@ parse_play_by_play <- function(game_id) {
     set_names(c("time", "play", "score")) |>
     mutate(
       game_id = game_id,
+      season = season_year,
       # Extract quarter from play description if it exists,
       # otherwise use NA
       quarter = if_else(
@@ -88,6 +89,7 @@ parse_play_by_play <- function(game_id) {
     # Reorder columns
     select(
       game_id,
+      season,
       quarter,
       time,
       minute,
@@ -102,9 +104,9 @@ parse_play_by_play <- function(game_id) {
 }
 
 # Function to parse box score data
-parse_box_score <- function(game_id) {
+parse_box_score <- function(game_id, season_year) {
   # Read the box score HTML file
-  box_score_file <- path("games", game_id, "box-score.html")
+  box_score_file <- path("games", season_year, game_id, "box-score.html")
   if (!file_exists(box_score_file)) {
     warning(sprintf("Box score file not found for game %s", game_id))
     return(NULL)
@@ -132,6 +134,7 @@ parse_box_score <- function(game_id) {
     as_tibble() |>
     mutate(
       game_id = game_id,
+      season = season_year,
       # Convert MIN to character to ensure consistent type across all games
       MIN = as.character(MIN),
       # Add starter flag and clean player names
@@ -165,6 +168,7 @@ parse_box_score <- function(game_id) {
     # Reorder columns to put new columns first
     select(
       game_id,
+      season,
       is_starter,
       player_name,
       MIN,
@@ -191,9 +195,9 @@ parse_box_score <- function(game_id) {
 }
 
 # Function to parse summary data
-parse_summary <- function(game_id) {
+parse_summary <- function(game_id, season_year) {
   # Read the summary HTML file
-  summary_file <- path("games", game_id, "summary.html")
+  summary_file <- path("games", season_year, game_id, "summary.html")
   if (!file_exists(summary_file)) {
     warning(sprintf("Summary file not found for game %s", game_id))
     return(NULL)
@@ -230,6 +234,7 @@ parse_summary <- function(game_id) {
     # Add game_id and rename stats
     mutate(
       game_id = game_id,
+      season = season_year,
       stat = case_when(
         col1 == "FG" ~ "field_goals",
         col1 == "Field Goal %" ~ "field_goal_pct",
@@ -251,7 +256,7 @@ parse_summary <- function(game_id) {
       team = if_else(team_col == "col2", "team_a", "team_b")
     ) |>
     # Remove unnecessary columns
-    select(game_id, team, stat, value) |>
+    select(game_id, season, team, stat, value) |>
     # Convert to wide format by stat
     pivot_wider(
       names_from = stat,
@@ -267,37 +272,31 @@ parse_summary <- function(game_id) {
   return(summary)
 }
 
-# Get list of all game directories
-game_dirs <- dir_ls("games", type = "directory") |>
-  path_file()
+# Function to process a season
+process_season <- function(season_year) {
+  season_dir <- path("games", season_year)
+  if (!dir_exists(season_dir)) {
+    return(NULL)
+  }
 
-# Parse all games
-message("Parsing play by play data...")
-play_by_play_data <- map_dfr(game_dirs, parse_play_by_play)
+  game_dirs <- dir_ls(season_dir, type = "directory") |>
+    path_file()
 
-# Count unique games in play by play data
-message(sprintf(
-  "Number of unique games in play by play data: %d",
-  n_distinct(play_by_play_data$game_id)
-))
+  list(
+    play_by_play = map_dfr(game_dirs, ~ parse_play_by_play(.x, season_year)),
+    box_score = map_dfr(game_dirs, ~ parse_box_score(.x, season_year)),
+    summary = map_dfr(game_dirs, ~ parse_summary(.x, season_year))
+  )
+}
 
-message("Parsing box score data...")
-box_score_data <- map_dfr(game_dirs, parse_box_score)
+# Process all seasons
+seasons <- c(2025, 2026)
+all_data <- map(seasons, process_season) |> compact()
 
-# Count unique games in box score data
-message(sprintf(
-  "Number of unique games in box score data: %d",
-  n_distinct(box_score_data$game_id)
-))
+play_by_play_data <- map_dfr(all_data, ~ .x$play_by_play)
+box_score_data <- map_dfr(all_data, ~ .x$box_score)
+summary_data <- map_dfr(all_data, ~ .x$summary)
 
-message("Parsing summary data...")
-summary_data <- map_dfr(game_dirs, parse_summary)
-
-# Count unique games in summary data
-message(sprintf(
-  "Number of unique games in summary data: %d",
-  n_distinct(summary_data$game_id)
-))
 
 # Save the parsed data
 write_feather(play_by_play_data, "unrivaled_play_by_play.feather")

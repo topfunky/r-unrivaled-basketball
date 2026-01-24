@@ -3,7 +3,7 @@
 This plan outlines the steps to upgrade the current Unrivaled Basketball scraper to support the 2026 season while maintaining and categorizing the 2025 data.
 
 ## 1. Data Structure Updates
-- **Global Season Identifier**: Add a `season` column (integer or character) to all core data frames:
+- **Global Season Identifier**: Add a `season` column (integer ) to all core data frames:
   - `unrivaled_scores.csv`
   - `unrivaled_play_by_play.feather`
   - `unrivaled_box_scores.feather`
