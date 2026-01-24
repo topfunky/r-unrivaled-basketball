@@ -96,6 +96,9 @@ for (season_year in seasons) {
   playoff_line <- if (season_year == 2025) 14 else
     max(team_records$games_played, na.rm = TRUE)
 
+  # Calculate the number of teams dynamically
+  num_teams <- length(unique(team_records$team))
+
   # Create rankings based on games played
   game_rankings <- team_records |>
     # Group by games_played to compare teams with same number of games
@@ -153,10 +156,10 @@ for (season_year in seasons) {
     ) |>
     # First sort by wins (descending), then by head-to-head wins, then by point differential
     arrange(desc(wins), desc(h2h_wins), desc(point_differential)) |>
-    # Assign ranks from 1 to 6
+    # Assign ranks from 1 to num_teams
     mutate(rank = row_number()) |>
-    # Ensure rank is between 1 and 6
-    mutate(rank = pmin(pmax(rank, 1), 6)) |>
+    # Ensure rank is between 1 and num_teams
+    mutate(rank = pmin(pmax(rank, 1), num_teams)) |>
     # Fill in the ranks for the rest of the week
     group_by(team) |>
     fill(rank, .direction = "down") |>
@@ -221,8 +224,12 @@ for (season_year in seasons) {
   line_width <- 4
   dot_size <- 8
   label_size <- 3
+  
+  # Get maximum games played for label positioning
+  max_games <- max(game_rankings$games_played, na.rm = TRUE)
 
   p <- game_rankings |>
+    arrange(team, games_played) |>
     ggplot(aes(x = games_played, y = rank, color = team)) +
     # Add vertical line at end of regular season (only for 2025)
     {
@@ -246,7 +253,7 @@ for (season_year in seasons) {
         annotate(
           "text",
           x = 14.2,
-          y = 6,
+          y = num_teams,
           label = "Playoffs",
           color = "#606060",
           family = "InputMono",
@@ -258,46 +265,29 @@ for (season_year in seasons) {
     # Use geom_bump for smooth lines and points
     geom_bump(
       linewidth = line_width,
-      size = dot_size, # TODO: Might not be needed if linewidth is set
       show.legend = FALSE # Don't show in legend
     ) +
     # Use team colors from imported palette
     scale_color_manual(values = TEAM_COLORS) +
     # Reverse y-axis so rank 1 is at the top
-    scale_y_reverse(breaks = 1:6) +
-    # Add team labels at the end of each line
+    scale_y_reverse(breaks = 1:num_teams) +
+    # Add team labels at the right side of the plot, right aligned
     geom_text(
       data = game_rankings |>
         group_by(team) |>
         slice_max(games_played, n = 1) |>
-        mutate(
-          x_offset = case_when(
-            team == "Rose" ~ -1,
-            team == "Lunar Owls" ~ 0,
-            team == "Mist" ~ -2.9,
-            team == "Laces" ~ 0,
-            team == "Phantom" ~ 0,
-            team == "Vinyl" ~ -0.7
-          ),
-          y_offset = case_when(
-            team == "Rose" ~ 1,
-            team == "Lunar Owls" ~ 0,
-            team == "Mist" ~ 0,
-            team == "Laces" ~ 0,
-            team == "Phantom" ~ 0,
-            team == "Vinyl" ~ 2
-          )
-        ),
+        ungroup(),
       aes(
         label = team,
-        x = games_played + x_offset,
-        y = rank + y_offset
+        x = max_games,
+        y = rank
       ),
-      hjust = 1.1,
+      hjust = 1,
+      nudge_x = 0.2,
       size = label_size,
       family = "InputMono",
       show.legend = FALSE,
-      color = "black",
+      color = "white",
       fontface = "bold"
     ) +
     # Use gghighcontrast theme with white text on black background
@@ -311,6 +301,8 @@ for (season_year in seasons) {
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank()
     ) +
+    # Allow labels to extend beyond plot area
+    coord_cartesian(clip = "off", xlim = c(1, max_games * 1.15)) +
     # Add labels
     labs(
       title = paste0("Unrivaled Basketball League Rankings ", season_year),
