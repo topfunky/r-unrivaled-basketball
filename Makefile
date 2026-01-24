@@ -75,6 +75,7 @@ list:
 	@echo "  elo          - Generate ELO ratings visualization"
 	@echo "  wp           - Generate win probability model and visualizations"
 	@echo "  format       - Format all R files using air"
+	@echo "  validate     - Validate all R files using lintr"
 	@echo ""
 	@echo "  all-tasks    - Run all task files in sequence"
 	@echo ""
@@ -97,6 +98,12 @@ format:
 	@find . -name "*.R" -exec air format {} \;
 	@echo "Formatting complete!"
 
+# Validate all R files using lintr
+validate:
+	@echo "Validating all R files..."
+	@Rscript -e "lintr::lint_dir('.')"
+	@echo "Validation complete!"
+
 # Run all task files in alphabetical order (use with caution)
 run-all-tasks: format
 	@echo "Running all tasks in alphabetical order (use with caution)..."
@@ -106,4 +113,4 @@ run-all-tasks: format
 	done
 	@echo "All tasks complete!"
 
-.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp task10 task11 clean install-deps setup-hooks list format run-all-tasks
+.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp task10 task11 clean install-deps setup-hooks list format run-all-tasks validate

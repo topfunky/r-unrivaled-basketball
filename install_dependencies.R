@@ -11,7 +11,7 @@ install.packages(
 )
 
 # Set CRAN mirror
-# options(repos = c(CRAN = "https://cloud.r-project.org"))
+options(repos = c(CRAN = "https://cloud.r-project.org"))
 
 # Install remotes if not already installed
 # if (!require("remotes", quietly = TRUE)) {
