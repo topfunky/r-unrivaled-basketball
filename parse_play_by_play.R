@@ -139,13 +139,20 @@ parse_box_score <- function(game_id, season_year) {
       MIN = as.character(MIN),
       # Add starter flag and clean player names
       is_starter = str_starts(PLAYERS, "S "),
-      player_name = if_else(is_starter, str_remove(PLAYERS, "^S "), PLAYERS)
+      player_name_raw = if_else(is_starter, str_remove(PLAYERS, "^S "), PLAYERS)
     ) |>
     # Filter out rows with blank player names or "TEAM" rows
     filter(
-      !is.na(player_name),
-      str_trim(player_name) != "",
-      str_trim(player_name) != "TEAM"
+      !is.na(player_name_raw),
+      str_trim(player_name_raw) != "",
+      str_trim(player_name_raw) != "TEAM"
+    ) |>
+    # Split player name and jersey number
+    mutate(
+      # Extract jersey number if present (format: "Name #XX")
+      jersey_number = as.numeric(str_extract(player_name_raw, "(?<=#)\\d+$")),
+      # Remove jersey number from player name
+      player_name = str_remove(player_name_raw, " #\\d+$")
     ) |>
     # Split shooting stats into made and attempted
     mutate(
@@ -176,6 +183,7 @@ parse_box_score <- function(game_id, season_year) {
       season,
       is_starter,
       player_name,
+      jersey_number,
       MIN,
       field_goals_made,
       field_goals_attempted,
