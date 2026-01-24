@@ -203,7 +203,7 @@ scrape_unrivaled_games <- function(season_year = 2025) {
 }
 
 # Scrape the games for all available seasons
-seasons <- c(2025) # Add 2026 once fixtures are ready
+seasons <- c(2025, 2026) # Add 2026 once fixtures are ready
 all_season_games <- map_dfr(seasons, scrape_unrivaled_games)
 
 # Save to CSV
