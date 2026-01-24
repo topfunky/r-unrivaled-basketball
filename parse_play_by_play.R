@@ -163,7 +163,12 @@ parse_box_score <- function(game_id, season_year) {
       two_point_field_goals_made = field_goals_made -
         three_point_field_goals_made,
       two_point_field_goals_attempted = field_goals_attempted -
-        three_point_field_goals_attempted
+        three_point_field_goals_attempted,
+      # Convert numeric columns to ensure consistent types across all games
+      across(
+        c(REB, OREB, DREB, AST, STL, BLK, TO, PF, PTS),
+        ~ as.numeric(.)
+      )
     ) |>
     # Reorder columns to put new columns first
     select(

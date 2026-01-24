@@ -59,10 +59,12 @@ scrape_unrivaled_games <- function(season_year = 2025) {
     print(paste("Found date text:", date_text))
 
     # Convert date text to Date object
+    # Use US East timezone since that's where games are played
+    today <- as.Date(now(tzone = "America/New_York"))
     game_date <- if (str_detect(date_text, "^Today")) {
-      as.Date("2026-01-24") # Hardcode today's date for this run as it's from current live site
+      today
     } else if (str_detect(date_text, "^Tomorrow")) {
-      as.Date("2026-01-25")
+      today + 1
     } else {
       # Try multiple formats
       d <- as.Date(date_text, format = "%A, %B %d, %Y")
@@ -84,6 +86,15 @@ scrape_unrivaled_games <- function(season_year = 2025) {
     # Skip games in the specified date range
     if (game_date >= s_params$skip_start && game_date <= s_params$skip_end) {
       warning(glue("Skipping games on {game_date} (within skip date range)"))
+      return(NULL)
+    }
+
+    # Skip today and future games that haven't occurred yet
+    # Only parse games from yesterday or before (guaranteed to have completed)
+    # Use US East timezone since that's where games are played
+    today <- as.Date(now(tzone = "America/New_York"))
+    if (game_date >= today) {
+      warning(glue("Skipping game on {game_date} (only parsing games from yesterday or before)"))
       return(NULL)
     }
 
@@ -169,6 +180,10 @@ scrape_unrivaled_games <- function(season_year = 2025) {
     }
 
     # Combine all games for this day
+    if (length(game_data) == 0) {
+      # No games found for this day, return NULL
+      return(NULL)
+    }
     day_data <- bind_rows(game_data)
     print(day_data)
     return(day_data)
@@ -195,9 +210,26 @@ scrape_unrivaled_games <- function(season_year = 2025) {
   all_games <- map(game_days, parse_game_day) |>
     # Remove any NULL results from failed parsing
     compact() |>
-    bind_rows() |>
-    # Add week number based on date
-    arrange(date)
+    bind_rows()
+
+  # If no games found, return empty tibble with correct structure
+  if (nrow(all_games) == 0) {
+    all_games <- tibble(
+      game_id = character(),
+      date = as.Date(character()),
+      away_team = character(),
+      away_team_score = numeric(),
+      home_team = character(),
+      home_team_score = numeric(),
+      season = numeric(),
+      season_type = character()
+    )
+    return(all_games)
+  }
+
+  # Add week number based on date
+  all_games <- all_games |>
+    arrange(.data$date)
 
   # Add the canceled game that counts against team records (2025 only)
   if (season_year == 2025) {
@@ -214,11 +246,11 @@ scrape_unrivaled_games <- function(season_year = 2025) {
 
   # Final processing
   all_games <- all_games |>
-    arrange(date) |>
+    arrange(.data$date) |>
     # Add season type (REG or POST) based on date
     mutate(
       season_type = case_when(
-        date >= s_params$postseason_start ~ "POST",
+        .data$date >= s_params$postseason_start ~ "POST",
         TRUE ~ "REG"
       )
     )

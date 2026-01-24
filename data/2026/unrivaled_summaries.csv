@@ -1,0 +1,9 @@
+game_id,season,team,field_goals,field_goal_pct,three_pointers,three_point_pct,free_throws,free_throw_pct
+4eqyt7yhtfqo,2026,team_a,23-51,45.1,2,16.7,7-9,77.8
+4eqyt7yhtfqo,2026,team_b,25-61,41,10,40,5-6,83.3
+6d69v7ar0xev,2026,team_a,28-58,48.3,7,43.8,10-11,90.9
+6d69v7ar0xev,2026,team_b,22-69,31.9,8,30.8,7-10,70
+f5ka0iwfzzq7,2026,team_a,34-59,57.6,12,48,4-8,50
+f5ka0iwfzzq7,2026,team_b,29-58,50,4,25,6-6,100
+m0a5r2dtoddj,2026,team_a,31-65,47.7,9,34.6,5-5,100
+m0a5r2dtoddj,2026,team_b,23-49,46.9,4,40,10-11,90.9
