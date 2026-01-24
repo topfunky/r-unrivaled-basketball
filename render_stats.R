@@ -208,7 +208,7 @@ render_top_2pt_diff <- function(player_comparison) {
 "
   )
 
-  # Calculate top 10 differences internally, mirroring task10.R logic
+  # Calculate top 10 differences internally, mirroring analyze_shooting_metrics.R logic
   two_pt_diff_data <- player_comparison |>
     filter(ubb_two_pt_attempted >= 40) |> # Filter by shot attempts
     mutate(

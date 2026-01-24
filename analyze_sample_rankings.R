@@ -3,7 +3,7 @@
 # The chart shows weekly rankings (1-6) with custom Unrivaled purple colors and high contrast theme.
 # Outputs include a PNG chart and a feather file with the rankings data.
 #
-# Note: This task is exploratory and is not used in the final analysis.
+# Note: This analysis is exploratory and is not used in the final analysis.
 
 # Load required libraries
 library(tidyverse)
