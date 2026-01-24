@@ -22,11 +22,11 @@ all_games <- read_csv("fixtures/unrivaled_scores.csv")
 
 for (season_year in seasons) {
   print(paste0("Processing season ", season_year, "..."))
-  
+
   # Filter games for this season
   games <- all_games |>
     filter(season == season_year)
-  
+
   # Skip if no games for this season
   if (nrow(games) == 0) {
     print(paste0("No games found for season ", season_year, ". Skipping..."))
@@ -93,7 +93,8 @@ for (season_year in seasons) {
   print(team_records)
 
   # Determine playoff line for this season
-  playoff_line <- if (season_year == 2025) 14 else max(team_records$games_played, na.rm = TRUE)
+  playoff_line <- if (season_year == 2025) 14 else
+    max(team_records$games_played, na.rm = TRUE)
 
   # Create rankings based on games played
   game_rankings <- team_records |>
@@ -110,7 +111,8 @@ for (season_year in seasons) {
         # For playoff line, count all wins against playoff teams
         if (current_games_played == playoff_line) {
           # Playoff teams vary by season - adjust as needed
-          playoff_teams <- if (season_year == 2025) c("Lunar Owls", "Rose", "Laces") else c()
+          playoff_teams <- if (season_year == 2025)
+            c("Lunar Owls", "Rose", "Laces") else c()
           # Count all wins against playoff teams
           playoff_wins <- games_long |>
             filter(
@@ -177,7 +179,7 @@ for (season_year in seasons) {
       ungroup() |>
       select(team, wins, losses, point_differential)
   }
-  
+
   final_standings <- final_standings |>
     arrange(desc(wins), desc(point_differential)) |>
     mutate(
@@ -204,12 +206,15 @@ for (season_year in seasons) {
         )
       }
     }()
-  
+
   # Create output directory if it doesn't exist
   output_dir <- file.path("data", season_year)
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
-  
-  write_feather(final_standings, file.path(output_dir, "unrivaled_regular_season_standings.feather"))
+
+  write_feather(
+    final_standings,
+    file.path(output_dir, "unrivaled_regular_season_standings.feather")
+  )
 
   # Create the bump chart
   # Define plot parameters
@@ -220,103 +225,120 @@ for (season_year in seasons) {
   p <- game_rankings |>
     ggplot(aes(x = games_played, y = rank, color = team)) +
     # Add vertical line at end of regular season (only for 2025)
-    {if (season_year == 2025 && max(game_rankings$games_played, na.rm = TRUE) >= 14)
-      geom_vline(
-        xintercept = 14,
-        linetype = "dotted",
-        color = "white",
-        alpha = 0.5
+    {
+      if (
+        season_year == 2025 &&
+          max(game_rankings$games_played, na.rm = TRUE) >= 14
       )
+        geom_vline(
+          xintercept = 14,
+          linetype = "dotted",
+          color = "white",
+          alpha = 0.5
+        )
     } +
     # Add "Playoffs" label (only for 2025)
-    {if (season_year == 2025 && max(game_rankings$games_played, na.rm = TRUE) >= 14)
-      annotate(
-        "text",
-        x = 14.2,
-        y = 6,
-        label = "Playoffs",
-        color = "#606060",
-        family = "InputMono",
-        size = 2,
-        hjust = 0,
-        vjust = 0.5 # Center vertically
+    {
+      if (
+        season_year == 2025 &&
+          max(game_rankings$games_played, na.rm = TRUE) >= 14
       )
-    } +
-  # Use geom_bump for smooth lines and points
-  geom_bump(
-    linewidth = line_width,
-    size = dot_size, # TODO: Might not be needed if linewidth is set
-    show.legend = FALSE # Don't show in legend
-  ) +
-  # Use team colors from imported palette
-  scale_color_manual(values = TEAM_COLORS) +
-  # Reverse y-axis so rank 1 is at the top
-  scale_y_reverse(breaks = 1:6) +
-  # Add team labels at the end of each line
-  geom_text(
-    data = game_rankings |>
-      group_by(team) |>
-      slice_max(games_played, n = 1) |>
-      mutate(
-        x_offset = case_when(
-          team == "Rose" ~ -1,
-          team == "Lunar Owls" ~ 0,
-          team == "Mist" ~ -2.9,
-          team == "Laces" ~ 0,
-          team == "Phantom" ~ 0,
-          team == "Vinyl" ~ -0.7
-        ),
-        y_offset = case_when(
-          team == "Rose" ~ 1,
-          team == "Lunar Owls" ~ 0,
-          team == "Mist" ~ 0,
-          team == "Laces" ~ 0,
-          team == "Phantom" ~ 0,
-          team == "Vinyl" ~ 2
+        annotate(
+          "text",
+          x = 14.2,
+          y = 6,
+          label = "Playoffs",
+          color = "#606060",
+          family = "InputMono",
+          size = 2,
+          hjust = 0,
+          vjust = 0.5 # Center vertically
         )
+    } +
+    # Use geom_bump for smooth lines and points
+    geom_bump(
+      linewidth = line_width,
+      size = dot_size, # TODO: Might not be needed if linewidth is set
+      show.legend = FALSE # Don't show in legend
+    ) +
+    # Use team colors from imported palette
+    scale_color_manual(values = TEAM_COLORS) +
+    # Reverse y-axis so rank 1 is at the top
+    scale_y_reverse(breaks = 1:6) +
+    # Add team labels at the end of each line
+    geom_text(
+      data = game_rankings |>
+        group_by(team) |>
+        slice_max(games_played, n = 1) |>
+        mutate(
+          x_offset = case_when(
+            team == "Rose" ~ -1,
+            team == "Lunar Owls" ~ 0,
+            team == "Mist" ~ -2.9,
+            team == "Laces" ~ 0,
+            team == "Phantom" ~ 0,
+            team == "Vinyl" ~ -0.7
+          ),
+          y_offset = case_when(
+            team == "Rose" ~ 1,
+            team == "Lunar Owls" ~ 0,
+            team == "Mist" ~ 0,
+            team == "Laces" ~ 0,
+            team == "Phantom" ~ 0,
+            team == "Vinyl" ~ 2
+          )
+        ),
+      aes(
+        label = team,
+        x = games_played + x_offset,
+        y = rank + y_offset
       ),
-    aes(
-      label = team,
-      x = games_played + x_offset,
-      y = rank + y_offset
-    ),
-    hjust = 1.1,
-    size = label_size,
-    family = "InputMono",
-    show.legend = FALSE,
-    color = "black",
-    fontface = "bold"
-  ) +
-  # Use gghighcontrast theme with white text on black background
-  theme_high_contrast(
-    foreground_color = "white",
-    background_color = "black",
-    base_family = "InputMono"
-  ) +
-  # Style grid lines in dark grey
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank()
-  ) +
-  # Add labels
-  labs(
-    title = paste0("Unrivaled Basketball League Rankings ", season_year),
-    subtitle = "Team rankings by win/loss record throughout the season",
-    x = "Games Played",
-    y = "Rank",
-    color = "Team",
-    caption = "Game data from unrivaled.basketball",
-  )
+      hjust = 1.1,
+      size = label_size,
+      family = "InputMono",
+      show.legend = FALSE,
+      color = "black",
+      fontface = "bold"
+    ) +
+    # Use gghighcontrast theme with white text on black background
+    theme_high_contrast(
+      foreground_color = "white",
+      background_color = "black",
+      base_family = "InputMono"
+    ) +
+    # Style grid lines in dark grey
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank()
+    ) +
+    # Add labels
+    labs(
+      title = paste0("Unrivaled Basketball League Rankings ", season_year),
+      subtitle = "Team rankings by win/loss record throughout the season",
+      x = "Games Played",
+      y = "Rank",
+      color = "Team",
+      caption = "Game data from unrivaled.basketball",
+    )
 
   # Create plots directory if it doesn't exist
   plots_dir <- file.path("plots", season_year)
   dir.create(plots_dir, showWarnings = FALSE, recursive = TRUE)
 
   # Save the plot
-  ggsave(file.path(plots_dir, "unrivaled_rankings.png"), p, width = 6, height = 4, dpi = 300)
+  ggsave(
+    file.path(plots_dir, "unrivaled_rankings.png"),
+    p,
+    width = 6,
+    height = 4,
+    dpi = 300
+  )
 
   # Save the data
-  write_feather(game_rankings, file.path(output_dir, "unrivaled_rankings.feather"))
-  
+  write_feather(
+    game_rankings,
+    file.path(output_dir, "unrivaled_rankings.feather")
+  )
+
   print(paste0("✅ Completed processing season ", season_year))
 }

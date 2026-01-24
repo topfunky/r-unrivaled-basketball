@@ -318,9 +318,9 @@ for (season_year in seasons) {
 for (i in seq_along(all_data)) {
   season_year <- seasons[i]
   season_data <- all_data[[i]]
-  
+
   data_dir <- path("data", season_year)
-  
+
   write_feather(
     season_data$play_by_play,
     path(data_dir, "unrivaled_play_by_play.feather")
@@ -333,7 +333,7 @@ for (i in seq_along(all_data)) {
     season_data$summary,
     path(data_dir, "unrivaled_summaries.feather")
   )
-  
+
   # Also save CSV versions in the same directory
   write_csv(
     season_data$play_by_play,

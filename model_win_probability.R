@@ -18,7 +18,11 @@ message(sprintf("Processing season %d...", season_year))
 plots_dir <- file.path("plots", season_year)
 message(sprintf("Creating plots directory if it doesn't exist: %s", plots_dir))
 dir.create(plots_dir, showWarnings = FALSE, recursive = TRUE)
-dir.create(file.path(plots_dir, "train"), showWarnings = FALSE, recursive = TRUE)
+dir.create(
+  file.path(plots_dir, "train"),
+  showWarnings = FALSE,
+  recursive = TRUE
+)
 dir.create(file.path(plots_dir, "test"), showWarnings = FALSE, recursive = TRUE)
 
 # Source calibration functions
@@ -42,7 +46,10 @@ if (file_exists(elo_rankings_file)) {
     select(game_id, home_team_elo_prev, away_team_elo_prev) |>
     distinct()
 } else {
-  message(sprintf("ELO rankings file not found for season %d, using NA values", season_year))
+  message(sprintf(
+    "ELO rankings file not found for season %d, using NA values",
+    season_year
+  ))
   elo_rankings <- play_by_play |>
     select(game_id) |>
     distinct() |>
@@ -124,7 +131,10 @@ dir.create(data_dir, showWarnings = FALSE, recursive = TRUE)
 enhanced_file <- path(data_dir, "unrivaled_play_by_play_enhanced.csv")
 message(sprintf("Writing enhanced play by play data to %s...", enhanced_file))
 write_csv(model_data, enhanced_file)
-write_feather(model_data, path(data_dir, "unrivaled_play_by_play_enhanced.feather"))
+write_feather(
+  model_data,
+  path(data_dir, "unrivaled_play_by_play_enhanced.feather")
+)
 
 # Split data into quarters 1-3 and quarter 4
 message("Splitting data into quarters 1-3 and quarter 4...")
@@ -312,10 +322,16 @@ ggsave(
 )
 
 # Generate win probability visualizations for training games
-generate_win_probability_plots(model_data_train, output_dir = file.path(plots_dir, "train"))
+generate_win_probability_plots(
+  model_data_train,
+  output_dir = file.path(plots_dir, "train")
+)
 
 # Generate win probability visualizations for testing games
-generate_win_probability_plots(model_data_test, output_dir = file.path(plots_dir, "test"))
+generate_win_probability_plots(
+  model_data_test,
+  output_dir = file.path(plots_dir, "test")
+)
 
 # Calculate and print model performance metrics
 message("Calculating model performance metrics...")

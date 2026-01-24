@@ -80,32 +80,38 @@ for (package in github_packages) {
 # This is necessary if openssl was previously installed but system OpenSSL libraries
 # were missing or have been updated
 message("Checking and reinstalling openssl package if needed...")
-tryCatch({
-  # Try to load openssl to check if it works
-  if (requireNamespace("openssl", quietly = TRUE)) {
-    # Try to actually use it to verify it works
-    test_result <- tryCatch({
-      openssl::md5("test")
-      TRUE
-    }, error = function(e) FALSE)
-    
-    if (!test_result) {
-      message("openssl package exists but is broken. Reinstalling...")
-      pak::pkg_remove("openssl")
+tryCatch(
+  {
+    # Try to load openssl to check if it works
+    if (requireNamespace("openssl", quietly = TRUE)) {
+      # Try to actually use it to verify it works
+      test_result <- tryCatch(
+        {
+          openssl::md5("test")
+          TRUE
+        },
+        error = function(e) FALSE
+      )
+
+      if (!test_result) {
+        message("openssl package exists but is broken. Reinstalling...")
+        pak::pkg_remove("openssl")
+        pak::pkg_install("openssl")
+      }
+    } else {
+      message("Installing openssl package...")
       pak::pkg_install("openssl")
     }
-  } else {
-    message("Installing openssl package...")
+  },
+  error = function(e) {
+    message("Error checking openssl, attempting reinstall...")
+    pak::pkg_remove("openssl")
     pak::pkg_install("openssl")
   }
-}, error = function(e) {
-  message("Error checking openssl, attempting reinstall...")
-  pak::pkg_remove("openssl")
-  pak::pkg_install("openssl")
-})
+)
 
 # You can install wehoop using the pacman package using the following code:
-if (!requireNamespace('pacman', quietly = TRUE)){
+if (!requireNamespace('pacman', quietly = TRUE)) {
   install.packages('pacman')
 }
 

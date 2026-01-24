@@ -10,7 +10,7 @@ TEAM_COLORS <- c(
   "Phantom" = "#606060", # Dark grey
   "Vinyl" = "#E6E6E6", # Very light grey
   "Breeze" = "#00BFFF", # Deep sky blue
-  "Hive" = "#FFD700"  # Gold
+  "Hive" = "#FFD700" # Gold
 )
 
 # Define comparison colors

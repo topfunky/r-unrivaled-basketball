@@ -23,7 +23,7 @@ seasons <- c(2025, 2026)
 
 for (season_year in seasons) {
   print(paste0("Processing season ", season_year, "..."))
-  
+
   # Filter games for this season
   games <- all_games |>
     filter(season == season_year) |>
@@ -36,13 +36,13 @@ for (season_year in seasons) {
       )
     ) |>
     arrange(date)
-  
+
   # Skip if no games for this season
   if (nrow(games) == 0) {
     print(paste0("No games found for season ", season_year, ". Skipping..."))
     next
   }
-  
+
   # Initialize ELO ratings
   elo_ratings <- elo.run(
     formula = result ~ home_team + away_team,
@@ -50,7 +50,7 @@ for (season_year in seasons) {
     k = 32, # Standard K-factor
     initial.ratings = 1500 # Standard starting rating
   )
-  
+
   # Get ratings after each game
   ratings_history <- as.data.frame(elo_ratings) |>
     mutate(
@@ -76,7 +76,7 @@ for (season_year in seasons) {
       away_team_elo_prev = lag(away_team_elo, default = 1500)
     ) |>
     ungroup()
-  
+
   # Print ratings after each game
   print(paste0("ELO Ratings After Each Game (", season_year, "):"))
   ratings_history |>
@@ -92,7 +92,7 @@ for (season_year in seasons) {
       away_team_elo
     ) |>
     print()
-  
+
   # Print final ELO ratings
   # Combine home and away ratings for each team
   final_ratings <- bind_rows(
@@ -116,28 +116,46 @@ for (season_year in seasons) {
     # Select only team and rating
     select(team, elo_rating) |>
     arrange(desc(elo_rating))
-  
+
   print(paste0("🏀 Final Regular Season ELO Ratings (", season_year, "):"))
   print(final_ratings)
-  
+
   # Create output directory if it doesn't exist
   output_dir <- paste0("data/", season_year)
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
-  
+
   # Save final regular season ratings
-  write_feather(final_ratings, paste0(output_dir, "/unrivaled_final_elo_ratings.feather"))
-  write_csv(final_ratings, paste0(output_dir, "/unrivaled_final_elo_ratings.csv"))
-  
+  write_feather(
+    final_ratings,
+    paste0(output_dir, "/unrivaled_final_elo_ratings.feather")
+  )
+  write_csv(
+    final_ratings,
+    paste0(output_dir, "/unrivaled_final_elo_ratings.csv")
+  )
+
   # Create a long format dataset for plotting
   plot_data <- bind_rows(
     # Home team ratings
     ratings_history |>
-      select(date, game_id, team = home_team, elo_rating = home_team_elo, result),
+      select(
+        date,
+        game_id,
+        team = home_team,
+        elo_rating = home_team_elo,
+        result
+      ),
     # Away team ratings
     ratings_history |>
-      select(date, game_id, team = away_team, elo_rating = away_team_elo, result)
+      select(
+        date,
+        game_id,
+        team = away_team,
+        elo_rating = away_team_elo,
+        result
+      )
   ) |>
     arrange(date) |>
     group_by(team) |>
@@ -166,16 +184,16 @@ for (season_year in seasons) {
     ) |>
     # Reorder data so Rose appears last (on top)
     arrange(team != "Rose")
-  
+
   # Define plot parameters
   linewidth <- 4
   dot_size <- 6
   label_size <- 3
-  
+
   # Determine max games played for playoff line positioning
   max_games <- max(plot_data$games_played, na.rm = TRUE)
   playoff_line <- if (season_year == 2025) 14 else max_games # Adjust for different season lengths
-  
+
   # Create the ELO ratings chart
   p <- plot_data |>
     ggplot(aes(x = games_played, y = elo_rating, color = team)) +
@@ -225,7 +243,7 @@ for (season_year in seasons) {
       y = "ELO Rating",
       caption = "Game data from unrivaled.basketball"
     )
-  
+
   # Add playoff line and label for 2025 season if applicable
   if (season_year == 2025 && max_games >= 14) {
     p <- p +
@@ -247,11 +265,11 @@ for (season_year in seasons) {
         vjust = 0.5
       )
   }
-  
+
   # Create plots directory if it doesn't exist
   plots_dir <- file.path("plots", season_year)
   dir.create(plots_dir, showWarnings = FALSE, recursive = TRUE)
-  
+
   # Save the plot
   ggsave(
     file.path(plots_dir, "unrivaled_elo_ratings.png"),
@@ -260,10 +278,13 @@ for (season_year in seasons) {
     height = 4,
     dpi = 300
   )
-  
+
   # Save the ELO rankings
-  write_feather(ratings_history, paste0(output_dir, "/unrivaled_elo_rankings.feather"))
+  write_feather(
+    ratings_history,
+    paste0(output_dir, "/unrivaled_elo_rankings.feather")
+  )
   write_csv(ratings_history, paste0(output_dir, "/unrivaled_elo_rankings.csv"))
-  
+
   print(paste0("✅ Completed processing season ", season_year))
 }
