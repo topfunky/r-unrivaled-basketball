@@ -12,18 +12,20 @@ library(glue)
 
 # Function to scrape all games
 scrape_unrivaled_games <- function(season_year = 2025) {
-  # Define valid team names
-  VALID_TEAMS <- c("Lunar Owls", "Mist", "Rose", "Laces", "Phantom", "Vinyl")
-
   # Season-specific parameters
   params <- list(
     `2025` = list(
+      valid_teams = c("Lunar Owls", "Mist", "Rose", "Laces", "Phantom", "Vinyl"),
       skip_start = as.Date("2025-02-10"),
       skip_end = as.Date("2025-02-15"),
       postseason_start = as.Date("2025-03-16"),
       schedule_file = "fixtures/2025/schedule.html"
     ),
     `2026` = list(
+      valid_teams = c(
+        "Lunar Owls", "Mist", "Rose", "Laces", "Phantom", "Vinyl",
+        "Breeze", "Hive"
+      ),
       skip_start = as.Date("2026-02-10"),
       skip_end = as.Date("2026-02-15"),
       postseason_start = as.Date("2026-03-16"),
@@ -35,6 +37,8 @@ scrape_unrivaled_games <- function(season_year = 2025) {
   if (is.null(s_params)) {
     stop(glue("Parameters for season {season_year} not found"))
   }
+
+  valid_teams <- s_params$valid_teams
 
   # Function to parse a single game day
   parse_game_day <- function(day_node) {
@@ -52,12 +56,30 @@ scrape_unrivaled_games <- function(season_year = 2025) {
     }
 
     date_text <- html_text(date_element)
-    print(paste("Found date:", date_text))
+    print(paste("Found date text:", date_text))
 
-    # Convert date text to Date object with correct format
-    game_date <- as.Date(date_text, format = "%A, %B %d, %Y")
+    # Convert date text to Date object
+    game_date <- if (str_detect(date_text, "^Today")) {
+      as.Date("2026-01-24") # Hardcode today's date for this run as it's from current live site
+    } else if (str_detect(date_text, "^Tomorrow")) {
+      as.Date("2026-01-25")
+    } else {
+      # Try multiple formats
+      d <- as.Date(date_text, format = "%A, %B %d, %Y")
+      if (is.na(d)) {
+        d <- as.Date(date_text, format = "%a, %b %d, %Y")
+      }
+      d
+    }
+
     # Print game_date
-    print(game_date)
+    print(paste("Parsed game date:", game_date))
+
+    # If date is still NA, skip this node
+    if (is.na(game_date)) {
+      warning(glue("Could not parse date from text: {date_text}"))
+      return(NULL)
+    }
 
     # Skip games in the specified date range
     if (game_date >= s_params$skip_start && game_date <= s_params$skip_end) {
@@ -73,75 +95,77 @@ scrape_unrivaled_games <- function(season_year = 2025) {
 
     # Process games in pairs (away team then home team)
     game_data <- list()
-    for (i in seq(1, length(games), by = 2)) {
-      if (i + 1 > length(games)) {
-        warning("Odd number of teams found, skipping last team")
-        break
-      }
+    if (length(games) >= 2) {
+      for (i in seq(1, length(games), by = 2)) {
+        if (i + 1 > length(games)) {
+          warning("Odd number of teams found, skipping last team")
+          break
+        }
 
-      away_game <- games[[i]]
-      home_game <- games[[i + 1]]
+        away_game <- games[[i]]
+        home_game <- games[[i + 1]]
 
-      # Extract scores
-      away_score <- away_game |>
-        html_element("h3.weight-900") |>
-        html_text() |>
-        as.numeric()
+        # Extract scores
+        away_score <- away_game |>
+          html_element("h3.weight-900") |>
+          html_text() |>
+          as.numeric()
 
-      home_score <- home_game |>
-        html_element("h3.weight-900") |>
-        html_text() |>
-        as.numeric()
+        home_score <- home_game |>
+          html_element("h3.weight-900") |>
+          html_text() |>
+          as.numeric()
 
-      # Extract team names
-      away_team <- away_game |>
-        html_element("a.flex-row.items-center.col-12") |>
-        html_element("div.color-blue.weight-500.font-14") |>
-        html_text()
+        # Extract team names
+        away_team <- away_game |>
+          html_element("a.flex-row.items-center.col-12") |>
+          html_element("div.color-blue.weight-500.font-14") |>
+          html_text()
 
-      home_team <- home_game |>
-        html_element("a.flex-row.items-center.col-12") |>
-        html_element("div.color-blue.weight-500.font-14") |>
-        html_text()
+        home_team <- home_game |>
+          html_element("a.flex-row.items-center.col-12") |>
+          html_element("div.color-blue.weight-500.font-14") |>
+          html_text()
 
-      # Validate team names
-      if (!away_team %in% VALID_TEAMS || !home_team %in% VALID_TEAMS) {
-        warning(glue(
-          "Skipping game with invalid team names: {away_team} at {home_team}"
+        # Validate team names
+        if (!away_team %in% valid_teams || !home_team %in% valid_teams) {
+          warning(glue(
+            "Skipping game with invalid team names: {away_team} at {home_team}"
+          ))
+          next
+        }
+
+        # Extract game ID from box score link
+        box_score_link <- day_node |>
+          html_element("a[href*='/game/']") |>
+          html_attr("href")
+
+        print(glue("Box score link: {box_score_link}"))
+
+        game_id <- if (!is.null(box_score_link)) {
+          id <- str_extract(box_score_link, "[a-z0-9]+(?=/box-score$)")
+          print(glue("Extracted game ID: {id}"))
+          id
+        } else {
+          print("No box score link found")
+          NA_character_
+        }
+
+        print(glue(
+          "Game: id:{game_id} {away_team} ({away_score}) at {home_team} ({home_score})"
         ))
-        next
+
+        # Create a row of game data
+        game_data[[length(game_data) + 1]] <- tibble(
+          game_id = game_id,
+          date = game_date,
+          away_team = away_team,
+          away_team_score = away_score,
+          home_team = home_team,
+          home_team_score = home_score,
+          season = season_year
+        )
       }
-
-      # Extract game ID from box score link
-      box_score_link <- day_node |>
-        html_element("a[href*='/game/']") |>
-        html_attr("href")
-
-      print(glue("Box score link: {box_score_link}"))
-
-      game_id <- if (!is.null(box_score_link)) {
-        id <- str_extract(box_score_link, "[a-z0-9]+(?=/box-score$)")
-        print(glue("Extracted game ID: {id}"))
-        id
-      } else {
-        print("No box score link found")
-        NA_character_
-      }
-
-      print(glue(
-        "Game: id:{game_id} {away_team} ({away_score}) at {home_team} ({home_score})"
-      ))
-
-      # Create a row of game data
-      game_data[[length(game_data) + 1]] <- tibble(
-        game_id = game_id,
-        date = game_date,
-        away_team = away_team,
-        away_team_score = away_score,
-        home_team = home_team,
-        home_team_score = home_score,
-        season = season_year
-      )
     }
 
     # Combine all games for this day
@@ -158,8 +182,8 @@ scrape_unrivaled_games <- function(season_year = 2025) {
   html <- read_html(s_params$schedule_file)
 
   # Debug: Print the overall HTML text
-  print("Overall HTML content:")
-  print(html_text(html))
+  # print("Overall HTML content:")
+  # print(html_text(html))
 
   # Find all game days
   game_days <- html |>
@@ -208,4 +232,3 @@ all_season_games <- map_dfr(seasons, scrape_unrivaled_games)
 
 # Save to CSV
 write_csv(all_season_games, "fixtures/unrivaled_scores.csv")
-

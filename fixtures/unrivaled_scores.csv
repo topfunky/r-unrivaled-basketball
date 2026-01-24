@@ -1,46 +1,90 @@
-"game_id","date","away_team","away_team_score","home_team","home_team_score","season_type","season"
-"jcdgg9yavn4e","2025-01-17","Lunar Owls",84,"Mist",80,"REG",2025
-"jcdgg9yavn4e","2025-01-17","Vinyl",79,"Rose",73,"REG",2025
-"cy9e2nxmf95w","2025-01-18","Laces",86,"Phantom",48,"REG",2025
-"cy9e2nxmf95w","2025-01-18","Rose",70,"Lunar Owls",79,"REG",2025
-"m9sh1b3jm0p1","2025-01-20","Phantom",69,"Vinyl",84,"REG",2025
-"m9sh1b3jm0p1","2025-01-20","Mist",43,"Laces",63,"REG",2025
-"6vgjcmphd6wm","2025-01-24","Mist",69,"Phantom",74,"REG",2025
-"6vgjcmphd6wm","2025-01-24","Vinyl",79,"Laces",83,"REG",2025
-"nyf4d8danani","2025-01-25","Rose",71,"Mist",66,"REG",2025
-"nyf4d8danani","2025-01-25","Phantom",58,"Lunar Owls",82,"REG",2025
-"yogi89xx6aw5","2025-01-27","Lunar Owls",67,"Vinyl",57,"REG",2025
-"yogi89xx6aw5","2025-01-27","Laces",71,"Rose",64,"REG",2025
-"zfxe4imyud75","2025-01-31","Rose",63,"Phantom",75,"REG",2025
-"zfxe4imyud75","2025-01-31","Lunar Owls",75,"Laces",73,"REG",2025
-"sjrwaj31kq62","2025-02-01","Vinyl",67,"Mist",77,"REG",2025
-"sjrwaj31kq62","2025-02-01","Laces",69,"Rose",83,"REG",2025
-"ez47fwm7a025","2025-02-03","Phantom",61,"Mist",64,"REG",2025
-"ez47fwm7a025","2025-02-03","Vinyl",68,"Lunar Owls",85,"REG",2025
-"t4qkedtx86as","2025-02-07","Lunar Owls",94,"Phantom",76,"REG",2025
-"t4qkedtx86as","2025-02-07","Rose",71,"Mist",63,"REG",2025
-NA,"2025-02-08","Mist",81,"Lunar Owls",85,"REG",2025
-NA,"2025-02-08","Laces",0,"Vinyl",11,"REG",2025
-"h1nn8q71jybo","2025-02-18","Rose",61,"Vinyl",55,"REG",2025
-"h1nn8q71jybo","2025-02-18","Phantom",68,"Laces",75,"REG",2025
-"boyu8ar6k7zl","2025-02-21","Lunar Owls",63,"Rose",72,"REG",2025
-"boyu8ar6k7zl","2025-02-21","Mist",65,"Vinyl",72,"REG",2025
-"73tp1uzii8x2","2025-02-22","Laces",60,"Lunar Owls",88,"REG",2025
-"73tp1uzii8x2","2025-02-22","Vinyl",72,"Phantom",79,"REG",2025
-"m92ditkrpg6g","2025-02-24","Phantom",59,"Rose",71,"REG",2025
-"m92ditkrpg6g","2025-02-24","Laces",49,"Mist",65,"REG",2025
-"wmma46sohv96","2025-02-28","Vinyl",64,"Laces",63,"REG",2025
-"wmma46sohv96","2025-02-28","Mist",88,"Phantom",62,"REG",2025
-"vi8xu7g2nnws","2025-03-01","Lunar Owls",78,"Vinyl",72,"REG",2025
-"vi8xu7g2nnws","2025-03-01","Mist",71,"Rose",62,"REG",2025
-"2bp02n0q27tj","2025-03-03","Rose",58,"Laces",53,"REG",2025
-"2bp02n0q27tj","2025-03-03","Phantom",79,"Lunar Owls",92,"REG",2025
-"f3cv3sdbrtmw","2025-03-07","Laces",73,"Phantom",59,"REG",2025
-"f3cv3sdbrtmw","2025-03-07","Rose",56,"Lunar Owls",66,"REG",2025
-"v4kmebvfsfds","2025-03-08","Mist",69,"Laces",76,"REG",2025
-"v4kmebvfsfds","2025-03-08","Phantom",80,"Vinyl",74,"REG",2025
-"h5sru56hfj20","2025-03-10","Lunar Owls",92,"Mist",58,"REG",2025
-"h5sru56hfj20","2025-03-10","Vinyl",46,"Rose",74,"REG",2025
-"jkfojym71xph","2025-03-16","Laces",57,"Rose",63,"POST",2025
-"jkfojym71xph","2025-03-16","Vinyl",73,"Lunar Owls",70,"POST",2025
-"xydxurm98lce","2025-03-17","Vinyl",54,"Rose",62,"POST",2025
+game_id,date,away_team,away_team_score,home_team,home_team_score,season,season_type
+jcdgg9yavn4e,2025-01-17,Lunar Owls,84,Mist,80,2025,REG
+jcdgg9yavn4e,2025-01-17,Vinyl,79,Rose,73,2025,REG
+cy9e2nxmf95w,2025-01-18,Laces,86,Phantom,48,2025,REG
+cy9e2nxmf95w,2025-01-18,Rose,70,Lunar Owls,79,2025,REG
+m9sh1b3jm0p1,2025-01-20,Phantom,69,Vinyl,84,2025,REG
+m9sh1b3jm0p1,2025-01-20,Mist,43,Laces,63,2025,REG
+6vgjcmphd6wm,2025-01-24,Mist,69,Phantom,74,2025,REG
+6vgjcmphd6wm,2025-01-24,Vinyl,79,Laces,83,2025,REG
+nyf4d8danani,2025-01-25,Rose,71,Mist,66,2025,REG
+nyf4d8danani,2025-01-25,Phantom,58,Lunar Owls,82,2025,REG
+yogi89xx6aw5,2025-01-27,Lunar Owls,67,Vinyl,57,2025,REG
+yogi89xx6aw5,2025-01-27,Laces,71,Rose,64,2025,REG
+zfxe4imyud75,2025-01-31,Rose,63,Phantom,75,2025,REG
+zfxe4imyud75,2025-01-31,Lunar Owls,75,Laces,73,2025,REG
+sjrwaj31kq62,2025-02-01,Vinyl,67,Mist,77,2025,REG
+sjrwaj31kq62,2025-02-01,Laces,69,Rose,83,2025,REG
+ez47fwm7a025,2025-02-03,Phantom,61,Mist,64,2025,REG
+ez47fwm7a025,2025-02-03,Vinyl,68,Lunar Owls,85,2025,REG
+t4qkedtx86as,2025-02-07,Lunar Owls,94,Phantom,76,2025,REG
+t4qkedtx86as,2025-02-07,Rose,71,Mist,63,2025,REG
+NA,2025-02-08,Mist,81,Lunar Owls,85,2025,REG
+NA,2025-02-08,Laces,0,Vinyl,11,2025,REG
+h1nn8q71jybo,2025-02-18,Rose,61,Vinyl,55,2025,REG
+h1nn8q71jybo,2025-02-18,Phantom,68,Laces,75,2025,REG
+boyu8ar6k7zl,2025-02-21,Lunar Owls,63,Rose,72,2025,REG
+boyu8ar6k7zl,2025-02-21,Mist,65,Vinyl,72,2025,REG
+73tp1uzii8x2,2025-02-22,Laces,60,Lunar Owls,88,2025,REG
+73tp1uzii8x2,2025-02-22,Vinyl,72,Phantom,79,2025,REG
+m92ditkrpg6g,2025-02-24,Phantom,59,Rose,71,2025,REG
+m92ditkrpg6g,2025-02-24,Laces,49,Mist,65,2025,REG
+wmma46sohv96,2025-02-28,Vinyl,64,Laces,63,2025,REG
+wmma46sohv96,2025-02-28,Mist,88,Phantom,62,2025,REG
+vi8xu7g2nnws,2025-03-01,Lunar Owls,78,Vinyl,72,2025,REG
+vi8xu7g2nnws,2025-03-01,Mist,71,Rose,62,2025,REG
+2bp02n0q27tj,2025-03-03,Rose,58,Laces,53,2025,REG
+2bp02n0q27tj,2025-03-03,Phantom,79,Lunar Owls,92,2025,REG
+f3cv3sdbrtmw,2025-03-07,Laces,73,Phantom,59,2025,REG
+f3cv3sdbrtmw,2025-03-07,Rose,56,Lunar Owls,66,2025,REG
+v4kmebvfsfds,2025-03-08,Mist,69,Laces,76,2025,REG
+v4kmebvfsfds,2025-03-08,Phantom,80,Vinyl,74,2025,REG
+h5sru56hfj20,2025-03-10,Lunar Owls,92,Mist,58,2025,REG
+h5sru56hfj20,2025-03-10,Vinyl,46,Rose,74,2025,REG
+jkfojym71xph,2025-03-16,Laces,57,Rose,63,2025,POST
+jkfojym71xph,2025-03-16,Vinyl,73,Lunar Owls,70,2025,POST
+xydxurm98lce,2025-03-17,Vinyl,54,Rose,62,2025,POST
+jcdgg9yavn4e,2025-01-17,Lunar Owls,84,Mist,80,2026,REG
+jcdgg9yavn4e,2025-01-17,Vinyl,79,Rose,73,2026,REG
+cy9e2nxmf95w,2025-01-18,Laces,86,Phantom,48,2026,REG
+cy9e2nxmf95w,2025-01-18,Rose,70,Lunar Owls,79,2026,REG
+m9sh1b3jm0p1,2025-01-20,Phantom,69,Vinyl,84,2026,REG
+m9sh1b3jm0p1,2025-01-20,Mist,43,Laces,63,2026,REG
+6vgjcmphd6wm,2025-01-24,Mist,69,Phantom,74,2026,REG
+6vgjcmphd6wm,2025-01-24,Vinyl,79,Laces,83,2026,REG
+nyf4d8danani,2025-01-25,Rose,71,Mist,66,2026,REG
+nyf4d8danani,2025-01-25,Phantom,58,Lunar Owls,82,2026,REG
+yogi89xx6aw5,2025-01-27,Lunar Owls,67,Vinyl,57,2026,REG
+yogi89xx6aw5,2025-01-27,Laces,71,Rose,64,2026,REG
+zfxe4imyud75,2025-01-31,Rose,63,Phantom,75,2026,REG
+zfxe4imyud75,2025-01-31,Lunar Owls,75,Laces,73,2026,REG
+sjrwaj31kq62,2025-02-01,Vinyl,67,Mist,77,2026,REG
+sjrwaj31kq62,2025-02-01,Laces,69,Rose,83,2026,REG
+ez47fwm7a025,2025-02-03,Phantom,61,Mist,64,2026,REG
+ez47fwm7a025,2025-02-03,Vinyl,68,Lunar Owls,85,2026,REG
+t4qkedtx86as,2025-02-07,Lunar Owls,94,Phantom,76,2026,REG
+t4qkedtx86as,2025-02-07,Rose,71,Mist,63,2026,REG
+NA,2025-02-08,Mist,81,Lunar Owls,85,2026,REG
+h1nn8q71jybo,2025-02-18,Rose,61,Vinyl,55,2026,REG
+h1nn8q71jybo,2025-02-18,Phantom,68,Laces,75,2026,REG
+boyu8ar6k7zl,2025-02-21,Lunar Owls,63,Rose,72,2026,REG
+boyu8ar6k7zl,2025-02-21,Mist,65,Vinyl,72,2026,REG
+73tp1uzii8x2,2025-02-22,Laces,60,Lunar Owls,88,2026,REG
+73tp1uzii8x2,2025-02-22,Vinyl,72,Phantom,79,2026,REG
+m92ditkrpg6g,2025-02-24,Phantom,59,Rose,71,2026,REG
+m92ditkrpg6g,2025-02-24,Laces,49,Mist,65,2026,REG
+wmma46sohv96,2025-02-28,Vinyl,64,Laces,63,2026,REG
+wmma46sohv96,2025-02-28,Mist,88,Phantom,62,2026,REG
+vi8xu7g2nnws,2025-03-01,Lunar Owls,78,Vinyl,72,2026,REG
+vi8xu7g2nnws,2025-03-01,Mist,71,Rose,62,2026,REG
+2bp02n0q27tj,2025-03-03,Rose,58,Laces,53,2026,REG
+2bp02n0q27tj,2025-03-03,Phantom,79,Lunar Owls,92,2026,REG
+f3cv3sdbrtmw,2025-03-07,Laces,73,Phantom,59,2026,REG
+f3cv3sdbrtmw,2025-03-07,Rose,56,Lunar Owls,66,2026,REG
+v4kmebvfsfds,2025-03-08,Mist,69,Laces,76,2026,REG
+v4kmebvfsfds,2025-03-08,Phantom,80,Vinyl,74,2026,REG
+h5sru56hfj20,2025-03-10,Lunar Owls,92,Mist,58,2026,REG
+h5sru56hfj20,2025-03-10,Vinyl,46,Rose,74,2026,REG
+jkfojym71xph,2025-03-16,Laces,57,Rose,63,2026,REG
+jkfojym71xph,2025-03-16,Vinyl,73,Lunar Owls,70,2026,REG
+xydxurm98lce,2025-03-17,Vinyl,54,Rose,62,2026,REG

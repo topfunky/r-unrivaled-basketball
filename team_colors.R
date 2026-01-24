@@ -8,7 +8,9 @@ TEAM_COLORS <- c(
   "Mist" = "#848484", # Medium-dark grey
   "Laces" = "#C0C0C0", # Silver
   "Phantom" = "#606060", # Dark grey
-  "Vinyl" = "#E6E6E6" # Very light grey
+  "Vinyl" = "#E6E6E6", # Very light grey
+  "Breeze" = "#00BFFF", # Deep sky blue
+  "Hive" = "#FFD700"  # Gold
 )
 
 # Define comparison colors

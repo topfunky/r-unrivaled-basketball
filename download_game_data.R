@@ -6,13 +6,22 @@ library(rvest)
 library(fs)
 library(httr)
 
+# Get command line arguments
+args <- commandArgs(trailingOnly = TRUE)
+season_year <- if (length(args) > 0) args[1] else "2026"
+
 # Create games directory if it doesn't exist
-if (!dir_exists("games")) {
-  dir_create("games")
+games_base_dir <- path("games", season_year)
+if (!dir_exists(games_base_dir)) {
+  dir_create(games_base_dir)
 }
 
 # Read the schedule HTML file
-schedule_html <- read_html("fixtures/schedule.html")
+schedule_file <- path("fixtures", season_year, "schedule.html")
+if (!file_exists(schedule_file)) {
+  stop(sprintf("Schedule file %s not found", schedule_file))
+}
+schedule_html <- read_html(schedule_file)
 
 # Get all game links
 game_links <- schedule_html |>
@@ -48,7 +57,7 @@ download_if_missing <- function(url, filepath) {
 # Download files for each game
 for (game_id in game_links) {
   # Create game-specific directory
-  game_dir <- path("games", game_id)
+  game_dir <- path(games_base_dir, game_id)
   if (!dir_exists(game_dir)) {
     dir_create(game_dir)
   }
