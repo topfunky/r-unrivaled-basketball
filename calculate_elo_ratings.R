@@ -192,20 +192,13 @@ for (season_year in seasons) {
 
   # Determine max games played for playoff line positioning
   max_games <- max(plot_data$games_played, na.rm = TRUE)
-  playoff_line <- if (season_year == 2025) 14 else max_games # Adjust for different season lengths
+  # Adjust for different season lengths
+  playoff_line <- if (season_year == 2025) 14 else max_games
 
   # Create the ELO ratings chart
   p <- plot_data |>
     ggplot(aes(x = games_played, y = elo_rating, color = team)) +
     geom_line(linewidth = linewidth, show.legend = FALSE) +
-    # Add points only at the end of each line
-    geom_point(
-      data = plot_data |>
-        group_by(team) |>
-        slice_max(games_played, n = 1),
-      size = linewidth - 0.6,
-      show.legend = FALSE
-    ) +
     # Use team colors from imported palette
     scale_color_manual(values = TEAM_COLORS) +
     # Add team labels at the end of each line
@@ -215,10 +208,10 @@ for (season_year in seasons) {
         slice_max(games_played, n = 1),
       aes(
         label = team,
-        x = games_played + x_offset,
-        y = elo_rating + y_offset
+        x = games_played,
+        y = elo_rating + 10
       ),
-      hjust = 0.5, # Center text horizontally
+      hjust = 1,
       size = 3,
       family = "InputMono",
       show.legend = FALSE,
@@ -230,10 +223,10 @@ for (season_year in seasons) {
       background_color = "black",
       base_family = "InputMono"
     ) +
-    # Style grid lines in dark grey
+    # Style grid lines
     theme(
-      panel.grid.major = element_line(color = "#1A1A1A", linewidth = 0.5),
-      panel.grid.minor = element_line(color = "#1A1A1A", linewidth = 0.25)
+      panel.grid.major = element_line(color = "white", linewidth = 0.5),
+      panel.grid.minor = element_line(color = "white", linewidth = 0.25)
     ) +
     # Add labels
     labs(

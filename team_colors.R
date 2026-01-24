@@ -3,13 +3,13 @@
 
 # Define team colors
 TEAM_COLORS <- c(
-  "Rose" = "#9B30FF", # Bright purple
-  "Lunar Owls" = "#808080", # Medium grey
-  "Mist" = "#848484", # Medium-dark grey
-  "Laces" = "#C0C0C0", # Silver
-  "Phantom" = "#606060", # Dark grey
-  "Vinyl" = "#E6E6E6", # Very light grey
-  "Breeze" = "#00BFFF", # Deep sky blue
+  "Rose" = "#1c5750", # Dark teal
+  "Lunar Owls" = "#d7d5e0", # Light grey/lavender
+  "Mist" = "#063860", # Dark blue
+  "Laces" = "#76b1a1", # Teal
+  "Phantom" = "#cccccc", # Light grey
+  "Vinyl" = "#820234", # Dark red
+  "Breeze" = "#b52f72", # Pink/magenta
   "Hive" = "#FFD700" # Gold
 )
 
