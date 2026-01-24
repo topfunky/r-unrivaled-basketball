@@ -17,9 +17,20 @@ source("render_stats.R")
 source("render_fg_plots.R")
 source("team_colors.R")
 
-# Load data
-pbp_data <- read_feather("unrivaled_play_by_play.feather")
-box_scores <- read_feather("unrivaled_box_scores.feather")
+# Get season from command line argument or default to 2026
+args <- commandArgs(trailingOnly = TRUE)
+season_year <- if (length(args) > 0) as.numeric(args[1]) else 2026
+
+message(sprintf("Processing season %d...", season_year))
+
+# Create plots directory if it doesn't exist
+plots_dir <- file.path("plots", season_year)
+dir.create(plots_dir, showWarnings = FALSE, recursive = TRUE)
+
+# Load data from season-specific directory
+data_dir <- file.path("data", season_year)
+pbp_data <- read_feather(file.path(data_dir, "unrivaled_play_by_play.feather"))
+box_scores <- read_feather(file.path(data_dir, "unrivaled_box_scores.feather"))
 wnba_stats <- read_feather("fixtures/wnba_shooting_stats_2024.feather")
 
 # Join WNBA stats with box scores
@@ -240,29 +251,34 @@ player_ts_pct <- box_scores |>
 # Render density plots
 render_fg_density_plot(
   player_fg_pct,
-  player_comparison
+  player_comparison,
+  output_dir = plots_dir
 )
 
 two_pt_plot <- render_two_pt_density_plot(
   player_fg_pct,
-  player_comparison
+  player_comparison,
+  output_dir = plots_dir
 )
 
 three_pt_plot <- render_three_pt_density_plot(
   player_fg_pct,
-  player_comparison
+  player_comparison,
+  output_dir = plots_dir
 )
 
 # Render combined shooting plot
 render_combined_shooting_plot(
   two_pt_plot,
-  three_pt_plot
+  three_pt_plot,
+  output_dir = plots_dir
 )
 
 # Render TS density plot
 render_ts_density_plot(
   player_ts_pct,
-  player_comparison
+  player_comparison,
+  output_dir = plots_dir
 )
 
 
@@ -298,7 +314,7 @@ render_barbell_plot(
   x2_label = "Unrivaled",
   title = "Two-Point Shooting Percentage: WNBA vs Unrivaled",
   subtitle = "Players with biggest improvement in Unrivaled (purple)",
-  file_path = "plots/two_pt_barbell_positive.png"
+  file_path = file.path(plots_dir, "two_pt_barbell_positive.png")
 )
 
 render_barbell_plot(
@@ -310,7 +326,7 @@ render_barbell_plot(
   x2_label = "Unrivaled",
   title = "Two-Point Shooting Percentage: WNBA vs Unrivaled",
   subtitle = "Players with biggest decrease in Unrivaled (purple)",
-  file_path = "plots/two_pt_barbell_negative.png"
+  file_path = file.path(plots_dir, "two_pt_barbell_negative.png")
 )
 
 # Calculate shooting improvement data
@@ -352,7 +368,7 @@ render_improvement_scatter(
   y_lab = "3P (percentage points)",
   title = "Shooting Improvement: Unrivaled vs WNBA",
   subtitle = "Comparing 2P and 3P shooting",
-  file_path = "plots/shooting_improvement_scatter.png",
+  file_path = file.path(plots_dir, "shooting_improvement_scatter.png"),
   add_trendline = TRUE
 )
 
@@ -364,7 +380,7 @@ render_improvement_scatter(
   y_lab = "3-Point Shooting Improvement (%)",
   title = "Relative Shooting Improvement: Unrivaled vs WNBA",
   subtitle = "Comparing relative improvements in 2-point and 3-point shooting",
-  file_path = "plots/relative_shooting_improvement_scatter.png"
+  file_path = file.path(plots_dir, "relative_shooting_improvement_scatter.png")
 )
 
 # Calculate data for FGA histogram
@@ -375,7 +391,7 @@ player_fga <- player_fg_pct |>
   arrange(desc(total_fga))
 
 # Render FGA histogram
-render_fga_histogram(player_fga)
+render_fga_histogram(player_fga, output_dir = plots_dir)
 
 # Create a list of all statistics for rendering
 stats <- list(
@@ -388,4 +404,4 @@ stats <- list(
 )
 
 # Render all statistics to markdown file
-render_all_stats("plots/player_stats.md", stats)
+render_all_stats(file.path(plots_dir, "player_stats.md"), stats)

@@ -30,11 +30,13 @@ scatter_quadrant_position_factor <- 0.99 # Factor for positioning quadrant label
 #' Render and save field goal density plot
 #' @param player_fg_pct Data frame with player FG%
 #' @param player_comparison Data frame with player comparison stats
+#' @param output_dir Output directory for the plot (default: "plots")
 #' @param chart_width Width of the chart
 #' @param chart_height Height of the chart
 render_fg_density_plot <- function(
   player_fg_pct,
-  player_comparison
+  player_comparison,
+  output_dir = "plots"
 ) {
   fg_density_plot <- ggplot() +
     geom_density(
@@ -68,7 +70,7 @@ render_fg_density_plot <- function(
     )
 
   ggsave(
-    "plots/fg_density.png",
+    file.path(output_dir, "fg_density.png"),
     plot = fg_density_plot,
     width = chart_width,
     height = chart_height,
@@ -80,11 +82,13 @@ render_fg_density_plot <- function(
 #' Render and save two-point density plot
 #' @param player_fg_pct Data frame with player FG%
 #' @param player_comparison Data frame with player comparison stats
+#' @param output_dir Output directory for the plot (default: "plots")
 #' @param chart_width Width of the chart
 #' @param chart_height Height of the chart
 render_two_pt_density_plot <- function(
   player_fg_pct,
-  player_comparison
+  player_comparison,
+  output_dir = "plots"
 ) {
   two_pt_density_plot <- ggplot() +
     geom_density(
@@ -119,7 +123,7 @@ render_two_pt_density_plot <- function(
     )
 
   ggsave(
-    "plots/two_pt_density.png",
+    file.path(output_dir, "two_pt_density.png"),
     plot = two_pt_density_plot,
     width = chart_width,
     height = chart_height,
@@ -131,11 +135,13 @@ render_two_pt_density_plot <- function(
 #' Render and save three-point density plot
 #' @param player_fg_pct Data frame with player FG%
 #' @param player_comparison Data frame with player comparison stats
+#' @param output_dir Output directory for the plot (default: "plots")
 #' @param chart_width Width of the chart
 #' @param chart_height Height of the chart
 render_three_pt_density_plot <- function(
   player_fg_pct,
-  player_comparison
+  player_comparison,
+  output_dir = "plots"
 ) {
   three_pt_density_plot <- ggplot() +
     geom_density(
@@ -170,7 +176,7 @@ render_three_pt_density_plot <- function(
     )
 
   ggsave(
-    "plots/three_pt_density.png",
+    file.path(output_dir, "three_pt_density.png"),
     plot = three_pt_density_plot,
     width = chart_width,
     height = chart_height,
@@ -182,11 +188,13 @@ render_three_pt_density_plot <- function(
 #' Render and save combined 2pt and 3pt density plots
 #' @param two_pt_plot ggplot object for 2pt density
 #' @param three_pt_plot ggplot object for 3pt density
+#' @param output_dir Output directory for the plot (default: "plots")
 #' @param chart_width_double Width for the combined chart
 #' @param chart_height Height for the combined chart
 render_combined_shooting_plot <- function(
   two_pt_plot,
-  three_pt_plot
+  three_pt_plot,
+  output_dir = "plots"
 ) {
   combined_shooting_plot <- (two_pt_plot) +
     (three_pt_plot) +
@@ -194,7 +202,7 @@ render_combined_shooting_plot <- function(
     plot_annotation(theme = theme(plot.margin = margin(0, 0, 0, 0)))
 
   ggsave(
-    "plots/combined_shooting.png",
+    file.path(output_dir, "combined_shooting.png"),
     plot = combined_shooting_plot,
     width = chart_width_double,
     height = chart_height,
@@ -206,11 +214,13 @@ render_combined_shooting_plot <- function(
 #' Render and save true shooting percentage density plot
 #' @param player_ts_pct Data frame with player TS%
 #' @param player_comparison Data frame with player comparison stats
+#' @param output_dir Output directory for the plot (default: "plots")
 #' @param chart_width Width of the chart
 #' @param chart_height Height of the chart
 render_ts_density_plot <- function(
   player_ts_pct,
-  player_comparison
+  player_comparison,
+  output_dir = "plots"
 ) {
   ts_density_plot <- ggplot() +
     geom_density(
@@ -243,7 +253,7 @@ render_ts_density_plot <- function(
     )
 
   ggsave(
-    "plots/ts_density.png",
+    file.path(output_dir, "ts_density.png"),
     plot = ts_density_plot,
     width = chart_width,
     height = chart_height,
@@ -490,9 +500,10 @@ render_improvement_scatter <- function(
 
 #' Render and save field goal attempts histogram
 #' @param player_fga Data frame with player FGA stats
+#' @param output_dir Output directory for the plot (default: "plots")
 #' @param chart_width Width of the chart
 #' @param chart_height Height of the chart
-render_fga_histogram <- function(player_fga) {
+render_fga_histogram <- function(player_fga, output_dir = "plots") {
   # Create base histogram plot
   base_histogram <- ggplot(player_fga, aes(x = total_fga)) +
     geom_histogram(
@@ -555,7 +566,7 @@ render_fga_histogram <- function(player_fga) {
 
   # Save the histogram
   ggsave(
-    "plots/fga_histogram.png",
+    file.path(output_dir, "fga_histogram.png"),
     plot = fga_histogram,
     width = chart_width,
     height = chart_height,

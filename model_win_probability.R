@@ -6,24 +6,51 @@ library(tidyverse)
 library(xgboost)
 library(feather)
 library(gghighcontrast)
+library(fs)
+
+# Get season from command line argument or default to 2026
+args <- commandArgs(trailingOnly = TRUE)
+season_year <- if (length(args) > 0) as.numeric(args[1]) else 2026
+
+message(sprintf("Processing season %d...", season_year))
 
 # Create plots directory if it doesn't exist
-message("Creating plots directory if it doesn't exist...")
-dir.create("plots", showWarnings = FALSE, recursive = TRUE)
+plots_dir <- file.path("plots", season_year)
+message(sprintf("Creating plots directory if it doesn't exist: %s", plots_dir))
+dir.create(plots_dir, showWarnings = FALSE, recursive = TRUE)
+dir.create(file.path(plots_dir, "train"), showWarnings = FALSE, recursive = TRUE)
+dir.create(file.path(plots_dir, "test"), showWarnings = FALSE, recursive = TRUE)
 
 # Source calibration functions
 source("calibration.R")
 # Source visualization functions
 source("render_wp_plots.R")
 
-# Read play by play data
-message("Reading play by play data...")
-play_by_play <- read_feather("unrivaled_play_by_play.feather")
+# Read play by play data from season-specific directory
+message(sprintf("Reading play by play data for season %d...", season_year))
+play_by_play_file <- path("data", season_year, "unrivaled_play_by_play.csv")
+if (!file_exists(play_by_play_file)) {
+  stop(sprintf("Play by play file not found: %s", play_by_play_file))
+}
+play_by_play <- read_csv(play_by_play_file)
 
-# Read ELO rankings data
-elo_rankings <- read_feather("unrivaled_elo_rankings.feather") |>
-  select(game_id, home_team_elo_prev, away_team_elo_prev) |>
-  distinct()
+# Read ELO rankings data from season-specific directory (if it exists)
+elo_rankings_file <- path("data", season_year, "unrivaled_elo_rankings.csv")
+if (file_exists(elo_rankings_file)) {
+  message(sprintf("Reading ELO rankings for season %d...", season_year))
+  elo_rankings <- read_csv(elo_rankings_file) |>
+    select(game_id, home_team_elo_prev, away_team_elo_prev) |>
+    distinct()
+} else {
+  message(sprintf("ELO rankings file not found for season %d, using NA values", season_year))
+  elo_rankings <- play_by_play |>
+    select(game_id) |>
+    distinct() |>
+    mutate(
+      home_team_elo_prev = NA_real_,
+      away_team_elo_prev = NA_real_
+    )
+}
 
 # Calculate average points per possession for quarter 4 estimation
 points_per_possession <- play_by_play |>
@@ -91,8 +118,13 @@ model_data <- play_by_play |>
   ) |>
   ungroup()
 
-# Write full play by play with extra fields
-write_feather(model_data, "unrivaled_play_by_play_enhanced.feather")
+# Write full play by play with extra fields to season-specific directory
+data_dir <- path("data", season_year)
+dir.create(data_dir, showWarnings = FALSE, recursive = TRUE)
+enhanced_file <- path(data_dir, "unrivaled_play_by_play_enhanced.csv")
+message(sprintf("Writing enhanced play by play data to %s...", enhanced_file))
+write_csv(model_data, enhanced_file)
+write_feather(model_data, path(data_dir, "unrivaled_play_by_play_enhanced.feather"))
 
 # Split data into quarters 1-3 and quarter 4
 message("Splitting data into quarters 1-3 and quarter 4...")
@@ -265,14 +297,14 @@ p_calibration_test <- create_calibration_plot(model_data_test, "Testing Data")
 
 # Save calibration plots
 ggsave(
-  "plots/calibration_train.png",
+  file.path(plots_dir, "calibration_train.png"),
   p_calibration_train,
   width = 10,
   height = 6,
   dpi = 300
 )
 ggsave(
-  "plots/calibration_test.png",
+  file.path(plots_dir, "calibration_test.png"),
   p_calibration_test,
   width = 10,
   height = 6,
@@ -280,10 +312,10 @@ ggsave(
 )
 
 # Generate win probability visualizations for training games
-generate_win_probability_plots(model_data_train, output_dir = "plots/train")
+generate_win_probability_plots(model_data_train, output_dir = file.path(plots_dir, "train"))
 
 # Generate win probability visualizations for testing games
-generate_win_probability_plots(model_data_test, output_dir = "plots/test")
+generate_win_probability_plots(model_data_test, output_dir = file.path(plots_dir, "test"))
 
 # Calculate and print model performance metrics
 message("Calculating model performance metrics...")
