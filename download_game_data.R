@@ -111,7 +111,10 @@ download_if_missing <- function(url, filepath) {
 
   # File is missing or empty, download it
   if (file_exists(filepath) && is_game_file_empty(filepath)) {
-    message(sprintf("File is empty (Game Not Found), re-downloading %s...", url))
+    message(sprintf(
+      "File is empty (Game Not Found), re-downloading %s...",
+      url
+    ))
   } else {
     message(sprintf("Downloading %s...", url))
   }

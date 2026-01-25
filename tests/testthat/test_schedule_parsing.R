@@ -1,8 +1,9 @@
 # Purpose: Tests that schedule.html can be parsed and game IDs are extracted correctly
 
 library(testthat)
-library(rvest)
-library(tidyverse)
+
+# Source the function from scrape_unrivaled_scores.R
+source(file.path("..", "..", "scrape_unrivaled_scores.R"))
 
 test_that("schedule.html contains game links with expected IDs", {
   # Get path relative to project root (testthat runs from tests/testthat)
@@ -11,28 +12,8 @@ test_that("schedule.html contains game links with expected IDs", {
   # Check that file exists
   expect_true(file.exists(schedule_file), info = "Schedule file should exist")
 
-  # Read the HTML file
-  html <- read_html(schedule_file)
-
-  # Find all game links
-  game_links <- html |>
-    html_elements("a[href*='/game/']")
-
-  # Extract game IDs from href attributes
-  game_ids <- map_chr(
-    game_links,
-    ~ {
-      href <- html_attr(.x, "href")
-      if (is.na(href) || is.null(href)) return(NA_character_)
-      # Extract ID from /game/{id} pattern
-      id <- str_extract(href, "(?<=/game/)[a-z0-9]+")
-      if (is.na(id)) return(NA_character_)
-      id
-    }
-  )
-
-  # Remove NA values
-  game_ids <- game_ids[!is.na(game_ids)]
+  # Extract game IDs using function from scrape_unrivaled_scores.R
+  game_ids <- extract_game_ids(schedule_file, season_year = 2026)
 
   # Verify that game IDs are found
   expect_true(length(game_ids) > 0, info = "Should find at least one game ID")

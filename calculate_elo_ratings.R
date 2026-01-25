@@ -40,10 +40,10 @@ calculate_game_results <- function(games) {
 calculate_elo_ratings <- function(games) {
   # Get all teams that should be included (from team colors)
   all_teams <- names(TEAM_COLORS)
-  
+
   # Create initial ratings for all teams
   initial_ratings <- setNames(rep(1500, length(all_teams)), all_teams)
-  
+
   elo.run(
     formula = result ~ home_team + away_team,
     data = games,
@@ -83,17 +83,17 @@ get_ratings_history <- function(elo_ratings, games, season_year) {
 get_final_ratings <- function(ratings_history, elo_ratings) {
   # Get all teams that should be included
   all_teams <- names(TEAM_COLORS)
-  
+
   # Get final ratings from elo.run object (includes all teams that were initialized)
   final_elos <- final.elos(elo_ratings)
-  
+
   # Create tibble with all teams
   final_ratings <- tibble(
     team = all_teams,
     elo_rating = ifelse(team %in% names(final_elos), final_elos[team], 1500)
   ) |>
     arrange(desc(elo_rating))
-  
+
   return(final_ratings)
 }
 
@@ -267,7 +267,7 @@ save_elo_plot <- function(plot, season_year) {
 # Print ratings information
 print_ratings_info <- function(ratings_history, final_ratings, season_year) {
   cat("## Elo Ratings After Each Game (", season_year, ")\n\n", sep = "")
-  
+
   ratings_table <- ratings_history |>
     select(
       date,
@@ -281,15 +281,20 @@ print_ratings_info <- function(ratings_history, final_ratings, season_year) {
       away_team_elo
     ) |>
     knitr::kable(format = "markdown", digits = 1)
-  
+
   cat(ratings_table, sep = "\n")
   cat("\n\n")
 
-  cat("## 🏀 Final Regular Season Elo Ratings (", season_year, ")\n\n", sep = "")
-  
+  cat(
+    "## 🏀 Final Regular Season Elo Ratings (",
+    season_year,
+    ")\n\n",
+    sep = ""
+  )
+
   final_table <- final_ratings |>
     knitr::kable(format = "markdown", digits = 1)
-  
+
   cat(final_table, sep = "\n")
   cat("\n\n")
 }

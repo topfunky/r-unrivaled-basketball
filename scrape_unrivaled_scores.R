@@ -10,6 +10,38 @@ library(rvest)
 library(lubridate)
 library(glue)
 
+# Function to extract game IDs from schedule HTML file
+extract_game_ids <- function(schedule_file, season_year = 2026) {
+  # Check that file exists
+  if (!file.exists(schedule_file)) {
+    stop(glue("Schedule file {schedule_file} not found"))
+  }
+
+  # Read the HTML file
+  html <- read_html(schedule_file)
+
+  # Find all game links
+  game_links <- html |>
+    html_elements("a[href*='/game/']")
+
+  # Extract game IDs from href attributes
+  game_ids <- map_chr(
+    game_links,
+    ~ {
+      href <- html_attr(.x, "href")
+      if (is.na(href) || is.null(href)) return(NA_character_)
+      # Extract ID from /game/{id} pattern
+      id <- str_extract(href, "(?<=/game/)[a-z0-9]+")
+      if (is.na(id)) return(NA_character_)
+      id
+    }
+  )
+
+  # Remove NA values and return unique IDs
+  game_ids <- game_ids[!is.na(game_ids)]
+  unique(game_ids)
+}
+
 # Function to scrape all games
 scrape_unrivaled_games <- function(season_year = 2025) {
   # Season-specific parameters
@@ -557,33 +589,39 @@ scrape_unrivaled_games <- function(season_year = 2025) {
   return(all_games)
 }
 
-# Scrape the games for all available seasons
-seasons <- c(2025, 2026) # Add 2026 once fixtures are ready
-all_season_games <- map_dfr(seasons, scrape_unrivaled_games)
+# Only run execution code if script is run directly (not sourced)
+# Check command line arguments to see if script is being run via Rscript
+cmd_args <- commandArgs(trailingOnly = FALSE)
+is_script_run <- any(grepl("scrape_unrivaled_scores\\.R", cmd_args))
+if (is_script_run) {
+  # Scrape the games for all available seasons
+  seasons <- c(2025, 2026) # Add 2026 once fixtures are ready
+  all_season_games <- map_dfr(seasons, scrape_unrivaled_games)
 
-# Save season-specific files to fixtures/{year}/unrivaled_scores.csv
-for (season_year in seasons) {
-  season_games <- all_season_games |>
-    filter(season == season_year)
+  # Save season-specific files to fixtures/{year}/unrivaled_scores.csv
+  for (season_year in seasons) {
+    season_games <- all_season_games |>
+      filter(season == season_year)
 
-  # Create directory if it doesn't exist
-  season_dir <- paste0("fixtures/", season_year)
-  if (!dir.exists(season_dir)) {
-    dir.create(season_dir, recursive = TRUE)
+    # Create directory if it doesn't exist
+    season_dir <- paste0("fixtures/", season_year)
+    if (!dir.exists(season_dir)) {
+      dir.create(season_dir, recursive = TRUE)
+    }
+
+    # Write season-specific file
+    write_csv(season_games, paste0(season_dir, "/unrivaled_scores.csv"))
+    print(paste0(
+      "✅ Saved ",
+      nrow(season_games),
+      " games for season ",
+      season_year,
+      " to ",
+      season_dir,
+      "/unrivaled_scores.csv"
+    ))
   }
 
-  # Write season-specific file
-  write_csv(season_games, paste0(season_dir, "/unrivaled_scores.csv"))
-  print(paste0(
-    "✅ Saved ",
-    nrow(season_games),
-    " games for season ",
-    season_year,
-    " to ",
-    season_dir,
-    "/unrivaled_scores.csv"
-  ))
+  # Also save combined file for backward compatibility
+  write_csv(all_season_games, "fixtures/unrivaled_scores.csv")
 }
-
-# Also save combined file for backward compatibility
-write_csv(all_season_games, "fixtures/unrivaled_scores.csv")
