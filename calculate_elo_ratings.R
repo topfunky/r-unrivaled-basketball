@@ -16,49 +16,39 @@ library(elo) # For Elo calculations
 library(ggplot2)
 library(gghighcontrast)
 library(ggrepel) # For non-overlapping labels
+library(ggbump) # For smooth bump charts
 library(feather) # For saving data in feather format
+library(knitr) # For markdown table formatting
 
 # Import team colors
 source("team_colors.R")
 
-# Read the CSV data
-all_games <- read_csv("fixtures/unrivaled_scores.csv")
-
-# Process each season separately
-seasons <- c(2025, 2026)
-
-for (season_year in seasons) {
-  print(paste0("Processing season ", season_year, "..."))
-
-  # Filter games for this season
-  games <- all_games |>
-    filter(season == season_year) |>
-    # Calculate results (1 for home win, 0 for away win, 0.5 for tie)
+# Calculate game results (1 for home win, 0 for away win, 0.5 for tie)
+calculate_game_results <- function(games) {
+  games |>
     mutate(
       result = case_when(
-        home_team_score > away_team_score ~ 1, # Home win
-        home_team_score < away_team_score ~ 0, # Away win
-        TRUE ~ 0.5 # Tie
+        home_team_score > away_team_score ~ 1,
+        home_team_score < away_team_score ~ 0,
+        TRUE ~ 0.5
       )
     ) |>
     arrange(date)
+}
 
-  # Skip if no games for this season
-  if (nrow(games) == 0) {
-    print(paste0("No games found for season ", season_year, ". Skipping..."))
-    next
-  }
-
-  # Initialize Elo ratings
-  elo_ratings <- elo.run(
+# Calculate Elo ratings using elo package
+calculate_elo_ratings <- function(games) {
+  elo.run(
     formula = result ~ home_team + away_team,
     data = games,
-    k = 32, # Standard K-factor
-    initial.ratings = 1500 # Standard starting rating
+    k = 32,
+    initial.ratings = 1500
   )
+}
 
-  # Get ratings after each game
-  ratings_history <- as.data.frame(elo_ratings) |>
+# Get ratings history with previous ratings
+get_ratings_history <- function(elo_ratings, games, season_year) {
+  as.data.frame(elo_ratings) |>
     mutate(
       date = games$date,
       game_id = games$game_id,
@@ -71,7 +61,6 @@ for (season_year in seasons) {
       home_team_elo = elo.A,
       away_team_elo = elo.B
     ) |>
-    # Add previous Elo ratings for each team
     group_by(home_team) |>
     mutate(
       home_team_elo_prev = lag(home_team_elo, default = 1500)
@@ -82,69 +71,32 @@ for (season_year in seasons) {
       away_team_elo_prev = lag(away_team_elo, default = 1500)
     ) |>
     ungroup()
+}
 
-  # Print ratings after each game
-  print(paste0("Elo Ratings After Each Game (", season_year, "):"))
-  ratings_history |>
-    select(
-      date,
-      game_id,
-      home_team,
-      away_team,
-      result,
-      home_team_elo_prev,
-      away_team_elo_prev,
-      home_team_elo,
-      away_team_elo
-    ) |>
-    print()
-
-  # Print final Elo ratings
-  # Combine home and away ratings for each team
-  final_ratings <- bind_rows(
-    # Home team ratings
+# Get final Elo ratings for each team
+get_final_ratings <- function(ratings_history) {
+  bind_rows(
     ratings_history |>
       group_by(team = home_team) |>
       arrange(desc(date)) |>
       slice(1) |>
       select(date, team, elo_rating = home_team_elo),
-    # Away team ratings
     ratings_history |>
       group_by(team = away_team) |>
       arrange(desc(date)) |>
       slice(1) |>
       select(date, team, elo_rating = away_team_elo)
   ) |>
-    # Get the most recent rating for each team
     group_by(team) |>
     arrange(desc(date)) |>
     slice(1) |>
-    # Select only team and rating
     select(team, elo_rating) |>
     arrange(desc(elo_rating))
+}
 
-  print(paste0("🏀 Final Regular Season Elo Ratings (", season_year, "):"))
-  print(final_ratings)
-
-  # Create output directory if it doesn't exist
-  output_dir <- paste0("data/", season_year)
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
-
-  # Save final regular season ratings
-  write_feather(
-    final_ratings,
-    paste0(output_dir, "/unrivaled_final_elo_ratings.feather")
-  )
-  write_csv(
-    final_ratings,
-    paste0(output_dir, "/unrivaled_final_elo_ratings.csv")
-  )
-
-  # Create a long format dataset for plotting
+# Prepare plot data in long format
+prepare_plot_data <- function(ratings_history) {
   plot_data <- bind_rows(
-    # Home team ratings
     ratings_history |>
       select(
         date,
@@ -153,7 +105,6 @@ for (season_year in seasons) {
         elo_rating = home_team_elo,
         result
       ),
-    # Away team ratings
     ratings_history |>
       select(
         date,
@@ -166,11 +117,10 @@ for (season_year in seasons) {
     arrange(date) |>
     group_by(team) |>
     mutate(
-      games_played = cumsum(!is.na(result)) # Count cumulative games played
+      games_played = cumsum(!is.na(result))
     ) |>
     ungroup()
 
-  # Calculate final Elo ratings to determine drawing order
   team_order <- plot_data |>
     group_by(team) |>
     slice_max(games_played, n = 1) |>
@@ -178,60 +128,67 @@ for (season_year in seasons) {
     arrange(elo_rating) |>
     pull(team)
 
-  # Sort teams by final Elo rating (ascending)
-  # so higher-rated teams are drawn on top
-  plot_data <- plot_data |>
+  plot_data |>
     mutate(
       team = factor(team, levels = team_order)
     )
+}
 
-  # Define plot parameters
+# Create Elo ratings plot
+create_elo_plot <- function(plot_data, season_year) {
   linewidth <- 4
-  dot_size <- 6
   label_size <- 3
-
-  # Determine max games played for playoff line positioning
   max_games <- max(plot_data$games_played, na.rm = TRUE)
-  # Adjust for different season lengths
-  playoff_line <- if (season_year == 2025) 14 else max_games
+  elo_min <- min(plot_data$elo_rating, na.rm = TRUE)
+  elo_max <- max(plot_data$elo_rating, na.rm = TRUE)
+  plot_right_edge <- max_games + 1
 
-  # Create the Elo ratings chart
+  label_data <- plot_data |>
+    group_by(team) |>
+    slice_max(games_played, n = 1) |>
+    ungroup()
+
   p <- plot_data |>
     ggplot(aes(x = games_played, y = elo_rating, color = team)) +
-    geom_line(linewidth = linewidth, show.legend = FALSE) +
-    # Use team colors from imported palette
+    geom_bump(
+      linewidth = linewidth,
+      show.legend = FALSE
+    ) +
     scale_color_manual(values = TEAM_COLORS) +
-    # Add team labels at the end of each line using ggrepel
-    geom_text_repel(
-      data = plot_data |>
-        group_by(team) |>
-        slice_max(games_played, n = 1),
+    annotate(
+      "rect",
+      xmin = max_games,
+      xmax = plot_right_edge,
+      ymin = elo_min,
+      ymax = elo_max,
+      fill = "black",
+      color = NA
+    ) +
+    geom_text(
+      data = label_data,
       aes(
         label = team,
-        x = games_played,
+        x = max_games,
         y = elo_rating
       ),
-      direction = "y",
       hjust = 0,
-      nudge_x = 0.5,
-      size = 3,
+      nudge_x = 0.2,
+      size = label_size,
       family = "InputMono",
       show.legend = FALSE,
-      fontface = "bold",
-      segment.color = NA
+      color = "white",
+      fontface = "bold"
     ) +
-    # Use gghighcontrast theme with white text on black background
     theme_high_contrast(
       foreground_color = "white",
       background_color = "black",
       base_family = "InputMono"
     ) +
-    # Style grid lines
     theme(
       panel.grid.major = element_line(color = "white", linewidth = 0.5),
       panel.grid.minor = element_line(color = "white", linewidth = 0.25)
     ) +
-    # Add labels
+    coord_cartesian(clip = "off", xlim = c(1, max_games * 1.15)) +
     labs(
       title = paste0("Unrivaled Basketball League Elo Ratings ", season_year),
       subtitle = "Team ratings after each game",
@@ -240,7 +197,6 @@ for (season_year in seasons) {
       caption = "Game data from unrivaled.basketball"
     )
 
-  # Add playoff line and label for 2025 season if applicable
   if (season_year == 2025 && max_games >= 14) {
     p <- p +
       geom_vline(
@@ -262,25 +218,111 @@ for (season_year in seasons) {
       )
   }
 
-  # Create plots directory if it doesn't exist
-  plots_dir <- file.path("plots", season_year)
-  dir.create(plots_dir, showWarnings = FALSE, recursive = TRUE)
+  p
+}
 
-  # Save the plot
-  ggsave(
-    file.path(plots_dir, "unrivaled_elo_ratings.png"),
-    p,
-    width = 6,
-    height = 4,
-    dpi = 300
+# Save ratings data files
+save_ratings_data <- function(final_ratings, ratings_history, season_year) {
+  output_dir <- paste0("data/", season_year)
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+  }
+
+  write_feather(
+    final_ratings,
+    paste0(output_dir, "/unrivaled_final_elo_ratings.feather")
+  )
+  write_csv(
+    final_ratings,
+    paste0(output_dir, "/unrivaled_final_elo_ratings.csv")
   )
 
-  # Save the Elo rankings
   write_feather(
     ratings_history,
     paste0(output_dir, "/unrivaled_elo_rankings.feather")
   )
-  write_csv(ratings_history, paste0(output_dir, "/unrivaled_elo_rankings.csv"))
+  write_csv(
+    ratings_history,
+    paste0(output_dir, "/unrivaled_elo_rankings.csv")
+  )
+}
+
+# Save plot to file
+save_elo_plot <- function(plot, season_year) {
+  plots_dir <- file.path("plots", season_year)
+  dir.create(plots_dir, showWarnings = FALSE, recursive = TRUE)
+
+  ggsave(
+    file.path(plots_dir, "unrivaled_elo_ratings.png"),
+    plot,
+    width = 6,
+    height = 4,
+    dpi = 300
+  )
+}
+
+# Print ratings information
+print_ratings_info <- function(ratings_history, final_ratings, season_year) {
+  cat("## Elo Ratings After Each Game (", season_year, ")\n\n", sep = "")
+  
+  ratings_table <- ratings_history |>
+    select(
+      date,
+      game_id,
+      home_team,
+      away_team,
+      result,
+      home_team_elo_prev,
+      away_team_elo_prev,
+      home_team_elo,
+      away_team_elo
+    ) |>
+    knitr::kable(format = "markdown", digits = 1)
+  
+  cat(ratings_table, sep = "\n")
+  cat("\n\n")
+
+  cat("## 🏀 Final Regular Season Elo Ratings (", season_year, ")\n\n", sep = "")
+  
+  final_table <- final_ratings |>
+    knitr::kable(format = "markdown", digits = 1)
+  
+  cat(final_table, sep = "\n")
+  cat("\n\n")
+}
+
+# Process a single season
+process_season <- function(all_games, season_year) {
+  print(paste0("Processing season ", season_year, "..."))
+
+  games <- all_games |>
+    filter(season == season_year) |>
+    calculate_game_results()
+
+  if (nrow(games) == 0) {
+    print(paste0("No games found for season ", season_year, ". Skipping..."))
+    return(invisible(NULL))
+  }
+
+  elo_ratings <- calculate_elo_ratings(games)
+  ratings_history <- get_ratings_history(elo_ratings, games, season_year)
+  final_ratings <- get_final_ratings(ratings_history)
+
+  print_ratings_info(ratings_history, final_ratings, season_year)
+
+  save_ratings_data(final_ratings, ratings_history, season_year)
+
+  plot_data <- prepare_plot_data(ratings_history)
+  plot <- create_elo_plot(plot_data, season_year)
+  save_elo_plot(plot, season_year)
 
   print(paste0("✅ Completed processing season ", season_year))
+}
+
+# Main execution
+all_games <- read_csv("fixtures/unrivaled_scores.csv")
+seasons <- c(2025, 2026)
+
+for (season_year in seasons) {
+  process_season(all_games, season_year)
 }
