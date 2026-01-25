@@ -15,9 +15,9 @@ source("team_colors.R")
 # Set seed for reproducibility
 set.seed(5150)
 
-# Create fixtures directory if it doesn't exist
-message("Creating fixtures directory if it doesn't exist...")
-dir.create("fixtures", showWarnings = FALSE, recursive = TRUE)
+# Create data directory if it doesn't exist
+message("Creating data directory if it doesn't exist...")
+dir.create("data", showWarnings = FALSE, recursive = TRUE)
 
 # Helper function for percentage formatting
 format_pct <- function(value, digits = 1) {
@@ -118,7 +118,7 @@ if (current_month < 5) {
 wnba_shooting_stats <- get_wnba_shooting_stats(season)
 
 # Save to feather file
-output_file <- glue("fixtures/wnba_shooting_stats_{season}.feather")
+output_file <- glue("data/wnba_shooting_stats_{season}.feather")
 message(glue("Saving shooting stats to {output_file}..."))
 write_feather(wnba_shooting_stats, output_file)
 

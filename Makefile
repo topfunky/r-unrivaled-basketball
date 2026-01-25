@@ -5,7 +5,7 @@
 .DEFAULT_GOAL := list
 
 # Run all task files in sequence (respecting dependencies)
-all-tasks: scrape rankings elo standings download pbp wp fetch-wnba-stats shooting
+all-tasks: scrape rankings elo standings download pbp fetch-wnba-stats shooting
 
 # Individual task targets
 analyze-rankings: analyze_sample_rankings.R

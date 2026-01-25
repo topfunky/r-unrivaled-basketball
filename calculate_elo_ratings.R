@@ -328,7 +328,7 @@ process_season <- function(all_games, season_year) {
 }
 
 # Main execution
-all_games <- read_csv("fixtures/unrivaled_scores.csv")
+all_games <- read_csv("data/unrivaled_scores.csv")
 seasons <- c(2025, 2026)
 
 for (season_year in seasons) {

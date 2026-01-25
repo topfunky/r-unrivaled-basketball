@@ -2,7 +2,7 @@
 # processes game results, and saves to CSV. Includes team name validation and
 # skips games during mid-season 1v1 tournament (Feb 10-15, 2025). Adds canceled
 # game from Feb 8, 2025 (Laces at Vinyl) as it counts in standings.
-# Outputs to fixtures/unrivaled_scores.csv.
+# Outputs to data/unrivaled_scores.csv.
 
 # Load required libraries
 library(tidyverse)
@@ -595,16 +595,16 @@ cmd_args <- commandArgs(trailingOnly = FALSE)
 is_script_run <- any(grepl("scrape_unrivaled_scores\\.R", cmd_args))
 if (is_script_run) {
   # Scrape the games for all available seasons
-  seasons <- c(2025, 2026) # Add 2026 once fixtures are ready
+  seasons <- c(2025, 2026)
   all_season_games <- map_dfr(seasons, scrape_unrivaled_games)
 
-  # Save season-specific files to fixtures/{year}/unrivaled_scores.csv
+  # Save season-specific files to data/{year}/unrivaled_scores.csv
   for (season_year in seasons) {
     season_games <- all_season_games |>
       filter(season == season_year)
 
     # Create directory if it doesn't exist
-    season_dir <- paste0("fixtures/", season_year)
+    season_dir <- paste0("data/", season_year)
     if (!dir.exists(season_dir)) {
       dir.create(season_dir, recursive = TRUE)
     }
@@ -623,5 +623,5 @@ if (is_script_run) {
   }
 
   # Also save combined file for backward compatibility
-  write_csv(all_season_games, "fixtures/unrivaled_scores.csv")
+  write_csv(all_season_games, "data/unrivaled_scores.csv")
 }

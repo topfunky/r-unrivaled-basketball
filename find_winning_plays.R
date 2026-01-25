@@ -19,7 +19,7 @@ pbp_data <- read_feather(file.path(data_dir, "unrivaled_play_by_play.feather"))
 
 # Load schedule data to get team names
 schedule_data <- read_csv(
-  "fixtures/unrivaled_scores.csv",
+  "data/unrivaled_scores.csv",
   show_col_types = FALSE
 ) |>
   filter(season == season_year)

@@ -382,6 +382,27 @@ render_improvement_scatter <- function(
   file_path,
   add_trendline = FALSE
 ) {
+  # Helper function to safely get max/min values
+  safe_max <- function(x) {
+    x_clean <- x[!is.na(x) & is.finite(x)]
+    if (length(x_clean) == 0) return(0)
+    max(x_clean)
+  }
+  
+  safe_min <- function(x) {
+    x_clean <- x[!is.na(x) & is.finite(x)]
+    if (length(x_clean) == 0) return(0)
+    min(x_clean)
+  }
+  
+  # Get safe min/max values for quadrant labels
+  x_values <- shooting_improvement |> pull({{ x_var }})
+  y_values <- shooting_improvement |> pull({{ y_var }})
+  x_max <- safe_max(x_values)
+  x_min <- safe_min(x_values)
+  y_max <- safe_max(y_values)
+  y_min <- safe_min(y_values)
+  
   plot <- ggplot(shooting_improvement, aes(x = {{ x_var }}, y = {{ y_var }})) +
     # Add reference lines at 0
     geom_hline(
@@ -409,55 +430,54 @@ render_improvement_scatter <- function(
       box.padding = 0.5,
       color = scatter_label_color
     ) +
-    # Add quadrant labels
-    annotate(
-      "text",
-      x = max(shooting_improvement |> pull({{ x_var }})) *
-        scatter_quadrant_position_factor,
-      y = max(shooting_improvement |> pull({{ y_var }})) *
-        scatter_quadrant_position_factor,
-      label = "Improved in both",
-      color = scatter_quadrant_label_color,
-      family = "InputMono",
-      size = scatter_quadrant_label_size,
-      hjust = 1 # Right align for NE quadrant
-    ) +
-    annotate(
-      "text",
-      x = min(shooting_improvement |> pull({{ x_var }})) *
-        scatter_quadrant_position_factor,
-      y = max(shooting_improvement |> pull({{ y_var }})) *
-        scatter_quadrant_position_factor,
-      label = "Better 3PT",
-      color = scatter_quadrant_label_color,
-      family = "InputMono",
-      size = scatter_quadrant_label_size,
-      hjust = 0 # Left align for NW quadrant
-    ) +
-    annotate(
-      "text",
-      x = max(shooting_improvement |> pull({{ x_var }})) *
-        scatter_quadrant_position_factor,
-      y = min(shooting_improvement |> pull({{ y_var }})) *
-        scatter_quadrant_position_factor,
-      label = "Better 2PT",
-      color = scatter_quadrant_label_color,
-      family = "InputMono",
-      size = scatter_quadrant_label_size,
-      hjust = 1 # Right align for SE quadrant
-    ) +
-    annotate(
-      "text",
-      x = min(shooting_improvement |> pull({{ x_var }})) *
-        scatter_quadrant_position_factor,
-      y = min(shooting_improvement |> pull({{ y_var }})) *
-        scatter_quadrant_position_factor,
-      label = "Worse in both",
-      color = scatter_quadrant_label_color,
-      family = "InputMono",
-      size = scatter_quadrant_label_size,
-      hjust = 0 # Left align for SW quadrant
-    ) +
+    # Add quadrant labels (only if we have valid data)
+    {if (length(x_values[!is.na(x_values) & is.finite(x_values)]) > 0 &&
+         length(y_values[!is.na(y_values) & is.finite(y_values)]) > 0) {
+      list(
+        annotate(
+          "text",
+          x = x_max * scatter_quadrant_position_factor,
+          y = y_max * scatter_quadrant_position_factor,
+          label = "Improved in both",
+          color = scatter_quadrant_label_color,
+          family = "InputMono",
+          size = scatter_quadrant_label_size,
+          hjust = 1 # Right align for NE quadrant
+        ),
+        annotate(
+          "text",
+          x = x_min * scatter_quadrant_position_factor,
+          y = y_max * scatter_quadrant_position_factor,
+          label = "Better 3PT",
+          color = scatter_quadrant_label_color,
+          family = "InputMono",
+          size = scatter_quadrant_label_size,
+          hjust = 0 # Left align for NW quadrant
+        ),
+        annotate(
+          "text",
+          x = x_max * scatter_quadrant_position_factor,
+          y = y_min * scatter_quadrant_position_factor,
+          label = "Better 2PT",
+          color = scatter_quadrant_label_color,
+          family = "InputMono",
+          size = scatter_quadrant_label_size,
+          hjust = 1 # Right align for SE quadrant
+        ),
+        annotate(
+          "text",
+          x = x_min * scatter_quadrant_position_factor,
+          y = y_min * scatter_quadrant_position_factor,
+          label = "Worse in both",
+          color = scatter_quadrant_label_color,
+          family = "InputMono",
+          size = scatter_quadrant_label_size,
+          hjust = 0 # Left align for SW quadrant
+        )
+      )
+    } else {
+      NULL
+    }} +
     # Customize the plot
     scale_size_continuous(
       name = "Field Goal Attempts",

@@ -31,7 +31,7 @@ dir.create(plots_dir, showWarnings = FALSE, recursive = TRUE)
 data_dir <- file.path("data", season_year)
 pbp_data <- read_feather(file.path(data_dir, "unrivaled_play_by_play.feather"))
 box_scores <- read_feather(file.path(data_dir, "unrivaled_box_scores.feather"))
-wnba_stats <- read_feather("fixtures/wnba_shooting_stats_2024.feather")
+wnba_stats <- read_feather("data/wnba_shooting_stats_2025.feather")
 
 # Join WNBA stats with box scores
 player_comparison <- box_scores |>

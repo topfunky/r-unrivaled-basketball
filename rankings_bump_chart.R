@@ -18,7 +18,7 @@ source("team_colors.R")
 seasons <- c(2025, 2026)
 
 # Read the CSV data
-all_games <- read_csv("fixtures/unrivaled_scores.csv")
+all_games <- read_csv("data/unrivaled_scores.csv")
 
 for (season_year in seasons) {
   print(paste0("Processing season ", season_year, "..."))
@@ -224,7 +224,7 @@ for (season_year in seasons) {
   line_width <- 4
   dot_size <- 8
   label_size <- 3
-  
+
   # Get maximum games played for label positioning
   max_games <- max(game_rankings$games_played, na.rm = TRUE)
 

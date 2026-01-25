@@ -154,3 +154,31 @@ Fixed `download_game_data.R` to prevent caching of future games that haven't occ
 - Cached files containing "Game Not Found" are detected and re-downloaded
 - Games that were cached before they occurred are automatically re-downloaded when they become available
 - Future games are not cached, preventing the issue from recurring
+
+### Refactor: Enforce Fixtures Directory as Read-Only
+
+Implemented plan to enforce fixtures directory as read-only for all non-test code. Moved all data writes from `fixtures/` to `data/` directory and updated dependent scripts to read from new locations.
+
+**Test-Driven Development Approach:**
+
+1. **Created test (`tests/testthat/test_no_fixtures_writes.R`):**
+   - Scans all `.R` files outside `tests/` directory
+   - Uses regex patterns to detect file write operations targeting `fixtures/` directory
+   - Detects: `write_csv()`, `write_feather()`, `dir.create()`, and other write operations
+   - Test initially failed (RED phase) showing 2 violations
+
+2. **Fixed violations (GREEN phase):**
+   - **`scrape_unrivaled_scores.R`**: Changed writes from `fixtures/unrivaled_scores.csv` → `data/unrivaled_scores.csv` and `fixtures/{year}/unrivaled_scores.csv` → `data/{year}/unrivaled_scores.csv`
+   - **`fetch_wnba_stats.R`**: Changed write from `fixtures/wnba_shooting_stats_{season}.feather` → `data/wnba_shooting_stats_{season}.feather` and updated `dir.create()` call
+
+3. **Updated dependent scripts to read from new locations:**
+   - **`calculate_elo_ratings.R`**: Reads from `data/unrivaled_scores.csv`
+   - **`rankings_bump_chart.R`**: Reads from `data/unrivaled_scores.csv`
+   - **`find_winning_plays.R`**: Reads from `data/unrivaled_scores.csv`
+   - **`analyze_shooting_metrics.R`**: Reads from `data/wnba_shooting_stats_2024.feather`
+
+**Result:**
+- All tests pass (8 tests, 0 failures)
+- Fixtures directory is now read-only for all non-test code
+- Test suite will catch any future violations automatically
+- Production code writes to `data/` directory, fixtures remain for test data only
