@@ -117,3 +117,40 @@ Fixed `scrape_unrivaled_scores.R` to generate season-specific score files at `fi
 - `fixtures/2026/unrivaled_scores.csv` now generated with completed games
 - File includes proper game IDs, dates, teams, scores, and season_type
 - ELO calculations and other analyses can now use season-specific score files
+
+## 2026-01-25
+
+### Fix: Game Caching for Future Games
+
+Fixed `download_game_data.R` to prevent caching of future games that haven't occurred yet. Previously, the script would cache HTML files for all games found in the schedule, including games marked as "Final" and those scheduled but not yet played. When future games were cached, they contained "Game Not Found" content (~104-105K files), and subsequent runs would see the files exist and skip re-downloading, even if the game had since occurred.
+
+**Changes Made:**
+
+1. **Added `extract_final_games()` function:**
+   - Parses the schedule HTML to find all game links using `a[href*='/game/']`
+   - Checks for "Final" status using selector `span.font-10.uppercase.clamp1.weight-700`
+   - Verifies text content equals "Final" (case-insensitive, trimmed)
+   - Extracts game ID from href using regex pattern `(?<=/game/)[a-z0-9]+`
+   - Returns only unique game IDs for games marked as "Final"
+
+2. **Added `is_game_file_empty()` function:**
+   - Checks if a cached HTML file exists
+   - Parses the HTML and checks the title element for "Game Not Found"
+   - Returns `TRUE` if the file is missing, unparseable, or contains "Game Not Found"
+   - Handles errors gracefully with tryCatch
+
+3. **Modified `download_if_missing()` function:**
+   - Now checks both file existence and whether the file is empty/not-found
+   - Re-downloads if the file is missing or contains "Game Not Found" content
+   - Provides clear messages indicating whether it's a new download or a re-download
+
+4. **Updated main download loop:**
+   - Only processes games marked as "Final" in the schedule
+   - Skips future games that haven't occurred yet
+   - Provides informative messages about how many final games were found
+
+**Result:**
+- Only games marked as "Final" in the schedule are downloaded
+- Cached files containing "Game Not Found" are detected and re-downloaded
+- Games that were cached before they occurred are automatically re-downloaded when they become available
+- Future games are not cached, preventing the issue from recurring

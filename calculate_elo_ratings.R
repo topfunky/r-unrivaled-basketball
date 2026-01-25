@@ -38,11 +38,17 @@ calculate_game_results <- function(games) {
 
 # Calculate Elo ratings using elo package
 calculate_elo_ratings <- function(games) {
+  # Get all teams that should be included (from team colors)
+  all_teams <- names(TEAM_COLORS)
+  
+  # Create initial ratings for all teams
+  initial_ratings <- setNames(rep(1500, length(all_teams)), all_teams)
+  
   elo.run(
     formula = result ~ home_team + away_team,
     data = games,
     k = 32,
-    initial.ratings = 1500
+    initial.ratings = initial_ratings
   )
 }
 
@@ -74,24 +80,21 @@ get_ratings_history <- function(elo_ratings, games, season_year) {
 }
 
 # Get final Elo ratings for each team
-get_final_ratings <- function(ratings_history) {
-  bind_rows(
-    ratings_history |>
-      group_by(team = home_team) |>
-      arrange(desc(date)) |>
-      slice(1) |>
-      select(date, team, elo_rating = home_team_elo),
-    ratings_history |>
-      group_by(team = away_team) |>
-      arrange(desc(date)) |>
-      slice(1) |>
-      select(date, team, elo_rating = away_team_elo)
+get_final_ratings <- function(ratings_history, elo_ratings) {
+  # Get all teams that should be included
+  all_teams <- names(TEAM_COLORS)
+  
+  # Get final ratings from elo.run object (includes all teams that were initialized)
+  final_elos <- final.elos(elo_ratings)
+  
+  # Create tibble with all teams
+  final_ratings <- tibble(
+    team = all_teams,
+    elo_rating = ifelse(team %in% names(final_elos), final_elos[team], 1500)
   ) |>
-    group_by(team) |>
-    arrange(desc(date)) |>
-    slice(1) |>
-    select(team, elo_rating) |>
     arrange(desc(elo_rating))
+  
+  return(final_ratings)
 }
 
 # Prepare plot data in long format
@@ -306,7 +309,7 @@ process_season <- function(all_games, season_year) {
 
   elo_ratings <- calculate_elo_ratings(games)
   ratings_history <- get_ratings_history(elo_ratings, games, season_year)
-  final_ratings <- get_final_ratings(ratings_history)
+  final_ratings <- get_final_ratings(ratings_history, elo_ratings)
 
   print_ratings_info(ratings_history, final_ratings, season_year)
 
