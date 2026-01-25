@@ -1,15 +1,21 @@
-# Purpose: Calculates and visualizes ELO ratings for each team throughout the season,
-# using the scraped game data. Implements the ELO rating system using standard ELO defaults of a K-factor of 32
-# and initial rating of 1500. Creates a line chart showing rating progression with
-# custom Unrivaled colors and high contrast theme. Outputs include a PNG chart and
-# a feather file with the ELO ratings data. Processes 2025 and 2026 seasons separately.
+# Purpose:
+# Calculates and visualizes Elo ratings for each team throughout the season,
+# using the scraped game data. Implements the Elo rating system using
+# standard Elo defaults of a K-factor of 32
+# and initial rating of 1500.
+# Creates a line chart showing rating progression with
+# custom Unrivaled colors and high contrast theme.
+# Outputs include a PNG chart and
+# a feather file with the Elo ratings data.
+# Processes 2025 and 2026 seasons separately.
 
 # Load required libraries
 library(tidyverse)
 library(lubridate)
-library(elo) # For ELO calculations
+library(elo) # For Elo calculations
 library(ggplot2)
 library(gghighcontrast)
+library(ggrepel) # For non-overlapping labels
 library(feather) # For saving data in feather format
 
 # Import team colors
@@ -43,7 +49,7 @@ for (season_year in seasons) {
     next
   }
 
-  # Initialize ELO ratings
+  # Initialize Elo ratings
   elo_ratings <- elo.run(
     formula = result ~ home_team + away_team,
     data = games,
@@ -65,7 +71,7 @@ for (season_year in seasons) {
       home_team_elo = elo.A,
       away_team_elo = elo.B
     ) |>
-    # Add previous ELO ratings for each team
+    # Add previous Elo ratings for each team
     group_by(home_team) |>
     mutate(
       home_team_elo_prev = lag(home_team_elo, default = 1500)
@@ -78,7 +84,7 @@ for (season_year in seasons) {
     ungroup()
 
   # Print ratings after each game
-  print(paste0("ELO Ratings After Each Game (", season_year, "):"))
+  print(paste0("Elo Ratings After Each Game (", season_year, "):"))
   ratings_history |>
     select(
       date,
@@ -93,7 +99,7 @@ for (season_year in seasons) {
     ) |>
     print()
 
-  # Print final ELO ratings
+  # Print final Elo ratings
   # Combine home and away ratings for each team
   final_ratings <- bind_rows(
     # Home team ratings
@@ -117,7 +123,7 @@ for (season_year in seasons) {
     select(team, elo_rating) |>
     arrange(desc(elo_rating))
 
-  print(paste0("🏀 Final Regular Season ELO Ratings (", season_year, "):"))
+  print(paste0("🏀 Final Regular Season Elo Ratings (", season_year, "):"))
   print(final_ratings)
 
   # Create output directory if it doesn't exist
@@ -162,28 +168,22 @@ for (season_year in seasons) {
     mutate(
       games_played = cumsum(!is.na(result)) # Count cumulative games played
     ) |>
+    ungroup()
+
+  # Calculate final Elo ratings to determine drawing order
+  team_order <- plot_data |>
+    group_by(team) |>
+    slice_max(games_played, n = 1) |>
     ungroup() |>
-    # Add offset columns for label positioning
+    arrange(elo_rating) |>
+    pull(team)
+
+  # Sort teams by final Elo rating (ascending)
+  # so higher-rated teams are drawn on top
+  plot_data <- plot_data |>
     mutate(
-      x_offset = case_when(
-        team == "Rose" ~ 0,
-        team == "Lunar Owls" ~ -5.5,
-        team == "Mist" ~ -2,
-        team == "Laces" ~ 1,
-        team == "Phantom" ~ -3.25,
-        team == "Vinyl" ~ -0.05
-      ),
-      y_offset = case_when(
-        team == "Rose" ~ 15,
-        team == "Lunar Owls" ~ 10,
-        team == "Mist" ~ 45,
-        team == "Laces" ~ 5,
-        team == "Phantom" ~ -15,
-        team == "Vinyl" ~ -15
-      )
-    ) |>
-    # Reorder data so Rose appears last (on top)
-    arrange(team != "Rose")
+      team = factor(team, levels = team_order)
+    )
 
   # Define plot parameters
   linewidth <- 4
@@ -195,27 +195,30 @@ for (season_year in seasons) {
   # Adjust for different season lengths
   playoff_line <- if (season_year == 2025) 14 else max_games
 
-  # Create the ELO ratings chart
+  # Create the Elo ratings chart
   p <- plot_data |>
     ggplot(aes(x = games_played, y = elo_rating, color = team)) +
     geom_line(linewidth = linewidth, show.legend = FALSE) +
     # Use team colors from imported palette
     scale_color_manual(values = TEAM_COLORS) +
-    # Add team labels at the end of each line
-    geom_text(
+    # Add team labels at the end of each line using ggrepel
+    geom_text_repel(
       data = plot_data |>
         group_by(team) |>
         slice_max(games_played, n = 1),
       aes(
         label = team,
         x = games_played,
-        y = elo_rating + 10
+        y = elo_rating
       ),
-      hjust = 1,
+      direction = "y",
+      hjust = 0,
+      nudge_x = 0.5,
       size = 3,
       family = "InputMono",
       show.legend = FALSE,
-      fontface = "bold" # Use bold font weight
+      fontface = "bold",
+      segment.color = NA
     ) +
     # Use gghighcontrast theme with white text on black background
     theme_high_contrast(
@@ -230,10 +233,10 @@ for (season_year in seasons) {
     ) +
     # Add labels
     labs(
-      title = paste0("Unrivaled Basketball League ELO Ratings ", season_year),
+      title = paste0("Unrivaled Basketball League Elo Ratings ", season_year),
       subtitle = "Team ratings after each game",
       x = "Games Played",
-      y = "ELO Rating",
+      y = "Elo Rating",
       caption = "Game data from unrivaled.basketball"
     )
 
@@ -272,7 +275,7 @@ for (season_year in seasons) {
     dpi = 300
   )
 
-  # Save the ELO rankings
+  # Save the Elo rankings
   write_feather(
     ratings_history,
     paste0(output_dir, "/unrivaled_elo_rankings.feather")

@@ -228,8 +228,16 @@ for (season_year in seasons) {
   # Get maximum games played for label positioning
   max_games <- max(game_rankings$games_played, na.rm = TRUE)
 
+  # Sort teams by final ranking (best teams first) so they're drawn on top
+  final_ranks <- game_rankings |>
+    group_by(team) |>
+    slice_max(games_played, n = 1) |>
+    ungroup() |>
+    select(team, final_rank = rank)
+
   p <- game_rankings |>
-    arrange(team, games_played) |>
+    left_join(final_ranks, by = "team") |>
+    arrange(desc(final_rank), games_played, team) |>
     ggplot(aes(x = games_played, y = rank, color = team)) +
     # Add vertical line at end of regular season (only for 2025)
     {
