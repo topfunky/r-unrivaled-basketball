@@ -90,6 +90,7 @@ list:
 	@echo "  clean           - Remove all generated files (plots, data files)"
 	@echo "  install-deps    - Install required R packages"
 	@echo "  setup-hooks     - Set up git hooks for code formatting"
+	@echo "  test            - Run testthat tests"
 	@echo "  list            - Show this help message"
 
 # Format all R files using air
@@ -104,6 +105,12 @@ validate:
 	@Rscript -e "lintr::lint_dir('.')"
 	@echo "Validation complete!"
 
+# Run tests using testthat
+test:
+	@echo "Running tests..."
+	@Rscript tests/testthat.R
+	@echo "Tests complete!"
+
 # Run all task files in alphabetical order (use with caution)
 run-all-tasks: format
 	@echo "Running all tasks in alphabetical order (use with caution)..."
@@ -113,4 +120,4 @@ run-all-tasks: format
 	done
 	@echo "All tasks complete!"
 
-.PHONY: all rankings elo wp all-tasks analyze-rankings scrape standings download pbp shooting fetch-wnba-stats clean install-deps setup-hooks list format run-all-tasks validate
+.PHONY: all rankings elo wp all-tasks analyze-rankings scrape standings download pbp shooting fetch-wnba-stats clean install-deps setup-hooks list format run-all-tasks validate test

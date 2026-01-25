@@ -32,7 +32,8 @@ required_packages <- c(
   "glue", # For string interpolation
   "patchwork", # For arranging plots
   "ggforce",
-  "ggrepel"
+  "ggrepel",
+  "testthat" # For unit testing
 )
 
 # List of GitHub packages
