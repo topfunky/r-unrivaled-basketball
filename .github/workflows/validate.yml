@@ -1,7 +1,7 @@
 name: Validate R Code
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
   # push:
     # branches: [ main ]
   # pull_request:
@@ -9,33 +9,63 @@ on:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - name: Setup R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          use-public-rspm: true
-
-      - name: Cache R packages
-        uses: actions/cache@v5
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-${{ hashFiles('install_dependencies.R') }}-2
-          restore-keys: |
-            ${{ runner.os }}-
-
-      - name: Install system dependencies
-        if: runner.os == 'Linux'
+      - name: Setup r2u repository and R
         run: |
+          # Install prerequisites
           sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+          sudo apt-get install -y wget ca-certificates gnupg
 
-      - name: Install dependencies
+          # Add r2u GPG key
+          wget -q -O- https://eddelbuettel.github.io/r2u/assets/dirk_eddelbuettel_key.asc \
+            | sudo tee /etc/apt/trusted.gpg.d/cranapt_key.asc > /dev/null
+
+          # Add r2u repository (pre-compiled CRAN binaries)
+          echo "deb [arch=amd64] https://r2u.stat.illinois.edu/ubuntu noble main" \
+            | sudo tee /etc/apt/sources.list.d/cranapt.list
+
+          # Add CRAN GPG key
+          wget -q -O- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc \
+            | sudo tee /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc > /dev/null
+
+          # Add CRAN repository
+          echo "deb [arch=amd64] https://cloud.r-project.org/bin/linux/ubuntu noble-cran40/" \
+            | sudo tee /etc/apt/sources.list.d/cran_r.list
+
+          # Configure apt to prefer r2u packages
+          echo -e "Package: *\nPin: release o=CRAN-Apt Project\nPin: release l=CRAN-Apt Packages\nPin-Priority: 700" \
+            | sudo tee /etc/apt/preferences.d/99cranapt
+
+          # Update and install R
+          sudo apt-get update
+          sudo apt-get install -y r-base-core
+
+      - name: Setup bspm for binary package installs
         run: |
-          Rscript -e 'if (!requireNamespace("lintr", quietly = TRUE)) install.packages("lintr")'
-          make install-deps
+          # Install Python dependencies for bspm
+          sudo apt-get install -y python3-dbus python3-gi python3-apt
+
+          # Install bspm
+          sudo Rscript -e 'install.packages("bspm", repos="https://cloud.r-project.org")'
+
+          # Enable bspm system-wide
+          R_HOME=$(R RHOME)
+          echo 'suppressMessages(bspm::enable())' | sudo tee -a "${R_HOME}/etc/Rprofile.site"
+          echo 'options(bspm.version.check=FALSE)' | sudo tee -a "${R_HOME}/etc/Rprofile.site"
+
+      - name: Install R dependencies
+        run: |
+          # Install lintr via apt (fast binary install)
+          sudo apt-get install -y r-cran-lintr
+
+          # Install project dependencies
+          sudo make install-deps
 
       - name: Run validation
         run: make validate
