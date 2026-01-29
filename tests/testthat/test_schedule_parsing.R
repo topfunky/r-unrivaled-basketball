@@ -1,8 +1,9 @@
-# Purpose: Tests that schedule.html can be parsed and game IDs are extracted correctly
+# Purpose: Tests that schedule.html can be parsed
+# and game IDs are extracted correctly
 
-test_that("schedule.html contains game links with expected IDs", {
+test_that("2026 schedule.html contains game links with expected IDs", {
   # Find the fixtures directory - try multiple locations to handle both
- # direct test runs and covr package coverage runs
+  # direct test runs and covr package coverage runs
   possible_paths <- c(
     testthat::test_path("..", "..", "fixtures", "2026", "schedule.html"),
     file.path(getwd(), "fixtures", "2026", "schedule.html"),
@@ -17,12 +18,14 @@ test_that("schedule.html contains game links with expected IDs", {
     }
   }
 
-  skip_if(is.null(schedule_file), "Schedule file not found in any expected location")
-
   # Extract game IDs using function from package
   game_ids <- extract_game_ids(schedule_file, season_year = 2026)
 
-  expect_true(length(game_ids) > 0, info = "Should find at least one game ID")
+  expect_equal(
+    61,
+    length(game_ids),
+    label = paste("game_ids found:", paste(game_ids, collapse = ", "))
+  )
 
   expected_ids <- c(
     "24w1j54rlgk9",
