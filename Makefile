@@ -46,6 +46,7 @@ clean:
 	rm -f unrivaled_elo_ratings.png unrivaled_elo_rankings.feather
 	rm -f plots/*.png
 	rm -f *.feather
+	rm -f coverage-report.html
 	@echo "Cleaning temporary files..."
 	@find . -name "*.Rproj.user" -type d -exec rm -rf {} +
 	@find . -name ".Rproj.user" -type d -exec rm -rf {} +
@@ -91,6 +92,7 @@ list:
 	@echo "  install-deps    - Install required R packages"
 	@echo "  setup-hooks     - Set up git hooks for code formatting"
 	@echo "  test            - Run testthat tests"
+	@echo "  coverage        - Generate test coverage report"
 	@echo "  list            - Show this help message"
 
 # Format all R files using air
@@ -111,6 +113,12 @@ test:
 	@Rscript tests/testthat.R
 	@echo "Tests complete!"
 
+# Run test coverage report
+coverage:
+	@echo "Running test coverage report..."
+	@Rscript -e "covr::report(covr::package_coverage(type = 'tests'), file = 'coverage-report.html', browse = FALSE)"
+	@echo "Coverage report saved to coverage-report.html"
+
 # Run all task files in alphabetical order (use with caution)
 run-all-tasks: format
 	@echo "Running all tasks in alphabetical order (use with caution)..."
@@ -120,4 +128,4 @@ run-all-tasks: format
 	done
 	@echo "All tasks complete!"
 
-.PHONY: all rankings elo wp all-tasks analyze-rankings scrape standings download pbp shooting fetch-wnba-stats clean install-deps setup-hooks list format run-all-tasks validate test
+.PHONY: all rankings elo wp all-tasks analyze-rankings scrape standings download pbp shooting fetch-wnba-stats clean install-deps setup-hooks list format run-all-tasks validate test coverage

@@ -1,3 +1,4 @@
 *.feather
 *.png
 .Rproj.user
+coverage-report.html

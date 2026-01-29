@@ -16,7 +16,10 @@ required_packages <- c(
   "patchwork", # For arranging plots
   "ggforce",
   "ggrepel",
-  "testthat" # For unit testing
+  "testthat", # For unit testing
+  "covr", # For test coverage reporting
+  "DT",
+  "htmltools"
 )
 
 # List of GitHub packages
