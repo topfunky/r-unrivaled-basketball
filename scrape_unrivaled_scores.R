@@ -62,7 +62,7 @@ scrape_unrivaled_games <- function(season_year = 2025) {
       skip_start = as.Date("2025-02-10"),
       skip_end = as.Date("2025-02-15"),
       postseason_start = as.Date("2025-03-16"),
-      schedule_file = "fixtures/2025/schedule.html"
+      schedule_file = "data/2025/schedule.html"
     ),
     `2026` = list(
       valid_teams = c(
@@ -78,7 +78,7 @@ scrape_unrivaled_games <- function(season_year = 2025) {
       skip_start = as.Date("2026-02-10"),
       skip_end = as.Date("2026-02-15"),
       postseason_start = as.Date("2026-03-16"),
-      schedule_file = "fixtures/2026/schedule.html"
+      schedule_file = "data/2026/schedule.html"
     )
   )
 
