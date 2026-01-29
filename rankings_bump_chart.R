@@ -93,8 +93,11 @@ for (season_year in seasons) {
   print(team_records)
 
   # Determine playoff line for this season
-  playoff_line <- if (season_year == 2025) 14 else
+  playoff_line <- if (season_year == 2025) {
+    14
+  } else {
     max(team_records$games_played, na.rm = TRUE)
+  }
 
   # Calculate the number of teams dynamically
   num_teams <- length(unique(team_records$team))
@@ -114,8 +117,11 @@ for (season_year in seasons) {
         # For playoff line, count all wins against playoff teams
         if (current_games_played == playoff_line) {
           # Playoff teams vary by season - adjust as needed
-          playoff_teams <- if (season_year == 2025)
-            c("Lunar Owls", "Rose", "Laces") else c()
+          playoff_teams <- if (season_year == 2025) {
+            c("Lunar Owls", "Rose", "Laces")
+          } else {
+            c()
+          }
           # Count all wins against playoff teams
           playoff_wins <- games_long |>
             filter(
@@ -244,20 +250,21 @@ for (season_year in seasons) {
       if (
         season_year == 2025 &&
           max(game_rankings$games_played, na.rm = TRUE) >= 14
-      )
+      ) {
         geom_vline(
           xintercept = 14,
           linetype = "dotted",
           color = "white",
           alpha = 0.5
         )
+      }
     } +
     # Add "Playoffs" label (only for 2025)
     {
       if (
         season_year == 2025 &&
           max(game_rankings$games_played, na.rm = TRUE) >= 14
-      )
+      ) {
         annotate(
           "text",
           x = 14.2,
@@ -269,6 +276,7 @@ for (season_year in seasons) {
           hjust = 0,
           vjust = 0.5 # Center vertically
         )
+      }
     } +
     # Use geom_bump for smooth lines and points
     geom_bump(

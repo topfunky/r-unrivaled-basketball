@@ -29,10 +29,14 @@ extract_game_ids <- function(schedule_file, season_year = 2026) {
     game_links,
     ~ {
       href <- html_attr(.x, "href")
-      if (is.na(href) || is.null(href)) return(NA_character_)
+      if (is.na(href) || is.null(href)) {
+        return(NA_character_)
+      }
       # Extract ID from /game/{id} pattern
       id <- str_extract(href, "(?<=/game/)[a-z0-9]+")
-      if (is.na(id)) return(NA_character_)
+      if (is.na(id)) {
+        return(NA_character_)
+      }
       id
     }
   )
@@ -479,9 +483,13 @@ scrape_unrivaled_games <- function(season_year = 2025) {
               games_in_day,
               ~ {
                 href <- html_attr(.x, "href")
-                if (is.na(href) || is.null(href)) return(NA_character_)
+                if (is.na(href) || is.null(href)) {
+                  return(NA_character_)
+                }
                 id <- str_extract(href, "(?<=/game/)[a-z0-9]+")
-                if (is.na(id)) return(NA_character_)
+                if (is.na(id)) {
+                  return(NA_character_)
+                }
                 id
               }
             )
