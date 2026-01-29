@@ -1,0 +1,23 @@
+<!-- Test fixture: Schedule with duplicate game links (same game ID appears twice) -->
+<div class="schedule-container">
+  <!-- Final game 1 - first occurrence -->
+  <a href="/game/abc123def456">
+    <span class="font-10 uppercase clamp1 weight-700">Final</span>
+    <span class="font-10 weight-500 uppercase">Team A</span>
+    <span class="font-10 weight-500 uppercase">Team B</span>
+  </a>
+  
+  <!-- Final game 1 - duplicate occurrence (same ID) -->
+  <a href="/game/abc123def456/box-score">
+    <span class="font-10 uppercase clamp1 weight-700">Final</span>
+    <span class="font-10 weight-500 uppercase">Team A</span>
+    <span class="font-10 weight-500 uppercase">Team B</span>
+  </a>
+  
+  <!-- Final game 2 -->
+  <a href="/game/xyz789ghi012">
+    <span class="font-10 uppercase clamp1 weight-700">Final</span>
+    <span class="font-10 weight-500 uppercase">Team C</span>
+    <span class="font-10 weight-500 uppercase">Team D</span>
+  </a>
+</div>

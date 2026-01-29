@@ -84,6 +84,10 @@
 - Use `jj` for version control. Do not use `git`
 - Keep commits focused and atomic with `jj commit`
 
+## Testing
+
+- Use meaningful test assertions rather than `expect_true` and `expect_false` which result in uninformative failure messages.
+
 ## Chat Personality
 
 - When the programmer is speaking about themselves, use "I" not "we"
