@@ -12,7 +12,7 @@ library(ggbump) # For smooth bump charts
 library(feather) # For saving data in feather format
 
 # Import team colors
-source("team_colors.R")
+source("R/team_colors.R")
 
 # Process each season separately
 seasons <- c(2025, 2026)

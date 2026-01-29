@@ -13,9 +13,9 @@ library(patchwork)
 library(ggrepel)
 
 # Source rendering functions
-source("render_stats.R")
-source("render_fg_plots.R")
-source("team_colors.R")
+source("R/render_stats.R")
+source("R/render_fg_plots.R")
+source("R/team_colors.R")
 
 # Get season from command line argument or default to 2026
 args <- commandArgs(trailingOnly = TRUE)

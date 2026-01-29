@@ -10,7 +10,7 @@ library(glue)
 library(gghighcontrast)
 library(knitr)
 
-source("team_colors.R")
+source("R/team_colors.R")
 
 # Set seed for reproducibility
 set.seed(5150)

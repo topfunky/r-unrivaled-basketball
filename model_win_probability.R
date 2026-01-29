@@ -26,9 +26,9 @@ dir.create(
 dir.create(file.path(plots_dir, "test"), showWarnings = FALSE, recursive = TRUE)
 
 # Source calibration functions
-source("calibration.R")
+source("R/calibration.R")
 # Source visualization functions
-source("render_wp_plots.R")
+source("R/render_wp_plots.R")
 
 # Read play by play data from season-specific directory
 message(sprintf("Reading play by play data for season %d...", season_year))

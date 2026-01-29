@@ -1,9 +1,7 @@
-# Purpose: Contains functions for creating win probability visualizations
+# Purpose: Functions for creating win probability visualizations
 # for basketball games.
-
-# Load required libraries
-library(tidyverse)
-library(gghighcontrast)
+#
+# Dependencies: tidyverse, gghighcontrast
 
 #' Create a win probability visualization for a single game
 #'

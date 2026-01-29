@@ -21,7 +21,7 @@ library(feather) # For saving data in feather format
 library(knitr) # For markdown table formatting
 
 # Import team colors
-source("team_colors.R")
+source("R/team_colors.R")
 
 # Calculate game results (1 for home win, 0 for away win, 0.5 for tie)
 calculate_game_results <- function(games) {

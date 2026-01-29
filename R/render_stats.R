@@ -1,9 +1,8 @@
-# Functions for rendering basketball statistics in Markdown format
+# Purpose: Functions for rendering basketball statistics in Markdown format.
 # This file contains functions that take aggregated data and render it as Markdown
 # for later use in a blog post or other documentation.
-
-library(tidyverse)
-library(knitr) # Added for kable
+#
+# Dependencies: tidyverse, knitr
 
 # Helper function for percentage formatting
 format_pct <- function(value, digits = 1) {

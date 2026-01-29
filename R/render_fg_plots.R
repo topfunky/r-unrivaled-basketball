@@ -1,12 +1,8 @@
-# Functions for rendering basketball statistics plots
-# This file contains functions that take aggregated data and render plots
-
-library(tidyverse)
-library(gghighcontrast)
-library(patchwork)
-library(ggrepel)
-
-source("team_colors.R")
+# Purpose: Functions for rendering basketball statistics plots.
+# This file contains functions that take aggregated data and render plots.
+#
+# Dependencies: tidyverse, gghighcontrast, patchwork, ggrepel
+# Also requires team_colors.R to be sourced (for ubb_color, wnba_color, median_color)
 
 # Define plot parameters
 line_width <- 4
