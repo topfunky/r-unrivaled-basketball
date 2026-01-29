@@ -1,0 +1,27 @@
+Package: unrivaled
+Title: Unrivaled Basketball League Analysis
+Version: 0.1.0
+Authors@R: 
+    person("Developer", "Name", email = "dev@example.com", role = c("aut", "cre"))
+Description: Tools for scraping, processing, and analyzing Unrivaled Basketball 
+    League game data. Includes functions for extracting game IDs from schedule 
+    HTML, calculating ELO ratings, and generating visualizations.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.0
+Imports:
+    dplyr,
+    glue,
+    lubridate,
+    purrr,
+    readr,
+    rlang,
+    rvest,
+    stringr,
+    tibble,
+    tidyr
+Suggests:
+    covr,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

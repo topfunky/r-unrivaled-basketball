@@ -1,11 +1,24 @@
 # Purpose: Test that no non-test code writes to fixtures directory.
 # This ensures fixtures remain read-only for all production code.
 
-library(testthat)
-
 test_that("no non-test code writes to fixtures directory", {
-  # Get project root directory (testthat runs from tests/testthat)
-  project_root <- file.path("..", "..")
+  # Find project root - try multiple locations
+  possible_roots <- c(
+    testthat::test_path("..", ".."),
+    getwd(),
+    "."
+  )
+
+  project_root <- NULL
+  for (root in possible_roots) {
+    # Check if this looks like the project root (has R/ directory)
+    if (dir.exists(file.path(root, "R"))) {
+      project_root <- root
+      break
+    }
+  }
+
+  skip_if(is.null(project_root), "Project root not found")
 
   # Find all R files in project root, excluding tests directory
   r_files <- list.files(
