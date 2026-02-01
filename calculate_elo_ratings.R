@@ -145,9 +145,6 @@ create_elo_plot <- function(plot_data, season_year) {
   linewidth <- 3
   label_size <- 3
   max_games <- max(plot_data$games_played, na.rm = TRUE)
-  elo_min <- min(plot_data$elo_rating, na.rm = TRUE)
-  elo_max <- max(plot_data$elo_rating, na.rm = TRUE)
-  plot_right_edge <- max_games + 1
 
   label_data <- plot_data |>
     group_by(team) |>
@@ -161,16 +158,7 @@ create_elo_plot <- function(plot_data, season_year) {
       show.legend = FALSE
     ) +
     scale_color_manual(values = TEAM_COLORS) +
-    annotate(
-      "rect",
-      xmin = max_games,
-      xmax = plot_right_edge,
-      ymin = elo_min,
-      ymax = elo_max,
-      fill = "black",
-      color = NA
-    ) +
-    geom_text(
+    geom_text_repel(
       data = label_data,
       aes(
         label = team,
@@ -179,11 +167,15 @@ create_elo_plot <- function(plot_data, season_year) {
       ),
       hjust = 0,
       nudge_x = 0.2,
+      direction = "y",
       size = label_size,
       family = "InputMono",
       show.legend = FALSE,
       color = "white",
-      fontface = "bold"
+      fontface = "bold",
+      segment.color = NA,
+      box.padding = 0.3,
+      min.segment.length = Inf
     ) +
     theme_high_contrast(
       foreground_color = "white",

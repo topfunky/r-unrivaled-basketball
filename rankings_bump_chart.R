@@ -14,6 +14,9 @@ library(feather) # For saving data in feather format
 # Import team colors
 source("R/team_colors.R")
 
+# Total games in a full season (x-axis always shows 1..14)
+SEASON_TOTAL_GAMES <- 14
+
 # Process each season separately
 seasons <- c(2025, 2026)
 
@@ -231,8 +234,8 @@ for (season_year in seasons) {
   dot_size <- 8
   label_size <- 3
 
-  # Get maximum games played for label positioning
-  max_games <- max(game_rankings$games_played, na.rm = TRUE)
+  # X-axis shows full season length (14 games) for consistent charts
+  max_games <- SEASON_TOTAL_GAMES
 
   # Sort teams by final ranking (best teams first) so they're drawn on top
   final_ranks <- game_rankings |>
@@ -287,6 +290,8 @@ for (season_year in seasons) {
     scale_color_manual(values = TEAM_COLORS) +
     # Reverse y-axis so rank 1 is at the top
     scale_y_reverse(breaks = 1:num_teams) +
+    # X-axis shows all 14 season games
+    scale_x_continuous(breaks = 1:SEASON_TOTAL_GAMES) +
     # Add team labels at the right side of the plot, right aligned
     geom_text(
       data = game_rankings |>
