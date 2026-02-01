@@ -295,16 +295,15 @@ describe("download_game_data integration", {
   })
   
   it("single-game fixture produces expected game ID", {
-    # The single-game fixture has a box-score link
+    # The single-game fixture has a box-score link with main layout structure
     game_file <- find_fixture("single-game.html")
     game_html <- read_html(game_file)
     
     game_ids <- extract_final_games(game_html)
     
-    # single-game.html has different class structure (font-14 not font-10)
-    # so it won't match the selector - this tests that we correctly
-    # filter based on the expected CSS class
-    expect_empty(game_ids)
+    # single-game.html uses font-14 class (main layout) with Final status
+    expect_equal(length(game_ids), 1)
+    expect_equal(game_ids[1], "jcdgg9yavn4e")
   })
   
   it("game_day fixture extracts correct game IDs", {
@@ -313,7 +312,127 @@ describe("download_game_data integration", {
     
     game_ids <- extract_final_games(game_html)
     
-    # game_day.html uses font-14 class, not font-10, so no matches expected
-    expect_empty(game_ids)
+    # game_day.html has 2 final games with font-14 class (main layout)
+    expect_equal(length(game_ids), 2)
+    expect_all_in(c("jcdgg9yavn4e", "jb3jklxmsrks"), game_ids)
+  })
+})
+
+# Tests for caching overwrite rubric
+describe("should_download_game", {
+  it("returns TRUE for missing game file", {
+    # Non-existent file should be downloaded
+    result <- should_download_game(
+      game_id = "newgame001",
+      game_dir = tempdir(),
+      is_game_final = TRUE
+    )
+    expect_true(result)
+  })
+  
+  it("returns FALSE for cached final game with valid content", {
+    # Create a temp directory with valid game files
+    temp_game_dir <- file.path(tempdir(), "cached_final_game")
+    dir.create(temp_game_dir, showWarnings = FALSE, recursive = TRUE)
+    on.exit(unlink(temp_game_dir, recursive = TRUE))
+    
+    # Create valid box-score file
+    box_score_file <- file.path(temp_game_dir, "box-score.html")
+    writeLines(
+      "<html><head><title>Box Score - Mist vs Rose</title></head></html>",
+      box_score_file
+    )
+    
+    result <- should_download_game(
+      game_id = "finalgame",
+      game_dir = temp_game_dir,
+      is_game_final = TRUE
+    )
+    expect_false(result)
+  })
+  
+  it("returns TRUE for cached game with 'Game Not Found' content", {
+    # Create a temp directory with invalid game files
+    temp_game_dir <- file.path(tempdir(), "not_found_game")
+    dir.create(temp_game_dir, showWarnings = FALSE, recursive = TRUE)
+    on.exit(unlink(temp_game_dir, recursive = TRUE))
+    
+    # Create "Game Not Found" box-score file
+    box_score_file <- file.path(temp_game_dir, "box-score.html")
+    writeLines(
+      "<html><head><title>Game Not Found</title></head></html>",
+      box_score_file
+    )
+    
+    result <- should_download_game(
+      game_id = "notfoundgame",
+      game_dir = temp_game_dir,
+      is_game_final = TRUE
+    )
+    expect_true(result)
+  })
+  
+  it("returns TRUE for non-final game even if cached", {
+    # Non-final (incomplete/upcoming) games should always be re-downloaded
+    # to check if they've been completed
+    temp_game_dir <- file.path(tempdir(), "incomplete_game")
+    dir.create(temp_game_dir, showWarnings = FALSE, recursive = TRUE)
+    on.exit(unlink(temp_game_dir, recursive = TRUE))
+    
+    # Create valid-looking box-score file
+    box_score_file <- file.path(temp_game_dir, "box-score.html")
+    writeLines(
+      "<html><head><title>Box Score - Mist vs Rose</title></head></html>",
+      box_score_file
+    )
+    
+    result <- should_download_game(
+      game_id = "incompletegame",
+      game_dir = temp_game_dir,
+      is_game_final = FALSE
+    )
+    expect_true(result)
+  })
+})
+
+# Tests for schedule with mixed final and upcoming games
+describe("extract_final_games with mixed schedule", {
+  it("extracts only final games, excludes upcoming games", {
+    schedule_file <- find_fixture("schedule_final_and_upcoming.html")
+    schedule_html <- read_html(schedule_file)
+    
+    game_ids <- extract_final_games(schedule_html)
+    
+    # Should find exactly 3 final games
+    expect_equal(length(game_ids), 3)
+    
+    # Should include all final game IDs
+    expect_all_in(c("finalgame001", "finalgame002", "finalgame003"), game_ids)
+    
+    # Should NOT include upcoming games (those with time indicators, no Final)
+    expect_none_in(c("upcoming001", "upcoming002"), game_ids)
+  })
+  
+  it("distinguishes Final from time-based status indicators", {
+    schedule_file <- find_fixture("schedule_final_and_upcoming.html")
+    schedule_html <- read_html(schedule_file)
+    
+    game_ids <- extract_final_games(schedule_html)
+    
+    # Games with "7:30 PM ET" or similar should not be extracted
+    # Only games with "Final" status should be included
+    for (id in game_ids) {
+      expect_not_contains(id, "upcoming")
+    }
+  })
+  
+  it("handles box-score URL format for final games", {
+    schedule_file <- find_fixture("schedule_final_and_upcoming.html")
+    schedule_html <- read_html(schedule_file)
+    
+    game_ids <- extract_final_games(schedule_html)
+    
+    # finalgame002 uses /game/id/box-score format
+    expect_in("finalgame002", game_ids)
   })
 })

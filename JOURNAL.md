@@ -182,3 +182,58 @@ Implemented plan to enforce fixtures directory as read-only for all non-test cod
 - Fixtures directory is now read-only for all non-test code
 - Test suite will catch any future violations automatically
 - Production code writes to `data/` directory, fixtures remain for test data only
+
+## 2026-02-01
+
+### Fix: 2026 Schedule Scraping for Multiple HTML Layouts
+
+Fixed the 2026 scraping pipeline to correctly parse schedule, box scores, and play-by-play data from the Unrivaled website. The website uses two different HTML layouts that needed to be handled:
+
+1. **Compact/carousel layout** (font-10 class): Used in sidebar/carousel views
+2. **Main schedule layout** (font-14 class): Used in the main schedule view
+
+**Problem:**
+- The original code only handled the compact layout, finding only 4 games
+- The main schedule view uses a different HTML structure where the "Final" indicator and box-score link are siblings, not parent-child
+- This resulted in only ~4 games being scraped instead of 30+ completed games
+
+**Changes Made:**
+
+1. **`R/download_game_data_utils.R`:**
+   - Added `extract_game_id_from_href()` helper function
+   - Added `extract_final_games_compact()` for carousel layout (font-10 class)
+   - Added `extract_final_games_main()` for main schedule layout (font-14 class)
+   - Updated `extract_final_games()` to combine results from both layouts
+   - Added `should_download_game()` implementing caching policy:
+     - Always download if files are missing
+     - Always download if cached files contain "Game Not Found"
+     - Skip download for completed games with valid cache
+
+2. **`R/scrape_utils.R`:**
+   - Added `parse_main_layout_game()` for parsing game cards from main layout
+   - Added `parse_date_text()` for flexible date parsing across formats
+   - Added `scrape_main_layout_games()` for the main schedule view
+   - Updated `scrape_unrivaled_games()` to try main layout first, then compact
+
+3. **`download_game_data.R`:**
+   - Now fetches schedule fresh from live URL on every run
+   - Uses `should_download_game()` for caching decisions
+   - Reports download/skip counts for transparency
+
+4. **`Makefile`:**
+   - Changed task order: `download` now runs before `scrape`
+   - Ensures fresh schedule is available before scraping scores
+
+5. **New fixture (`fixtures/schedule_final_and_upcoming.html`):**
+   - Test fixture with both completed ("Final") and upcoming games
+
+6. **Updated tests (`tests/testthat/test_download_game_data.R`):**
+   - Added tests for `should_download_game()` caching logic
+   - Added tests for mixed final/upcoming schedule parsing
+   - Updated expectations for fixtures matching main layout
+
+**Result:**
+- 32 final games found for 2026 season (exceeds 20+ requirement)
+- Caching works correctly - skips already-cached completed games
+- Both HTML layouts are handled seamlessly
+- All 204 tests pass

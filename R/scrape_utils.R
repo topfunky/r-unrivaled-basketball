@@ -265,6 +265,202 @@ parse_game_day <- function(day_node, season_year, s_params) {
   dplyr::bind_rows(game_data)
 }
 
+#' Parse a game from the main schedule layout (2026 format)
+#'
+#' Handles the main schedule card layout with div.flex.w-100.radius-8 containers.
+#'
+#' @param container HTML node containing game data
+#' @param date_text The date text for this game day
+#' @param season_year The season year
+#' @param s_params Season parameters
+#' @return tibble of game data or NULL if not a valid final game
+parse_main_layout_game <- function(container, date_text, season_year, s_params) {
+  valid_teams <- s_params$valid_teams
+
+  # Check for Final indicator (font-14 class)
+  final_indicator <- container |>
+    rvest::html_element("span.uppercase.weight-500.font-14")
+
+  if (is.null(final_indicator)) {
+    return(NULL)
+  }
+
+  final_text <- rvest::html_text(final_indicator)
+  if (is.na(final_text) || trimws(final_text) != "Final") {
+    return(NULL)
+  }
+
+  # Extract game ID from box-score link
+  box_score_link <- container |>
+    rvest::html_element("a[href*='/game/'][href*='/box-score']")
+
+  if (is.null(box_score_link)) {
+    return(NULL)
+  }
+
+  game_href <- rvest::html_attr(box_score_link, "href")
+  game_id <- stringr::str_extract(game_href, "(?<=/game/)[a-z0-9]+")
+
+  if (is.na(game_id)) {
+    return(NULL)
+  }
+
+  # Extract scores (h3.weight-900 elements)
+  scores <- container |>
+    rvest::html_elements("h3.weight-900") |>
+    rvest::html_text() |>
+    as.numeric()
+
+  if (length(scores) < 2) {
+    return(NULL)
+  }
+
+  # Extract team names (div.color-blue.weight-500.font-14 elements)
+  teams <- container |>
+    rvest::html_elements("div.color-blue.weight-500.font-14") |>
+    rvest::html_text()
+
+  if (length(teams) < 2) {
+    return(NULL)
+  }
+
+  away_team <- teams[1]
+  home_team <- teams[2]
+
+  if (!away_team %in% valid_teams || !home_team %in% valid_teams) {
+    return(NULL)
+  }
+
+  # Parse date
+  game_date <- parse_date_text(date_text, season_year)
+  if (is.na(game_date)) {
+    return(NULL)
+  }
+
+  # Skip games in the specified date range
+  if (game_date >= s_params$skip_start && game_date <= s_params$skip_end) {
+    return(NULL)
+  }
+
+  tibble::tibble(
+    game_id = game_id,
+    date = game_date,
+    away_team = away_team,
+    away_team_score = scores[1],
+    home_team = home_team,
+    home_team_score = scores[2],
+    season = season_year
+  )
+}
+
+#' Parse date text to Date object
+#'
+#' @param date_text The date text string
+#' @param season_year The season year for context
+#' @return Date object or NA
+parse_date_text <- function(date_text, season_year) {
+  today <- as.Date(lubridate::now(tzone = "America/New_York"))
+
+  if (stringr::str_detect(date_text, "^Today")) {
+    return(today)
+  } else if (stringr::str_detect(date_text, "^Tomorrow")) {
+    return(today + 1)
+  }
+
+  # Try standard date formats
+  d <- as.Date(date_text, format = "%A, %B %d, %Y")
+  if (!is.na(d)) return(d)
+
+  d <- as.Date(date_text, format = "%a, %b %d, %Y")
+  if (!is.na(d)) return(d)
+
+  # Try "Friday, January 17, 2025" format
+  date_parts <- stringr::str_match(
+    date_text,
+    "([A-Za-z]+),\\s*([A-Za-z]+)\\s+([0-9]+),\\s*([0-9]+)"
+  )
+  if (!is.na(date_parts[1, 1])) {
+    month <- date_parts[1, 3]
+    day <- date_parts[1, 4]
+    year <- date_parts[1, 5]
+    date_str <- paste(month, day, year, sep = " ")
+    d <- as.Date(date_str, format = "%B %d %Y")
+    if (!is.na(d)) return(d)
+  }
+
+  # Try compact format "Jan17Fri" or similar
+  date_parts <- stringr::str_match(
+    date_text,
+    "([A-Za-z]+)\\s*([0-9]+)\\s*([A-Za-z]+)"
+  )
+  if (!is.na(date_parts[1, 1])) {
+    month_abbr <- date_parts[1, 2]
+    day_num <- date_parts[1, 3]
+    date_str <- paste(month_abbr, day_num, season_year, sep = " ")
+    d <- as.Date(date_str, format = "%b %d %Y")
+    if (!is.na(d)) return(d)
+  }
+
+  NA
+}
+
+#' Scrape games from main schedule layout
+#'
+#' Parses games from the main schedule view which uses div.flex.row-12.p-12
+#' day containers with div.flex.w-100.radius-8 game cards.
+#'
+#' @param html The full HTML document
+#' @param season_year The season year
+#' @param s_params Season parameters
+#' @return tibble of games
+scrape_main_layout_games <- function(html, season_year, s_params) {
+  # Find day containers (div.flex.row-12.p-12)
+  day_containers <- html |>
+    rvest::html_elements("div.flex.row-12.p-12")
+
+  all_games <- list()
+
+  for (day_container in day_containers) {
+    # Extract date from the day header
+    date_element <- day_container |>
+      rvest::html_element("span.uppercase.weight-500")
+
+    if (is.null(date_element)) {
+      next
+    }
+
+    date_text <- rvest::html_text(date_element)
+    if (is.na(date_text) || date_text == "") {
+      next
+    }
+
+    # Find game cards within this day
+    game_cards <- day_container |>
+      rvest::html_elements("div.flex.w-100.radius-8")
+
+    for (card in game_cards) {
+      game_data <- parse_main_layout_game(card, date_text, season_year, s_params)
+      if (!is.null(game_data)) {
+        all_games[[length(all_games) + 1]] <- game_data
+      }
+    }
+  }
+
+  if (length(all_games) == 0) {
+    return(tibble::tibble(
+      game_id = character(),
+      date = as.Date(character()),
+      away_team = character(),
+      away_team_score = numeric(),
+      home_team = character(),
+      home_team_score = numeric(),
+      season = numeric()
+    ))
+  }
+
+  dplyr::bind_rows(all_games)
+}
+
 #' Scrape all games for a season
 #'
 #' @param season_year The season year (e.g., 2025, 2026)
@@ -283,46 +479,66 @@ scrape_unrivaled_games <- function(season_year = 2025) {
 
   html <- rvest::read_html(s_params$schedule_file)
 
+  # For 2026, try main layout first, then compact layout
   if (season_year == 2026) {
-    game_days <- html |>
-      rvest::html_elements("div.flex-row.pl-4")
+    # Try main schedule layout (div.flex.row-12.p-12 with game cards)
+    all_games <- scrape_main_layout_games(html, season_year, s_params)
+
+    # If main layout didn't find enough games, try compact layout
+    if (nrow(all_games) < 20) {
+      game_days <- html |>
+        rvest::html_elements("div.flex-row.pl-4")
+
+      compact_games <- purrr::map(
+        game_days,
+        ~ parse_game_day(.x, season_year, s_params)
+      ) |>
+        purrr::compact() |>
+        dplyr::bind_rows()
+
+      if (nrow(compact_games) > 0) {
+        all_games <- dplyr::bind_rows(all_games, compact_games) |>
+          dplyr::distinct(game_id, .keep_all = TRUE)
+      }
+    }
+
+    # Final fallback if still not enough games
+    if (nrow(all_games) < 20) {
+      tryCatch(
+        {
+          all_game_links <- html |>
+            rvest::html_elements("a[href*='/game/']")
+
+          fallback_games <- scrape_fallback_games(
+            all_game_links,
+            html,
+            all_games,
+            season_year,
+            s_params
+          )
+
+          if (length(fallback_games) > 0) {
+            fallback_df <- dplyr::bind_rows(fallback_games)
+            all_games <- dplyr::bind_rows(all_games, fallback_df) |>
+              dplyr::distinct(game_id, .keep_all = TRUE)
+          }
+        },
+        error = function(e) {
+          warning(glue::glue("Fallback method failed: {e$message}"))
+        }
+      )
+    }
   } else {
+    # 2025 season uses the original day-based parsing
     game_days <- html |>
       rvest::html_elements("div.flex.row-12.p-12")
-  }
 
-  all_games <- purrr::map(
-    game_days,
-    ~ parse_game_day(.x, season_year, s_params)
-  ) |>
-    purrr::compact() |>
-    dplyr::bind_rows()
-
-  # Fallback for 2026 season
-  if (season_year == 2026 && (nrow(all_games) == 0 || nrow(all_games) < 20)) {
-    tryCatch(
-      {
-        all_game_links <- html |>
-          rvest::html_elements("a[href*='/game/']")
-
-        fallback_games <- scrape_fallback_games(
-          all_game_links,
-          html,
-          all_games,
-          season_year,
-          s_params
-        )
-
-        if (length(fallback_games) > 0) {
-          fallback_df <- dplyr::bind_rows(fallback_games)
-          all_games <- dplyr::bind_rows(all_games, fallback_df) |>
-            dplyr::distinct(game_id, .keep_all = TRUE)
-        }
-      },
-      error = function(e) {
-        warning(glue::glue("Fallback method failed: {e$message}"))
-      }
-    )
+    all_games <- purrr::map(
+      game_days,
+      ~ parse_game_day(.x, season_year, s_params)
+    ) |>
+      purrr::compact() |>
+      dplyr::bind_rows()
   }
 
   if (nrow(all_games) == 0) {
