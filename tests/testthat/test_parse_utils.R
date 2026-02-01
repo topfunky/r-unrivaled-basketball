@@ -8,7 +8,9 @@ game_files_exist <- function(game_id, season_year) {
   pbp_file <- fs::path("games", season_year, game_id, "play-by-play.html")
   box_file <- fs::path("games", season_year, game_id, "box-score.html")
   sum_file <- fs::path("games", season_year, game_id, "summary.html")
-  fs::file_exists(pbp_file) && fs::file_exists(box_file) && fs::file_exists(sum_file)
+  fs::file_exists(pbp_file) &&
+    fs::file_exists(box_file) &&
+    fs::file_exists(sum_file)
 }
 
 describe("parse_play_by_play", {

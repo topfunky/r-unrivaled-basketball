@@ -183,7 +183,9 @@ is_game_file_empty <- function(filepath) {
       }
       title_text <- rvest::html_text(title_element)
       # Check if title contains "Game Not Found"
-      if (is.na(title_text) || stringr::str_detect(title_text, "Game Not Found")) {
+      if (
+        is.na(title_text) || stringr::str_detect(title_text, "Game Not Found")
+      ) {
         return(TRUE)
       }
       return(FALSE)

@@ -122,7 +122,9 @@ parse_game_day <- function(day_node, season_year, s_params) {
 
   # Skip games in the specified date range
   if (game_date >= s_params$skip_start && game_date <= s_params$skip_end) {
-    warning(glue::glue("Skipping games on {game_date} (within skip date range)"))
+    warning(glue::glue(
+      "Skipping games on {game_date} (within skip date range)"
+    ))
     return(NULL)
   }
 
@@ -274,7 +276,12 @@ parse_game_day <- function(day_node, season_year, s_params) {
 #' @param season_year The season year
 #' @param s_params Season parameters
 #' @return tibble of game data or NULL if not a valid final game
-parse_main_layout_game <- function(container, date_text, season_year, s_params) {
+parse_main_layout_game <- function(
+  container,
+  date_text,
+  season_year,
+  s_params
+) {
   valid_teams <- s_params$valid_teams
 
   # Check for Final indicator (font-14 class)
@@ -439,7 +446,12 @@ scrape_main_layout_games <- function(html, season_year, s_params) {
       rvest::html_elements("div.flex.w-100.radius-8")
 
     for (card in game_cards) {
-      game_data <- parse_main_layout_game(card, date_text, season_year, s_params)
+      game_data <- parse_main_layout_game(
+        card,
+        date_text,
+        season_year,
+        s_params
+      )
       if (!is.null(game_data)) {
         all_games[[length(all_games) + 1]] <- game_data
       }

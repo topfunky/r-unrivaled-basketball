@@ -10,7 +10,12 @@
 #' @return tibble of play-by-play data or NULL if file not found
 #' @export
 parse_play_by_play <- function(game_id, season_year) {
-  play_by_play_file <- fs::path("games", season_year, game_id, "play-by-play.html")
+  play_by_play_file <- fs::path(
+    "games",
+    season_year,
+    game_id,
+    "play-by-play.html"
+  )
   if (!fs::file_exists(play_by_play_file)) {
     warning(sprintf("Play by play file not found for game %s", game_id))
     return(NULL)
