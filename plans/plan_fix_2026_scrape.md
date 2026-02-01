@@ -36,7 +36,7 @@
 1. Add/adjust fixtures if needed
    - Capture an updated 2026 schedule fixture that includes:
      - Multiple completed games ("Final" + scores).
-     - Multiple upcoming games (no "Final", no scores).
+     - Ignore upcoming games (no "Final", no scores).
    - Ensure fixtures remain in `fixtures/` only.
 
 2. Tests for schedule parsing (red)
