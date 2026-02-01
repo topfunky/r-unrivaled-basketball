@@ -23,6 +23,9 @@ library(knitr) # For markdown table formatting
 # Import team colors
 source("R/team_colors.R")
 
+# Full Unrivaled regular season length (games per team)
+GAMES_IN_REGULAR_SEASON <- 14L
+
 # Calculate game results (1 for home win, 0 for away win, 0.5 for tie)
 calculate_game_results <- function(games) {
   games |>
@@ -139,7 +142,7 @@ prepare_plot_data <- function(ratings_history) {
 
 # Create Elo ratings plot
 create_elo_plot <- function(plot_data, season_year) {
-  linewidth <- 4
+  linewidth <- 3
   label_size <- 3
   max_games <- max(plot_data$games_played, na.rm = TRUE)
   elo_min <- min(plot_data$elo_rating, na.rm = TRUE)
@@ -191,7 +194,8 @@ create_elo_plot <- function(plot_data, season_year) {
       panel.grid.major = element_line(color = "white", linewidth = 0.5),
       panel.grid.minor = element_line(color = "white", linewidth = 0.25)
     ) +
-    coord_cartesian(clip = "off", xlim = c(1, max_games * 1.15)) +
+    scale_x_continuous(breaks = seq_len(GAMES_IN_REGULAR_SEASON)) +
+    coord_cartesian(clip = "off", xlim = c(1, GAMES_IN_REGULAR_SEASON + 2)) +
     labs(
       title = paste0("Unrivaled Basketball League Elo Ratings ", season_year),
       subtitle = "Team ratings after each game",
