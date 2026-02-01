@@ -18,7 +18,9 @@ test_that("no non-test code writes to fixtures directory", {
     }
   }
 
-  skip_if(is.null(project_root), "Project root not found")
+  if (is.null(project_root)) {
+    stop("Project root not found. Run tests from project root (directory with R/).")
+  }
 
   # Find all R files in project root, excluding tests directory
   r_files <- list.files(
