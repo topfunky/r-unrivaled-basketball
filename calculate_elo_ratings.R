@@ -142,7 +142,7 @@ prepare_plot_data <- function(ratings_history) {
 
 # Create Elo ratings plot
 create_elo_plot <- function(plot_data, season_year) {
-  linewidth <- 3
+  linewidth <- 2
   label_size <- 3
   max_games <- max(plot_data$games_played, na.rm = TRUE)
 
@@ -166,7 +166,6 @@ create_elo_plot <- function(plot_data, season_year) {
         y = elo_rating
       ),
       hjust = 0,
-      nudge_x = 0.2,
       direction = "y",
       size = label_size,
       family = "InputMono",
@@ -174,7 +173,6 @@ create_elo_plot <- function(plot_data, season_year) {
       color = "white",
       fontface = "bold",
       segment.color = NA,
-      box.padding = 0.3,
       min.segment.length = Inf
     ) +
     theme_high_contrast(
@@ -196,26 +194,24 @@ create_elo_plot <- function(plot_data, season_year) {
       caption = "Game data from unrivaled.basketball"
     )
 
-  if (season_year == 2025 && max_games >= 14) {
-    p <- p +
-      geom_vline(
-        xintercept = 14,
-        linetype = "dotted",
-        color = "white",
-        alpha = 0.5
-      ) +
-      annotate(
-        "text",
-        x = 14.2,
-        y = 1410,
-        label = "Playoffs",
-        color = "#606060",
-        family = "InputMono",
-        size = 2,
-        hjust = 0,
-        vjust = 0.5
-      )
-  }
+  p <- p +
+    geom_vline(
+      xintercept = 14,
+      linetype = "dotted",
+      color = "white",
+      alpha = 0.5
+    ) +
+    annotate(
+      "text",
+      x = 14.2,
+      y = 1410,
+      label = "Playoffs",
+      color = "#606060",
+      family = "InputMono",
+      size = 2,
+      hjust = 0,
+      vjust = 0.5
+    )
 
   p
 }
