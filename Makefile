@@ -5,40 +5,41 @@
 .DEFAULT_GOAL := list
 
 # Run all task files in sequence (respecting dependencies)
-all-tasks: task02 rankings elo task06 task07 pbp wp task11 task10
+# download must run first to fetch fresh schedule and game files
+all-tasks: download scrape rankings elo standings pbp fetch-wnba-stats shooting
 
 # Individual task targets
-task01: task01.R
-	Rscript task01.R
+analyze-rankings: analyze_sample_rankings.R
+	Rscript analyze_sample_rankings.R
 
-task02: task02.R
-	Rscript task02.R
+scrape: scrape_unrivaled_scores.R
+	Rscript scrape_unrivaled_scores.R
 
 # Generate rankings visualization
-rankings: task03.R
-	Rscript task03.R
+rankings: rankings_bump_chart.R
+	Rscript rankings_bump_chart.R
 
 # Generate ELO ratings visualization
-elo: task04.R
-	Rscript task04.R
+elo: calculate_elo_ratings.R
+	Rscript calculate_elo_ratings.R
 
-task06: task06.R
-	Rscript task06.R
+standings: generate_standings_table.R
+	Rscript generate_standings_table.R
 
-task07: task07.R
-	Rscript task07.R
+download: download_game_data.R
+	Rscript download_game_data.R
 
-pbp: task08.R
-	Rscript task08.R
+pbp: parse_play_by_play.R
+	Rscript parse_play_by_play.R
 
-wp: task09.R
-	Rscript task09.R
+wp: model_win_probability.R
+	Rscript model_win_probability.R
 
-task10: task10.R
-	Rscript task10.R
+shooting: analyze_shooting_metrics.R
+	Rscript analyze_shooting_metrics.R
 
-task11: task11.R
-	Rscript task11.R
+fetch-wnba-stats: fetch_wnba_stats.R
+	Rscript fetch_wnba_stats.R
 
 # Clean up generated files
 clean:
@@ -46,6 +47,7 @@ clean:
 	rm -f unrivaled_elo_ratings.png unrivaled_elo_rankings.feather
 	rm -f plots/*.png
 	rm -f *.feather
+	rm -f coverage-report.html
 	@echo "Cleaning temporary files..."
 	@find . -name "*.Rproj.user" -type d -exec rm -rf {} +
 	@find . -name ".Rproj.user" -type d -exec rm -rf {} +
@@ -70,26 +72,29 @@ setup-hooks:
 list:
 	@echo "Available tasks:"
 	@echo ""
-	@echo "  all          - Generate rankings, ELO ratings, and win probability model (default)"
-	@echo "  rankings     - Generate team rankings visualization"
-	@echo "  elo          - Generate ELO ratings visualization"
-	@echo "  wp           - Generate win probability model and visualizations"
-	@echo "  format       - Format all R files using air"
+	@echo "  all             - Generate rankings, ELO ratings, and win probability model (default)"
+	@echo "  rankings        - Generate team rankings visualization"
+	@echo "  elo             - Generate ELO ratings visualization"
+	@echo "  wp              - Generate win probability model and visualizations"
+	@echo "  format          - Format all R files using air"
+	@echo "  validate        - Validate all R files using lintr"
 	@echo ""
-	@echo "  all-tasks    - Run all task files in sequence"
+	@echo "  all-tasks       - Run all task files in sequence"
 	@echo ""
-	@echo "  task01       - Generate initial data analysis and visualizations"
-	@echo "  task02       - Scrape and process game data"
-	@echo "  task06       - Generate player statistics"
-	@echo "  task07       - Process and analyze game events"
-	@echo "  pbp          - Generate play-by-play analysis"
-	@echo "  task10       - Calculate additional basketball metrics"
-	@echo "  task11       - Download WNBA player shooting percentages"
+	@echo "  analyze-rankings - Generate initial data analysis and visualizations"
+	@echo "  scrape          - Scrape and process game data"
+	@echo "  standings       - Generate player statistics"
+	@echo "  download        - Process and analyze game events"
+	@echo "  pbp             - Generate play-by-play analysis"
+	@echo "  shooting        - Calculate additional basketball metrics"
+	@echo "  fetch-wnba-stats - Download WNBA player shooting percentages"
 	@echo ""
-	@echo "  clean        - Remove all generated files (plots, data files)"
-	@echo "  install-deps - Install required R packages"
-	@echo "  setup-hooks  - Set up git hooks for code formatting"
-	@echo "  list         - Show this help message"
+	@echo "  clean           - Remove all generated files (plots, data files)"
+	@echo "  install-deps    - Install required R packages"
+	@echo "  setup-hooks     - Set up git hooks for code formatting"
+	@echo "  test            - Run testthat tests"
+	@echo "  coverage        - Generate test coverage report"
+	@echo "  list            - Show this help message"
 
 # Format all R files using air
 format:
@@ -97,13 +102,31 @@ format:
 	@find . -name "*.R" -exec air format {} \;
 	@echo "Formatting complete!"
 
+# Validate all R files using lintr
+validate:
+	@echo "Validating all R files..."
+	@Rscript -e "lintr::lint_dir('.')"
+	@echo "Validation complete!"
+
+# Run tests using testthat
+test:
+	@echo "Running tests..."
+	@Rscript tests/testthat.R
+	@echo "Tests complete!"
+
+# Run test coverage report
+coverage:
+	@echo "Running test coverage report..."
+	@Rscript -e "covr::report(covr::package_coverage(type = 'tests'), file = 'coverage-report.html', browse = FALSE)"
+	@echo "Coverage report saved to coverage-report.html"
+
 # Run all task files in alphabetical order (use with caution)
 run-all-tasks: format
 	@echo "Running all tasks in alphabetical order (use with caution)..."
-	@for file in task*.R; do \
+	@for file in analyze_sample_rankings.R scrape_unrivaled_scores.R rankings_bump_chart.R calculate_elo_ratings.R generate_standings_table.R download_game_data.R parse_play_by_play.R model_win_probability.R analyze_shooting_metrics.R fetch_wnba_stats.R; do \
 		echo "Running $$file..."; \
 		Rscript $$file; \
 	done
 	@echo "All tasks complete!"
 
-.PHONY: all rankings elo wp all-tasks task01 task02 task06 task07 pbp task10 task11 clean install-deps setup-hooks list format run-all-tasks
+.PHONY: all rankings elo wp all-tasks analyze-rankings scrape standings download pbp shooting fetch-wnba-stats clean install-deps setup-hooks list format run-all-tasks validate test coverage

@@ -7,14 +7,22 @@ library(tidyverse)
 library(feather)
 library(knitr)
 
-# Load play-by-play data
-pbp_data <- read_feather("unrivaled_play_by_play.feather")
+# Get season from command line argument or default to 2026
+args <- commandArgs(trailingOnly = TRUE)
+season_year <- if (length(args) > 0) as.numeric(args[1]) else 2026
+
+message(sprintf("Processing season %d...", season_year))
+
+# Load play-by-play data from season-specific directory
+data_dir <- file.path("data", season_year)
+pbp_data <- read_feather(file.path(data_dir, "unrivaled_play_by_play.feather"))
 
 # Load schedule data to get team names
 schedule_data <- read_csv(
-  "fixtures/unrivaled_scores.csv",
+  "data/unrivaled_scores.csv",
   show_col_types = FALSE
-)
+) |>
+  filter(season == season_year)
 schedule_teams <- schedule_data |>
   select(game_id, home_team, away_team)
 
