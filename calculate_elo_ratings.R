@@ -23,6 +23,9 @@ library(knitr) # For markdown table formatting
 # Import team colors
 source("R/team_colors.R")
 
+# Full Unrivaled regular season length (games per team)
+GAMES_IN_REGULAR_SEASON <- 14L
+
 # Calculate game results (1 for home win, 0 for away win, 0.5 for tie)
 calculate_game_results <- function(games) {
   games |>
@@ -139,12 +142,9 @@ prepare_plot_data <- function(ratings_history) {
 
 # Create Elo ratings plot
 create_elo_plot <- function(plot_data, season_year) {
-  linewidth <- 4
+  linewidth <- 2
   label_size <- 3
   max_games <- max(plot_data$games_played, na.rm = TRUE)
-  elo_min <- min(plot_data$elo_rating, na.rm = TRUE)
-  elo_max <- max(plot_data$elo_rating, na.rm = TRUE)
-  plot_right_edge <- max_games + 1
 
   label_data <- plot_data |>
     group_by(team) |>
@@ -158,16 +158,7 @@ create_elo_plot <- function(plot_data, season_year) {
       show.legend = FALSE
     ) +
     scale_color_manual(values = TEAM_COLORS) +
-    annotate(
-      "rect",
-      xmin = max_games,
-      xmax = plot_right_edge,
-      ymin = elo_min,
-      ymax = elo_max,
-      fill = "black",
-      color = NA
-    ) +
-    geom_text(
+    geom_text_repel(
       data = label_data,
       aes(
         label = team,
@@ -175,12 +166,14 @@ create_elo_plot <- function(plot_data, season_year) {
         y = elo_rating
       ),
       hjust = 0,
-      nudge_x = 0.2,
+      direction = "y",
       size = label_size,
       family = "InputMono",
       show.legend = FALSE,
       color = "white",
-      fontface = "bold"
+      fontface = "bold",
+      segment.color = NA,
+      min.segment.length = Inf
     ) +
     theme_high_contrast(
       foreground_color = "white",
@@ -191,7 +184,8 @@ create_elo_plot <- function(plot_data, season_year) {
       panel.grid.major = element_line(color = "white", linewidth = 0.5),
       panel.grid.minor = element_line(color = "white", linewidth = 0.25)
     ) +
-    coord_cartesian(clip = "off", xlim = c(1, max_games * 1.15)) +
+    scale_x_continuous(breaks = seq_len(GAMES_IN_REGULAR_SEASON)) +
+    coord_cartesian(clip = "off", xlim = c(1, GAMES_IN_REGULAR_SEASON + 2)) +
     labs(
       title = paste0("Unrivaled Basketball League Elo Ratings ", season_year),
       subtitle = "Team ratings after each game",
@@ -200,26 +194,24 @@ create_elo_plot <- function(plot_data, season_year) {
       caption = "Game data from unrivaled.basketball"
     )
 
-  if (season_year == 2025 && max_games >= 14) {
-    p <- p +
-      geom_vline(
-        xintercept = 14,
-        linetype = "dotted",
-        color = "white",
-        alpha = 0.5
-      ) +
-      annotate(
-        "text",
-        x = 14.2,
-        y = 1410,
-        label = "Playoffs",
-        color = "#606060",
-        family = "InputMono",
-        size = 2,
-        hjust = 0,
-        vjust = 0.5
-      )
-  }
+  p <- p +
+    geom_vline(
+      xintercept = 14,
+      linetype = "dotted",
+      color = "white",
+      alpha = 0.5
+    ) +
+    annotate(
+      "text",
+      x = 14.2,
+      y = 1410,
+      label = "Playoffs",
+      color = "#606060",
+      family = "InputMono",
+      size = 2,
+      hjust = 0,
+      vjust = 0.5
+    )
 
   p
 }

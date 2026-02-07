@@ -23,6 +23,9 @@ rankings: rankings_bump_chart.R
 elo: calculate_elo_ratings.R
 	Rscript calculate_elo_ratings.R
 
+# Generate all visualizations (rankings and ELO)
+viz: elo rankings
+
 standings: generate_standings_table.R
 	Rscript generate_standings_table.R
 
@@ -73,6 +76,7 @@ list:
 	@echo "Available tasks:"
 	@echo ""
 	@echo "  all             - Generate rankings, ELO ratings, and win probability model (default)"
+	@echo "  viz             - Generate rankings and ELO visualizations"
 	@echo "  rankings        - Generate team rankings visualization"
 	@echo "  elo             - Generate ELO ratings visualization"
 	@echo "  wp              - Generate win probability model and visualizations"
@@ -129,4 +133,4 @@ run-all-tasks: format
 	done
 	@echo "All tasks complete!"
 
-.PHONY: all rankings elo wp all-tasks analyze-rankings scrape standings download pbp shooting fetch-wnba-stats clean install-deps setup-hooks list format run-all-tasks validate test coverage
+.PHONY: all rankings elo viz wp all-tasks analyze-rankings scrape standings download pbp shooting fetch-wnba-stats clean install-deps setup-hooks list format run-all-tasks validate test coverage
