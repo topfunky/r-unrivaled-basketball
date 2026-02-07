@@ -19,9 +19,14 @@ library(ggrepel) # For non-overlapping labels
 library(ggbump) # For smooth bump charts
 library(feather) # For saving data in feather format
 library(knitr) # For markdown table formatting
+library(rvest) # For parsing schedule HTML
+library(tidyr) # For pivot_longer in remaining SOS
 
-# Import team colors
+# Import project functions
 source("R/team_colors.R")
+source("R/elo_win_prob.R")
+source("R/scrape_utils.R")
+source("R/remaining_sos.R")
 
 # Full Unrivaled regular season length (games per team)
 GAMES_IN_REGULAR_SEASON <- 14L
@@ -291,6 +296,122 @@ print_ratings_info <- function(ratings_history, final_ratings, season_year) {
   cat("\n\n")
 }
 
+# Save Elo table with remaining SOS
+save_elo_with_sos <- function(elo_with_sos, season_year) {
+  output_dir <- paste0("data/", season_year)
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+  }
+
+  output <- elo_with_sos |>
+    select(
+      team,
+      games_played,
+      games_remaining,
+      elo_rating,
+      remaining_estimated_wins
+    ) |>
+    arrange(team, games_played)
+
+  write_feather(
+    output,
+    paste0(output_dir, "/unrivaled_elo_with_sos.feather")
+  )
+  write_csv(
+    output,
+    paste0(output_dir, "/unrivaled_elo_with_sos.csv")
+  )
+}
+
+# Print remaining SOS summary for the latest games_played level
+print_remaining_sos <- function(elo_with_sos, season_year) {
+  cat(
+    "\n## Remaining Strength of Schedule (",
+    season_year,
+    ")\n\n",
+    sep = ""
+  )
+
+  # Show the latest snapshot per team
+  latest <- elo_with_sos |>
+    group_by(team) |>
+    slice_max(games_played, n = 1, with_ties = FALSE) |>
+    ungroup() |>
+    select(
+      team,
+      games_played,
+      games_remaining,
+      elo_rating,
+      remaining_estimated_wins
+    ) |>
+    arrange(desc(remaining_estimated_wins))
+
+  cat(knitr::kable(latest, format = "markdown", digits = 2), sep = "\n")
+  cat("\n")
+}
+
+# Build per-team Elo table with games_played=0 row for each team
+build_elo_by_games_played <- function(ratings_history) {
+  all_teams <- names(TEAM_COLORS)
+  INITIAL_ELO <- 1500
+
+  # Per-game rows from the ratings history
+  per_game <- bind_rows(
+    ratings_history |>
+      select(
+        date,
+        game_id,
+        team = home_team,
+        elo_rating = home_team_elo,
+        result
+      ),
+    ratings_history |>
+      select(
+        date,
+        game_id,
+        team = away_team,
+        elo_rating = away_team_elo,
+        result
+      )
+  ) |>
+    arrange(date) |>
+    group_by(team) |>
+    mutate(games_played = cumsum(!is.na(result))) |>
+    ungroup()
+
+  # Add games_played=0 row for each team (initial Elo)
+  initial_rows <- tibble(
+    date = as.Date(NA),
+    game_id = NA_character_,
+    team = all_teams,
+    elo_rating = INITIAL_ELO,
+    result = NA_real_,
+    games_played = 0L
+  )
+
+  bind_rows(initial_rows, per_game)
+}
+
+# Add remaining strength of schedule to the Elo table
+add_remaining_sos <- function(elo_table, full_schedule) {
+  calculate_remaining_sos(elo_table, full_schedule)
+}
+
+# Load full schedule from schedule HTML
+load_full_schedule <- function(season_year) {
+  s_params <- get_season_params(season_year)
+  if (is.null(s_params) || !file.exists(s_params$schedule_file)) {
+    warning(paste0(
+      "Schedule file not found for season ", season_year,
+      ". Skipping remaining SOS."
+    ))
+    return(NULL)
+  }
+
+  html <- rvest::read_html(s_params$schedule_file)
+  extract_all_schedule_games(html, season_year)
+}
+
 # Process a single season
 process_season <- function(all_games, season_year) {
   print(paste0("Processing season ", season_year, "..."))
@@ -315,6 +436,15 @@ process_season <- function(all_games, season_year) {
   plot_data <- prepare_plot_data(ratings_history)
   plot <- create_elo_plot(plot_data, season_year)
   save_elo_plot(plot, season_year)
+
+  # Calculate remaining strength of schedule
+  full_schedule <- load_full_schedule(season_year)
+  if (!is.null(full_schedule)) {
+    elo_table <- build_elo_by_games_played(ratings_history)
+    elo_with_sos <- add_remaining_sos(elo_table, full_schedule)
+    save_elo_with_sos(elo_with_sos, season_year)
+    print_remaining_sos(elo_with_sos, season_year)
+  }
 
   print(paste0("✅ Completed processing season ", season_year))
 }
