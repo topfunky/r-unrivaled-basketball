@@ -27,6 +27,7 @@ source("R/team_colors.R")
 source("R/elo_win_prob.R")
 source("R/scrape_utils.R")
 source("R/remaining_sos.R")
+source("R/combine_elo_sos.R")
 
 # Full Unrivaled regular season length (games per team)
 GAMES_IN_REGULAR_SEASON <- 14L
@@ -296,35 +297,9 @@ print_ratings_info <- function(ratings_history, final_ratings, season_year) {
   cat("\n\n")
 }
 
-# Save Elo table with remaining SOS
-save_elo_with_sos <- function(elo_with_sos, season_year) {
-  output_dir <- paste0("data/", season_year)
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
 
-  output <- elo_with_sos |>
-    select(
-      team,
-      games_played,
-      games_remaining,
-      elo_rating,
-      remaining_estimated_wins
-    ) |>
-    arrange(team, games_played)
-
-  write_feather(
-    output,
-    paste0(output_dir, "/unrivaled_elo_with_sos.feather")
-  )
-  write_csv(
-    output,
-    paste0(output_dir, "/unrivaled_elo_with_sos.csv")
-  )
-}
-
-# Print remaining SOS summary for the latest games_played level
-print_remaining_sos <- function(elo_with_sos, season_year) {
+# Print remaining SOS summary from the combined ratings data
+print_remaining_sos <- function(combined_ratings, season_year) {
   cat(
     "\n## Remaining Strength of Schedule (",
     season_year,
@@ -332,19 +307,39 @@ print_remaining_sos <- function(elo_with_sos, season_year) {
     sep = ""
   )
 
-  # Show the latest snapshot per team
-  latest <- elo_with_sos |>
+  # Build per-team summary from the last game row for each team
+  home_latest <- combined_ratings |>
+    group_by(home_team) |>
+    slice_max(home_team_games_played, n = 1, with_ties = FALSE) |>
+    ungroup() |>
+    select(
+      team = home_team,
+      games_played = home_team_games_played,
+      games_remaining = home_team_games_remaining,
+      elo_rating = home_team_elo,
+      remaining_estimated_wins = home_team_remaining_estimated_wins,
+      total_estimated_wins = home_team_total_estimated_wins
+    )
+
+  away_latest <- combined_ratings |>
+    group_by(away_team) |>
+    slice_max(away_team_games_played, n = 1, with_ties = FALSE) |>
+    ungroup() |>
+    select(
+      team = away_team,
+      games_played = away_team_games_played,
+      games_remaining = away_team_games_remaining,
+      elo_rating = away_team_elo,
+      remaining_estimated_wins = away_team_remaining_estimated_wins,
+      total_estimated_wins = away_team_total_estimated_wins
+    )
+
+  # Pick the row with higher games_played for each team
+  latest <- bind_rows(home_latest, away_latest) |>
     group_by(team) |>
     slice_max(games_played, n = 1, with_ties = FALSE) |>
     ungroup() |>
-    select(
-      team,
-      games_played,
-      games_remaining,
-      elo_rating,
-      remaining_estimated_wins
-    ) |>
-    arrange(desc(remaining_estimated_wins))
+    arrange(desc(total_estimated_wins))
 
   cat(knitr::kable(latest, format = "markdown", digits = 2), sep = "\n")
   cat("\n")
@@ -425,26 +420,33 @@ process_season <- function(all_games, season_year) {
     return(invisible(NULL))
   }
 
+  season_scores <- all_games |>
+    filter(season == season_year)
+
   elo_ratings <- calculate_elo_ratings(games)
   ratings_history <- get_ratings_history(elo_ratings, games, season_year)
   final_ratings <- get_final_ratings(ratings_history, elo_ratings)
 
   print_ratings_info(ratings_history, final_ratings, season_year)
 
-  save_ratings_data(final_ratings, ratings_history, season_year)
-
-  plot_data <- prepare_plot_data(ratings_history)
-  plot <- create_elo_plot(plot_data, season_year)
-  save_elo_plot(plot, season_year)
-
-  # Calculate remaining strength of schedule
+  # Calculate remaining strength of schedule and combine into
+  # a single per-game output
   full_schedule <- load_full_schedule(season_year)
   if (!is.null(full_schedule)) {
     elo_table <- build_elo_by_games_played(ratings_history)
     elo_with_sos <- add_remaining_sos(elo_table, full_schedule)
-    save_elo_with_sos(elo_with_sos, season_year)
-    print_remaining_sos(elo_with_sos, season_year)
+    combined_ratings <- combine_elo_with_sos(
+      ratings_history, elo_with_sos, season_scores
+    )
+    save_ratings_data(final_ratings, combined_ratings, season_year)
+    print_remaining_sos(combined_ratings, season_year)
+  } else {
+    save_ratings_data(final_ratings, ratings_history, season_year)
   }
+
+  plot_data <- prepare_plot_data(ratings_history)
+  plot <- create_elo_plot(plot_data, season_year)
+  save_elo_plot(plot, season_year)
 
   print(paste0("✅ Completed processing season ", season_year))
 }
