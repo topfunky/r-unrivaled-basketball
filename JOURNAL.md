@@ -237,3 +237,39 @@ Fixed the 2026 scraping pipeline to correctly parse schedule, box scores, and pl
 - Caching works correctly - skips already-cached completed games
 - Both HTML layouts are handled seamlessly
 - All 204 tests pass
+
+## 2026-02-07
+
+### Feature: Remaining Strength of Schedule
+
+Added remaining strength of schedule calculation to the Elo pipeline. For each team at each `games_played` level, the system computes expected remaining wins by summing `elo_win_prob(my_elo, opponent_elo)` across all unplayed matchups.
+
+**Key design decisions:**
+- "Week" is defined as games played per team, not calendar time. Teams may play different numbers of games in a given weekend, so the unit of progress is simply how many games a team has completed.
+- Remaining games for a team at `games_played = N` are all matchups in the full schedule after that team's Nth game.
+- Teams with zero games played use the initial Elo of 1500.
+- `remaining_estimated_wins` is the sum of win probabilities (not a binary > 0.5 threshold).
+
+**New file: `R/remaining_sos.R`**
+- `extract_all_schedule_games(html, season_year)` - Parses schedule HTML to extract both completed (Final) and upcoming (Scheduled) games. Handles two HTML formats: `div.color-blue` text for Final games and `img[alt*='Logo']` attributes for upcoming games where only team logos are displayed.
+- `parse_schedule_card(card, game_date, s_params)` - Parses individual game cards from the main layout.
+- `calculate_remaining_sos(elo_table, full_schedule)` - Computes `games_remaining` and `remaining_estimated_wins` for each team at each `games_played` count.
+- `compute_expected_wins(...)` - Looks up remaining opponents and sums win probabilities using `elo_win_prob()`.
+
+**Modified: `calculate_elo_ratings.R`**
+- Added `build_elo_by_games_played()` to create per-team/per-game Elo table including `games_played = 0` rows with initial Elo of 1500.
+- Added `load_full_schedule()`, `add_remaining_sos()`, `save_elo_with_sos()`, and `print_remaining_sos()`.
+- `process_season()` now calculates remaining SOS and saves to `data/{year}/unrivaled_elo_with_sos.csv` and `.feather`.
+
+**New tests: `tests/testthat/test_remaining_sos.R`** (44 tests)
+- Schedule parsing with test fixture and real 2026 data: extracts all 56 games, 14 per team, correct status/team/date/game_id.
+- Upcoming games correctly parsed from img alt attributes.
+- SOS calculation: correct win probability sums, zero remaining when season complete, initial Elo for 0 games played, games_remaining tracking at each level.
+
+**New fixture: `fixtures/schedule_with_upcoming_main.html`**
+- Test fixture with both Final and upcoming games in the main layout format, including the logo-only HTML structure used for unplayed games.
+
+**Result:**
+- 2026 season: 56 total games (36 Final + 20 Scheduled), 14 per team
+- Output verified: total estimated wins across all teams equals the number of remaining games at every `games_played` level
+- All 288 tests pass (44 new + 244 existing)
