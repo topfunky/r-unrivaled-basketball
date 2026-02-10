@@ -159,6 +159,66 @@ describe("combine_elo_with_sos", {
     expect_all_in(required_cols, names(result))
   })
 
+  it("includes integer wins and losses columns", {
+    elo_with_sos <- build_test_elo_with_sos()
+    scores <- build_test_scores()
+
+    result <- combine_elo_with_sos(elo_with_sos, scores)
+
+    expect_all_in(c("wins", "losses"), names(result))
+    expect_equal(is.integer(result$wins), TRUE)
+    expect_equal(is.integer(result$losses), TRUE)
+  })
+
+  it("wins and losses match wins_to_date and losses_to_date", {
+    elo_with_sos <- build_test_elo_with_sos()
+    scores <- build_test_scores()
+
+    result <- combine_elo_with_sos(elo_with_sos, scores)
+
+    expect_equal(result$wins, result$wins_to_date)
+    expect_equal(result$losses, result$losses_to_date)
+  })
+
+  it("wins and losses are running totals per team", {
+    # 3 games: A beats B, C beats A, B beats C
+    scores <- tibble(
+      date = as.Date(c("2026-01-05", "2026-01-06", "2026-01-07")),
+      game_id = c("g1", "g2", "g3"),
+      home_team = c("A", "C", "B"),
+      away_team = c("B", "A", "C"),
+      home_team_score = c(80, 90, 85),
+      away_team_score = c(70, 75, 80),
+      season = c(2026, 2026, 2026),
+      season_type = rep("Regular Season", 3)
+    )
+
+    elo_with_sos <- tibble(
+      team = rep(c("A", "B", "C"), each = 3),
+      elo_rating = rep(1500, 9),
+      games_played = rep(c(0L, 1L, 2L), 3),
+      games_remaining = rep(c(2L, 1L, 0L), 3),
+      remaining_estimated_wins = rep(0.5, 9)
+    )
+
+    result <- combine_elo_with_sos(elo_with_sos, scores)
+
+    # A: wins game 1 (1-0), loses game 2 (1-1)
+    a_rows <- result |> filter(team == "A") |> arrange(team_game_index)
+    expect_equal(a_rows$wins, c(1L, 1L))
+    expect_equal(a_rows$losses, c(0L, 1L))
+
+    # B: loses game 1 (0-1), wins game 3 (1-1)
+    b_rows <- result |> filter(team == "B") |> arrange(team_game_index)
+    expect_equal(b_rows$wins, c(0L, 1L))
+    expect_equal(b_rows$losses, c(1L, 1L))
+
+    # C: wins game 2 (1-0), loses game 3 (1-1)
+    c_rows <- result |> filter(team == "C") |> arrange(team_game_index)
+    expect_equal(c_rows$wins, c(1L, 1L))
+    expect_equal(c_rows$losses, c(0L, 1L))
+  })
+
   it("includes SOS columns from elo_with_sos", {
     elo_with_sos <- build_test_elo_with_sos()
     scores <- build_test_scores()
@@ -350,5 +410,75 @@ describe("add_cumulative_record with three teams", {
     expect_equal(c_rows$team_game_index, c(1L, 2L))
     expect_equal(c_rows$wins_to_date, c(1L, 1L))
     expect_equal(c_rows$losses_to_date, c(0L, 1L))
+  })
+})
+
+# --- add_wins_losses_to_sos ---
+
+describe("add_wins_losses_to_sos", {
+  it("adds integer wins and losses columns", {
+    elo_with_sos <- build_test_elo_with_sos()
+    scores <- build_test_scores()
+
+    result <- add_wins_losses_to_sos(elo_with_sos, scores)
+
+    expect_all_in(c("wins", "losses"), names(result))
+    expect_equal(is.integer(result$wins), TRUE)
+    expect_equal(is.integer(result$losses), TRUE)
+  })
+
+  it("games_played=0 rows get wins=0 and losses=0", {
+    elo_with_sos <- build_test_elo_with_sos()
+    scores <- build_test_scores()
+
+    result <- add_wins_losses_to_sos(elo_with_sos, scores)
+
+    zero_rows <- result |> filter(games_played == 0)
+    expect_equal(unique(zero_rows$wins), 0L)
+    expect_equal(unique(zero_rows$losses), 0L)
+  })
+
+  it("running wins/losses align with games_played snapshot", {
+    elo_with_sos <- build_test_elo_with_sos()
+    scores <- build_test_scores()
+
+    result <- add_wins_losses_to_sos(elo_with_sos, scores)
+
+    # A wins both games: after 1 game => 1-0, after 2 => 2-0
+    a_rows <- result |>
+      filter(team == "A") |>
+      arrange(games_played)
+    expect_equal(a_rows$wins, c(0L, 1L, 2L))
+    expect_equal(a_rows$losses, c(0L, 0L, 0L))
+
+    # B loses both games: after 1 game => 0-1, after 2 => 0-2
+    b_rows <- result |>
+      filter(team == "B") |>
+      arrange(games_played)
+    expect_equal(b_rows$wins, c(0L, 0L, 0L))
+    expect_equal(b_rows$losses, c(0L, 1L, 2L))
+  })
+
+  it("preserves all original SOS columns", {
+    elo_with_sos <- build_test_elo_with_sos()
+    scores <- build_test_scores()
+
+    result <- add_wins_losses_to_sos(elo_with_sos, scores)
+
+    original_cols <- c(
+      "team", "elo_rating", "games_played",
+      "games_remaining", "remaining_estimated_wins"
+    )
+    expect_all_in(original_cols, names(result))
+  })
+
+  it("has no NA values in wins or losses", {
+    elo_with_sos <- build_test_elo_with_sos()
+    scores <- build_test_scores()
+
+    result <- add_wins_losses_to_sos(elo_with_sos, scores)
+
+    expect_equal(sum(is.na(result$wins)), 0)
+    expect_equal(sum(is.na(result$losses)), 0)
   })
 })

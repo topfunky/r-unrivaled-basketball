@@ -227,6 +227,7 @@ save_ratings_data <- function(
   final_ratings,
   ratings_history,
   combined_ratings,
+  elo_with_sos,
   season_year
 ) {
   output_dir <- paste0("data/", season_year)
@@ -260,6 +261,14 @@ save_ratings_data <- function(
     combined_ratings,
     paste0(output_dir, "/unrivaled_elo_rankings.csv")
   )
+
+  # Save SOS table with running wins/losses
+  if (!is.null(elo_with_sos)) {
+    write_csv(
+      elo_with_sos,
+      paste0(output_dir, "/unrivaled_elo_with_sos.csv")
+    )
+  }
 }
 
 # Save plot to file
@@ -432,15 +441,22 @@ process_season <- function(all_games, season_year) {
     combined_ratings <- combine_elo_with_sos(
       elo_with_sos, season_scores
     )
+
+    # Enrich SOS table with running wins/losses and save
+    elo_with_sos_record <- add_wins_losses_to_sos(
+      elo_with_sos, season_scores
+    )
     save_ratings_data(
-      final_ratings, ratings_history, combined_ratings, season_year
+      final_ratings, ratings_history, combined_ratings,
+      elo_with_sos_record, season_year
     )
     print_remaining_sos(combined_ratings, season_year)
   } else {
     # No schedule available; save ratings_history as both
     # the Elo history and the rankings output
     save_ratings_data(
-      final_ratings, ratings_history, ratings_history, season_year
+      final_ratings, ratings_history, ratings_history,
+      NULL, season_year
     )
   }
 

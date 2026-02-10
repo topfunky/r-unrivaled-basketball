@@ -1,7 +1,8 @@
 # Purpose: Functions to combine per-game Elo ratings history
 # with remaining strength of schedule and current win counts
 # into a single long-format output table (one row per team
-# per game).
+# per game). Also provides add_wins_losses_to_sos() to enrich
+# the SOS table with running wins and losses columns.
 
 #' Convert wide-format scores to long format (one row per team per game)
 #'
@@ -92,7 +93,8 @@ add_cumulative_record <- function(long_scores) {
 #'
 #' @param elo_with_sos Per-team-per-games_played SOS table
 #' @param scores Game scores for computing cumulative record
-#' @return Long-format tibble with cumulative record and SOS
+#' @return Long-format tibble with cumulative record, SOS,
+#'   and integer wins/losses columns
 #' @export
 combine_elo_with_sos <- function(elo_with_sos, scores) {
   long_scores <- scores_to_long(scores) |>
@@ -133,9 +135,47 @@ combine_elo_with_sos <- function(elo_with_sos, scores) {
     ))
   }
 
-  # Compute total estimated wins
+  # Add wins/losses aliases and total estimated wins
   combined |>
     dplyr::mutate(
+      wins = wins_to_date,
+      losses = losses_to_date,
       total_estimated_wins = wins_to_date + remaining_estimated_wins
     )
+}
+
+#' Add running wins and losses to a per-team SOS table
+#'
+#' Derives running wins/losses from game scores and joins them
+#' to the SOS table by (team, games_played). Rows with
+#' games_played = 0 receive wins = 0 and losses = 0.
+#'
+#' @param elo_with_sos SOS table with team, games_played,
+#'   games_remaining, elo_rating, remaining_estimated_wins
+#' @param scores Wide-format game scores
+#' @return SOS table with added integer wins and losses columns
+#' @export
+add_wins_losses_to_sos <- function(elo_with_sos, scores) {
+  # Build running record keyed by (team, games_played)
+  record_lookup <- scores_to_long(scores) |>
+    add_cumulative_record() |>
+    dplyr::select(
+      team,
+      games_played = games_played_to_date,
+      wins = wins_to_date,
+      losses = losses_to_date
+    )
+
+  # Join record onto SOS table; games_played=0 rows get NA
+  result <- elo_with_sos |>
+    dplyr::left_join(
+      record_lookup,
+      by = c("team", "games_played")
+    ) |>
+    dplyr::mutate(
+      wins = dplyr::if_else(is.na(wins), 0L, wins),
+      losses = dplyr::if_else(is.na(losses), 0L, losses)
+    )
+
+  result
 }
