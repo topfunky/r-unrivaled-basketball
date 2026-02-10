@@ -38,16 +38,16 @@ if (!file_exists(play_by_play_file)) {
 }
 play_by_play <- read_csv(play_by_play_file)
 
-# Read ELO rankings data from season-specific directory (if it exists)
-elo_rankings_file <- path("data", season_year, "unrivaled_elo_rankings.csv")
-if (file_exists(elo_rankings_file)) {
-  message(sprintf("Reading ELO rankings for season %d...", season_year))
-  elo_rankings <- read_csv(elo_rankings_file) |>
+# Read ELO history data from season-specific directory (if it exists)
+elo_history_file <- path("data", season_year, "unrivaled_elo_history.csv")
+if (file_exists(elo_history_file)) {
+  message(sprintf("Reading ELO history for season %d...", season_year))
+  elo_rankings <- read_csv(elo_history_file) |>
     select(game_id, home_team_elo_prev, away_team_elo_prev) |>
     distinct()
 } else {
   message(sprintf(
-    "ELO rankings file not found for season %d, using NA values",
+    "ELO history file not found for season %d, using NA values",
     season_year
   ))
   elo_rankings <- play_by_play |>
