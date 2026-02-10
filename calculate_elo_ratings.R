@@ -223,7 +223,12 @@ create_elo_plot <- function(plot_data, season_year) {
 }
 
 # Save ratings data files
-save_ratings_data <- function(final_ratings, ratings_history, season_year) {
+save_ratings_data <- function(
+  final_ratings,
+  ratings_history,
+  combined_ratings,
+  season_year
+) {
   output_dir <- paste0("data/", season_year)
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
@@ -238,12 +243,21 @@ save_ratings_data <- function(final_ratings, ratings_history, season_year) {
     paste0(output_dir, "/unrivaled_final_elo_ratings.csv")
   )
 
-  write_feather(
+  # Save per-game Elo history (wide format, used by win
+  # probability model for home/away Elo lookups)
+  write_csv(
     ratings_history,
+    paste0(output_dir, "/unrivaled_elo_history.csv")
+  )
+
+  # Save long-format combined rankings with SOS and
+  # cumulative record (one row per team per game)
+  write_feather(
+    combined_ratings,
     paste0(output_dir, "/unrivaled_elo_rankings.feather")
   )
   write_csv(
-    ratings_history,
+    combined_ratings,
     paste0(output_dir, "/unrivaled_elo_rankings.csv")
   )
 }
@@ -298,7 +312,7 @@ print_ratings_info <- function(ratings_history, final_ratings, season_year) {
 }
 
 
-# Print remaining SOS summary from the combined ratings data
+# Print remaining SOS summary from the combined long-format data
 print_remaining_sos <- function(combined_ratings, season_year) {
   cat(
     "\n## Remaining Strength of Schedule (",
@@ -307,38 +321,18 @@ print_remaining_sos <- function(combined_ratings, season_year) {
     sep = ""
   )
 
-  # Build per-team summary from the last game row for each team
-  home_latest <- combined_ratings |>
-    group_by(home_team) |>
-    slice_max(home_team_games_played, n = 1, with_ties = FALSE) |>
-    ungroup() |>
-    select(
-      team = home_team,
-      games_played = home_team_games_played,
-      games_remaining = home_team_games_remaining,
-      elo_rating = home_team_elo,
-      remaining_estimated_wins = home_team_remaining_estimated_wins,
-      total_estimated_wins = home_team_total_estimated_wins
-    )
-
-  away_latest <- combined_ratings |>
-    group_by(away_team) |>
-    slice_max(away_team_games_played, n = 1, with_ties = FALSE) |>
-    ungroup() |>
-    select(
-      team = away_team,
-      games_played = away_team_games_played,
-      games_remaining = away_team_games_remaining,
-      elo_rating = away_team_elo,
-      remaining_estimated_wins = away_team_remaining_estimated_wins,
-      total_estimated_wins = away_team_total_estimated_wins
-    )
-
-  # Pick the row with higher games_played for each team
-  latest <- bind_rows(home_latest, away_latest) |>
+  # Pick each team's most recent game row
+  latest <- combined_ratings |>
     group_by(team) |>
-    slice_max(games_played, n = 1, with_ties = FALSE) |>
+    slice_max(team_game_index, n = 1, with_ties = FALSE) |>
     ungroup() |>
+    select(
+      team,
+      games_played = games_played_to_date,
+      games_remaining,
+      remaining_estimated_wins,
+      total_estimated_wins
+    ) |>
     arrange(desc(total_estimated_wins))
 
   cat(knitr::kable(latest, format = "markdown", digits = 2), sep = "\n")
@@ -430,18 +424,24 @@ process_season <- function(all_games, season_year) {
   print_ratings_info(ratings_history, final_ratings, season_year)
 
   # Calculate remaining strength of schedule and combine into
-  # a single per-game output
+  # a single long-format per-team-per-game output
   full_schedule <- load_full_schedule(season_year)
   if (!is.null(full_schedule)) {
     elo_table <- build_elo_by_games_played(ratings_history)
     elo_with_sos <- add_remaining_sos(elo_table, full_schedule)
     combined_ratings <- combine_elo_with_sos(
-      ratings_history, elo_with_sos, season_scores
+      elo_with_sos, season_scores
     )
-    save_ratings_data(final_ratings, combined_ratings, season_year)
+    save_ratings_data(
+      final_ratings, ratings_history, combined_ratings, season_year
+    )
     print_remaining_sos(combined_ratings, season_year)
   } else {
-    save_ratings_data(final_ratings, ratings_history, season_year)
+    # No schedule available; save ratings_history as both
+    # the Elo history and the rankings output
+    save_ratings_data(
+      final_ratings, ratings_history, ratings_history, season_year
+    )
   }
 
   plot_data <- prepare_plot_data(ratings_history)

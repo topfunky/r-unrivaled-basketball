@@ -1,61 +1,105 @@
 # Purpose: Functions to combine per-game Elo ratings history
 # with remaining strength of schedule and current win counts
-# into a single output table.
+# into a single long-format output table (one row per team
+# per game).
 
-#' Compute per-team cumulative wins at each game
+#' Convert wide-format scores to long format (one row per team per game)
 #'
-#' Takes the scores data and returns one row per team per game
-#' with the team's cumulative wins and games_played at that point.
+#' Each game produces two rows: one for the home team and one for the
+#' away team. Validates that no duplicate (game_id, team) pairs exist.
 #'
-#' @param scores Tibble of game scores with home_team, away_team,
-#'   home_team_score, away_team_score columns
-#' @return Tibble with team, games_played, current_wins
+#' @param scores Tibble with home_team, away_team, home_team_score,
+#'   away_team_score, date, game_id columns
+#' @return Tibble with columns: date, game_id, team, opponent,
+#'   team_score, opponent_score, won
 #' @export
-compute_current_wins <- function(scores) {
+scores_to_long <- function(scores) {
   home_rows <- scores |>
-    dplyr::arrange(date) |>
-    dplyr::mutate(
+    dplyr::transmute(
+      date = date,
+      game_id = game_id,
       team = home_team,
+      opponent = away_team,
+      team_score = home_team_score,
+      opponent_score = away_team_score,
       won = as.integer(home_team_score > away_team_score)
-    ) |>
-    dplyr::select(date, game_id, team, won)
+    )
 
   away_rows <- scores |>
-    dplyr::arrange(date) |>
-    dplyr::mutate(
+    dplyr::transmute(
+      date = date,
+      game_id = game_id,
       team = away_team,
+      opponent = home_team,
+      team_score = away_team_score,
+      opponent_score = home_team_score,
       won = as.integer(away_team_score > home_team_score)
-    ) |>
-    dplyr::select(date, game_id, team, won)
+    )
 
-  dplyr::bind_rows(home_rows, away_rows) |>
-    dplyr::arrange(date, game_id) |>
-    dplyr::group_by(team) |>
-    dplyr::mutate(
-      games_played = dplyr::row_number(),
-      current_wins = cumsum(won)
-    ) |>
-    dplyr::ungroup() |>
-    dplyr::select(team, games_played, current_wins)
+  long <- dplyr::bind_rows(home_rows, away_rows) |>
+    dplyr::arrange(date, game_id, team)
+
+  # Validate no duplicate (game_id, team) pairs
+  dup_check <- long |>
+    dplyr::count(game_id, team) |>
+    dplyr::filter(n > 1)
+
+  if (nrow(dup_check) > 0) {
+    dup_desc <- paste(
+      dup_check$game_id, dup_check$team,
+      sep = "/", collapse = ", "
+    )
+    stop(paste(
+      "scores_to_long found duplicate (game_id, team) pairs:",
+      dup_desc
+    ))
+  }
+
+  long
 }
 
-#' Combine per-game Elo ratings with SOS and current wins
+#' Add cumulative record columns to long-format game data
 #'
-#' Joins remaining SOS data and current win counts onto the
-#' per-game ratings_history table for both home and away teams.
-#' Adds total_estimated_wins = current_wins + remaining_estimated_wins.
+#' Computes team_game_index (1-based chronological game number
+#' per team), wins_to_date, losses_to_date, and
+#' games_played_to_date.
 #'
-#' @param ratings_history Per-game Elo ratings from get_ratings_history()
-#' @param elo_with_sos Per-team-per-games_played SOS from add_remaining_sos()
-#' @param scores Game scores for computing current wins
-#' @return Combined tibble with all original columns plus SOS and wins
+#' @param long_scores Long-format scores from scores_to_long()
+#' @return Input tibble with added cumulative columns
 #' @export
-combine_elo_with_sos <- function(ratings_history, elo_with_sos, scores) {
-  # Build per-team current wins lookup
+add_cumulative_record <- function(long_scores) {
+  long_scores |>
+    dplyr::arrange(date, game_id, team) |>
+    dplyr::group_by(team) |>
+    dplyr::mutate(
+      team_game_index = dplyr::row_number(),
+      wins_to_date = cumsum(won),
+      losses_to_date = cumsum(1L - won),
+      games_played_to_date = team_game_index
+    ) |>
+    dplyr::ungroup()
+}
 
-  current_wins <- compute_current_wins(scores)
+#' Combine per-game Elo ratings with SOS and cumulative record
+#'
+#' Converts scores to long format, computes cumulative record,
+#' then joins elo_with_sos by (team, team_game_index). Produces
+#' one row per team per game with actual record and projected
+#' remaining wins.
+#'
+#' Fails with an error if any team-game key is unmatched in the
+#' join.
+#'
+#' @param elo_with_sos Per-team-per-games_played SOS table
+#' @param scores Game scores for computing cumulative record
+#' @return Long-format tibble with cumulative record and SOS
+#' @export
+combine_elo_with_sos <- function(elo_with_sos, scores) {
+  long_scores <- scores_to_long(scores) |>
+    add_cumulative_record()
 
   # Build SOS lookup keyed by team + games_played
+  # (games_played in elo_with_sos corresponds to team_game_index)
   sos_lookup <- elo_with_sos |>
     dplyr::select(
       team,
@@ -64,64 +108,34 @@ combine_elo_with_sos <- function(ratings_history, elo_with_sos, scores) {
       remaining_estimated_wins
     )
 
-  # Compute home_team games_played per game row
-  home_gp <- ratings_history |>
-    dplyr::group_by(home_team) |>
-    dplyr::mutate(home_team_games_played = dplyr::row_number()) |>
-    dplyr::ungroup() |>
-    dplyr::select(game_id, home_team_games_played)
-
-  # Compute away_team games_played per game row
-  away_gp <- ratings_history |>
-    dplyr::group_by(away_team) |>
-    dplyr::mutate(away_team_games_played = dplyr::row_number()) |>
-    dplyr::ungroup() |>
-    dplyr::select(game_id, away_team_games_played)
-
-  combined <- ratings_history |>
-    dplyr::left_join(home_gp, by = "game_id") |>
-    dplyr::left_join(away_gp, by = "game_id") |>
-    # Join SOS for home team
+  # Join SOS by (team, team_game_index = games_played)
+  combined <- long_scores |>
     dplyr::left_join(
-      sos_lookup |>
-        dplyr::rename(
-          home_team_games_remaining = games_remaining,
-          home_team_remaining_estimated_wins = remaining_estimated_wins
-        ),
-      by = c("home_team" = "team",
-             "home_team_games_played" = "games_played")
-    ) |>
-    # Join SOS for away team
-    dplyr::left_join(
-      sos_lookup |>
-        dplyr::rename(
-          away_team_games_remaining = games_remaining,
-          away_team_remaining_estimated_wins = remaining_estimated_wins
-        ),
-      by = c("away_team" = "team",
-             "away_team_games_played" = "games_played")
-    ) |>
-    # Join current wins for home team
-    dplyr::left_join(
-      current_wins |>
-        dplyr::rename(home_team_current_wins = current_wins),
-      by = c("home_team" = "team",
-             "home_team_games_played" = "games_played")
-    ) |>
-    # Join current wins for away team
-    dplyr::left_join(
-      current_wins |>
-        dplyr::rename(away_team_current_wins = current_wins),
-      by = c("away_team" = "team",
-             "away_team_games_played" = "games_played")
-    ) |>
-    # Compute total estimated wins
-    dplyr::mutate(
-      home_team_total_estimated_wins =
-        home_team_current_wins + home_team_remaining_estimated_wins,
-      away_team_total_estimated_wins =
-        away_team_current_wins + away_team_remaining_estimated_wins
+      sos_lookup,
+      by = c("team" = "team", "team_game_index" = "games_played")
     )
 
-  combined
+  # Validate no unmatched keys
+  unmatched <- combined |>
+    dplyr::filter(is.na(games_remaining) | is.na(remaining_estimated_wins))
+
+  if (nrow(unmatched) > 0) {
+    unmatched_desc <- unmatched |>
+      dplyr::distinct(team, team_game_index) |>
+      dplyr::mutate(
+        desc = paste0(team, " game ", team_game_index)
+      ) |>
+      dplyr::pull(desc) |>
+      paste(collapse = ", ")
+    stop(paste(
+      "combine_elo_with_sos found unmatched team-game keys:",
+      unmatched_desc
+    ))
+  }
+
+  # Compute total estimated wins
+  combined |>
+    dplyr::mutate(
+      total_estimated_wins = wins_to_date + remaining_estimated_wins
+    )
 }
