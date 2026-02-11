@@ -41,11 +41,12 @@
 env:
   DEBIAN_FRONTEND: "noninteractive"
 
-image: "ubuntu:24.04" # The default image for the pipeline's build
-
 steps:
   - label: ":test_tube: Validate R Code"
     key: "validate"
     agents:
       queue: "buildkite-queue"
     command: .buildkite/scripts/validate.sh
+    plugins:
+      - docker#v5.12.0:
+          image: "ubuntu:24.04"
