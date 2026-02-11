@@ -1,0 +1,14 @@
+# Reduce build context: Dockerfile only needs Makefile and install_dependencies.R
+.git
+.github
+.buildkite
+.vscode
+data
+games
+plots
+*.feather
+*.png
+.Rproj.user
+coverage-report.html
+lib
+.DS_Store

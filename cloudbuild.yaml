@@ -1,0 +1,37 @@
+# Purpose: Cloud Build configuration for R validation and tests.
+# Builds custom R image, runs make validate and make test.
+# Trigger on push to main and pull requests via GitHub integration.
+#
+# GCP setup: Enable Cloud Build and Artifact Registry APIs, create
+# Artifact Registry repo, connect GitHub. See plans/plan_gcp_cloud_build_migration.md.
+
+substitutions:
+  _IMAGE_NAME: 'us-central1-docker.pkg.dev/${PROJECT_ID}/r-unrivaled-basketball/ci-r'
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-image'
+    args:
+      - 'build'
+      - '-t'
+      - '${_IMAGE_NAME}:${SHORT_SHA}'
+      - '-f'
+      - 'docker/Dockerfile'
+      - '.'
+
+  - name: '${_IMAGE_NAME}:${SHORT_SHA}'
+    id: 'validate'
+    env:
+      - 'DEBIAN_FRONTEND=noninteractive'
+    args:
+      - 'bash'
+      - '-c'
+      - 'make validate && make test'
+    waitFor: ['build-image']
+
+images:
+  - '${_IMAGE_NAME}:${SHORT_SHA}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamicSubstitutions: true
