@@ -3,6 +3,14 @@
 Migration from GitHub Actions to Buildkite for the
 `r-unrivaled-basketball` project.
 
+## Prereq
+
+Buildkite will only upload one `pipeline.yml` by default. Set your prereq job to upload all pipeline files.
+
+```
+buildkite-agent pipeline upload .buildkite/pipeline*.yml
+```
+
 ## Workflow Mapping
 
 | GitHub Actions Workflow       | Buildkite Pipeline File              |
