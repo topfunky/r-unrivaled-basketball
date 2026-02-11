@@ -50,3 +50,5 @@ steps:
     plugins:
       - docker#v5.12.0:
           image: "ubuntu:24.04"
+          environment:
+            - "DEBIAN_FRONTEND=noninteractive"
