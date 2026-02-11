@@ -3,3 +3,4 @@
 .Rproj.user
 coverage-report.html
 lib/
+.DS_Store
