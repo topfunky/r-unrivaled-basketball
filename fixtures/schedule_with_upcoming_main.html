@@ -1,0 +1,77 @@
+<!-- Test fixture: Main layout schedule with both Final and upcoming games -->
+<!-- Uses actual 2026 HTML structure from Unrivaled website -->
+<div class="flex row-12 p-12">
+  <span class="uppercase weight-500">Mon, Jan 05, 2026</span>
+  <!-- Final game: Mist 72, Hive 56 -->
+  <div class="flex w-100 radius-8" style="background:var(--color-white-5)">
+    <div class="flex-row justify-between w-100 items-center px-16 py-12">
+      <div class="flex to-row-sm col-36 row-8">
+        <div class=" flex justify-center col-12 row-8"><span class="uppercase weight-500 font-14">Final</span></div>
+        <div class="flex col-12">
+          <div class="flex-row w-100 items-center col-12">
+            <div class="relative"><h3 class="weight-900">72</h3></div>
+            <a class="flex-row items-center col-12" href="/mist"><div class="color-blue weight-500 font-14">Mist</div></a>
+          </div>
+          <div class="flex-row w-100 items-center col-12">
+            <div class="relative"><h3 class="weight-900">56</h3></div>
+            <a class="flex-row items-center col-12" href="/hive"><div class="color-blue weight-500 font-14">Hive</div></a>
+          </div>
+        </div>
+      </div>
+      <div class="flex to-row-sm reverse items-center row-8 col-8">
+        <a aria-disabled="false" href="/game/abc123/box-score"><button class="white rectangle uppercase">Box Score</button></a>
+      </div>
+    </div>
+  </div>
+  <!-- Final game: Laces 58, Vinyl 42 -->
+  <div class="flex w-100 radius-8" style="background:var(--color-white-5)">
+    <div class="flex-row justify-between w-100 items-center px-16 py-12">
+      <div class="flex to-row-sm col-36 row-8">
+        <div class=" flex justify-center col-12 row-8"><span class="uppercase weight-500 font-14">Final</span></div>
+        <div class="flex col-12">
+          <div class="flex-row w-100 items-center col-12">
+            <div class="relative"><h3 class="weight-900">42</h3></div>
+            <a class="flex-row items-center col-12" href="/vinyl"><div class="color-blue weight-500 font-14">Vinyl</div></a>
+          </div>
+          <div class="flex-row w-100 items-center col-12">
+            <div class="relative"><h3 class="weight-900">58</h3></div>
+            <a class="flex-row items-center col-12" href="/laces"><div class="color-blue weight-500 font-14">Laces</div></a>
+          </div>
+        </div>
+      </div>
+      <div class="flex to-row-sm reverse items-center row-8 col-8">
+        <a aria-disabled="false" href="/game/def456/box-score"><button class="white rectangle uppercase">Box Score</button></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="flex row-12 p-12">
+  <span class="uppercase weight-500">Fri, Jan 09, 2026</span>
+  <!-- Upcoming game: Hive vs Breeze, 7:00 PM (logo-only format) -->
+  <div class="flex w-100 radius-8" style="background:var(--color-white-5)">
+    <a class="flex-row justify-between items-center w-100 py-12 px-16" href="/game/upcoming01">
+      <div class="flex row-8">
+        <span class="weight-500 font-14">7:00 PM ET</span>
+      </div>
+      <div class="flex-row items-center col-12">
+        <img alt="Hive Logo" width="48" height="48" src="/hive.png">
+        <span>@</span>
+        <img alt="Breeze Logo" width="48" height="48" src="/breeze.png">
+      </div>
+    </a>
+  </div>
+  <!-- Upcoming game: Rose vs Phantom, 7:30 PM (logo-only format) -->
+  <div class="flex w-100 radius-8" style="background:var(--color-white-5)">
+    <a class="flex-row justify-between items-center w-100 py-12 px-16" href="/game/upcoming02">
+      <div class="flex row-8">
+        <span class="weight-500 font-14">7:30 PM ET</span>
+      </div>
+      <div class="flex-row items-center col-12">
+        <img alt="Rose Logo" width="48" height="48" src="/rose.png">
+        <span>@</span>
+        <img alt="Phantom Logo" width="48" height="48" src="/phantom.png">
+      </div>
+    </a>
+  </div>
+</div>
