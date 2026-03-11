@@ -218,13 +218,25 @@ parse_summary <- function(game_id, season_year) {
     return(NULL)
   }
 
-  table_data <- rvest::html_table(tables[1])
-  if (length(table_data) == 0 || nrow(table_data[[1]]) == 0) {
-    warning(sprintf("Empty table in summary file for game %s", game_id))
+  # Playoff games have a leaders table and quarter-score table in addition to
+  # the shooting stats table, so search by content rather than position.
+  all_tables <- rvest::html_table(tables)
+  stats_table <- NULL
+  for (tbl in all_tables) {
+    if ("FG" %in% tbl[[1]]) {
+      stats_table <- tbl
+      break
+    }
+  }
+  if (is.null(stats_table)) {
+    warning(sprintf(
+      "No shooting stats table found in summary file for game %s",
+      game_id
+    ))
     return(NULL)
   }
 
-  summary <- table_data[[1]] |>
+  summary <- stats_table |>
     tibble::as_tibble(.name_repair = "minimal") |>
     purrr::set_names(c("col1", "col2", "col3")) |>
     dplyr::filter(

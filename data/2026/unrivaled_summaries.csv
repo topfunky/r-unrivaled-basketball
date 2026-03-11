@@ -17,6 +17,10 @@ game_id,season,team,field_goals,field_goal_pct,three_pointers,three_point_pct,fr
 8z57p4vocgku,2026,team_b,25-56,44.6,6,37.5,2-5,40
 94j1mo0zurq0,2026,team_a,27-53,50.9,3,21.4,5-8,62.5
 94j1mo0zurq0,2026,team_b,34-57,59.6,11,64.7,6-7,85.7
+9r3c2rtv1a4b,2026,team_a,34-54,63,9,45,3-6,50
+9r3c2rtv1a4b,2026,team_b,29-53,54.7,6,42.9,2-3,66.7
+arprsfrixw5t,2026,team_a,28-57,49.1,9,40.9,7-9,77.8
+arprsfrixw5t,2026,team_b,32-60,53.3,8,44.4,7-8,87.5
 beflzp9vtekt,2026,team_a,24-55,43.6,8,42.1,6-8,75
 beflzp9vtekt,2026,team_b,25-49,51,6,31.6,8-9,88.9
 bm2lkss94wnl,2026,team_a,26-48,54.2,7,46.7,10-10,100
@@ -31,8 +35,12 @@ g6szh1j6cvup,2026,team_a,27-57,47.4,9,47.4,6-10,60
 g6szh1j6cvup,2026,team_b,34-68,50,6,31.6,2-3,66.7
 justsjfaumpa,2026,team_a,25-61,41,6,30,3-4,75
 justsjfaumpa,2026,team_b,26-57,45.6,2,20,8-10,80
+jx1ocoygd5a4,2026,team_a,28-50,56,7,58.3,9-9,100
+jx1ocoygd5a4,2026,team_b,27-57,47.4,9,52.9,6-7,85.7
 kgxtxd4cer7n,2026,team_a,26-57,45.6,1,7.7,10-12,83.3
 kgxtxd4cer7n,2026,team_b,27-63,42.9,0,0,4-5,80
+kossd6v863z0,2026,team_a,30-60,50,3,30,3-5,60
+kossd6v863z0,2026,team_b,27-63,42.9,8,44.4,6-7,85.7
 m0a5r2dtoddj,2026,team_a,31-65,47.7,9,34.6,5-5,100
 m0a5r2dtoddj,2026,team_b,23-49,46.9,4,40,10-11,90.9
 msoh2b5w85lf,2026,team_a,31-68,45.6,8,28.6,8-10,80
@@ -43,3 +51,5 @@ qp6ewzers2uq,2026,team_a,30-63,47.6,5,25,7-7,100
 qp6ewzers2uq,2026,team_b,26-51,51,5,27.8,5-8,62.5
 rku5vtdbh0g9,2026,team_a,24-54,44.4,5,27.8,6-8,75
 rku5vtdbh0g9,2026,team_b,30-65,46.2,9,32.1,6-7,85.7
+y87s0h88otw8,2026,team_a,27-56,48.2,8,47.1,4-5,80
+y87s0h88otw8,2026,team_b,21-58,36.2,4,25,2-5,40

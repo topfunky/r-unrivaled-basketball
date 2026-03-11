@@ -24,6 +24,15 @@ format_pct <- function(value, digits = 1) {
   sprintf(paste0("%.", digits, "f%%"), value * 100)
 }
 
+# Appends a timestamped status line to data/wnba_fetch_status.txt so
+# operators can tell at a glance whether the last run fetched live data,
+# fell back to cache, or skipped entirely.
+write_fetch_status <- function(status, detail) {
+  timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+  line <- glue("{timestamp} | {status} | {detail}")
+  write(line, file = "data/wnba_fetch_status.txt", append = TRUE)
+}
+
 # Function to get WNBA player shooting stats
 get_wnba_shooting_stats <- function(season = NULL) {
   message(glue("Getting WNBA player shooting stats for {season} season..."))
@@ -34,11 +43,19 @@ get_wnba_shooting_stats <- function(season = NULL) {
   }
 
   # Get player stats from WNBA Stats API
-  player_stats <- wnba_leaguedashplayerstats(
-    season = season,
-    measure_type = "Base",
-    per_mode = "Totals"
+  player_stats <- tryCatch(
+    wnba_leaguedashplayerstats(
+      season = season,
+      measure_type = "Base",
+      per_mode = "Totals"
+    ),
+    error = function(e) {
+      warning(glue("API call failed for {season}: {conditionMessage(e)}"))
+      NULL
+    }
   )
+
+  if (is.null(player_stats)) return(NULL)
 
   # Extract the data frame from the list
   shooting_stats <- player_stats$LeagueDashPlayerStats |>
@@ -114,13 +131,26 @@ if (current_month < 5) {
   season <- current_year
 }
 
+output_file <- glue("data/wnba_shooting_stats_{season}.feather")
+
 # Get the shooting stats
 wnba_shooting_stats <- get_wnba_shooting_stats(season)
 
-# Save to feather file
-output_file <- glue("data/wnba_shooting_stats_{season}.feather")
-message(glue("Saving shooting stats to {output_file}..."))
-write_feather(wnba_shooting_stats, output_file)
+if (is.null(wnba_shooting_stats)) {
+  if (file.exists(output_file)) {
+    message(glue("API unavailable. Loading cached data from {output_file}..."))
+    wnba_shooting_stats <- read_feather(output_file)
+    write_fetch_status("CACHED", glue("Loaded from {output_file}"))
+  } else {
+    write_fetch_status("SKIPPED", "No cached data available. Skipping.")
+    message("No cached data available. Skipping all downstream steps.")
+    quit(save = "no", status = 0)
+  }
+} else {
+  message(glue("Saving shooting stats to {output_file}..."))
+  write_feather(wnba_shooting_stats, output_file)
+  write_fetch_status("SUCCESS", glue("Fetched and saved to {output_file}"))
+}
 
 # Print summary of the data
 message("Summary of WNBA shooting stats:")

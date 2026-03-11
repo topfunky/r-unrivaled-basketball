@@ -295,6 +295,43 @@ describe("parse_summary", {
     expect_type(result$three_point_pct, "double")
     expect_type(result$free_throw_pct, "double")
   })
+
+  it("parses playoff game summary that has a leaders table before the stats table", {
+    # Playoff games have 3 tables: leaders, shooting stats, quarter scores.
+    # The stats table is at index 2, not 1.
+    game_id <- "9r3c2rtv1a4b"
+    require_game_files(game_id, 2026)
+    old_wd <- getwd()
+    on.exit(setwd(old_wd), add = TRUE)
+    setwd(project_root)
+
+    result <- parse_summary(game_id, 2026)
+
+    expect_s3_class(result, "tbl_df")
+
+    expected_cols <- c(
+      "game_id",
+      "season",
+      "team",
+      "field_goals",
+      "field_goal_pct",
+      "three_pointers",
+      "three_point_pct",
+      "free_throws",
+      "free_throw_pct"
+    )
+    expect_true(all(expected_cols %in% names(result)))
+
+    expect_equal(nrow(result), 2)
+    expect_setequal(result$team, c("team_a", "team_b"))
+
+    expect_type(result$field_goal_pct, "double")
+    expect_type(result$three_point_pct, "double")
+    expect_type(result$free_throw_pct, "double")
+
+    # Sanity-check known values for this game (Vinyl 82, Laces 69)
+    expect_true(all(!is.na(result$field_goal_pct)))
+  })
 })
 
 describe("process_season", {
